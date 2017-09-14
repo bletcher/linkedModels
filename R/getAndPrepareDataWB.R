@@ -1,18 +1,3 @@
-# data end up here: file='/home/ben/dataForModels/cdForMovementModelWB.RData')
-# to avoid problems with .gitignore not ignoring .RData files
-
-
-
-# to rebuild library:
-# install.packages("devtools")
-# devtools::install_github('Conte-Ecology/westBrookData/getWBData')
-
-library(getWBData)
-library(dplyr)
-library(dbplyr)
-library(lubridate)
-
-
 #'Extract data from the PIT tag database
 #'
 #'@param drainage Which drainage, "west" or "stanley"
@@ -48,21 +33,10 @@ getSites <- function(drainageIn = "west"){
   return(sites)
 }
 
-############# 2_prepare data
-# install dev version to fix NA problem with lag()
-#if (packageVersion("devtools") < 1.6) {
-#  install.packages("devtools")
-#}
-#devtools::install_github("hadley/lazyeval")
-#devtools::install_github("hadley/dplyr")
-
-# sample 2.5 = fyke net. not sure if we should keep it - prob with obs model
-#cdWB <-  filter(cdWB, sampleNumber != 2.5 & sampleNumber != 10.1)
-
 #'Clean data from the PIT tag database
 #'
 #'@param d dataframe created with getCoreData()
-#'@param drainage Which drainage, "west" or "stanley"
+#'@param drainageIn Which drainage, "west" or "stanley"
 #'@return a data frame
 #'@export
 
@@ -77,9 +51,7 @@ cleanData <- function(d,drainageIn){
   }
   else if(drainageIn == "stanley"){
     maxSectionNum <- 52
-
-    # need to fix
-    d$riverOrdered <- factor(d$river,levels=c('west brook', 'wb jimmy', 'wb mitchell',"wb obear"),labels = c("west brook","wb jimmy","wb mitchell","wb obear"), ordered=T)
+    d$riverOrdered <- factor(d$river,levels=c('mainstem', 'west', 'east'),labels = c('mainstem', 'west', 'east'), ordered=T)
   }
 
   d$inside <- ifelse( d$section %in% 1:maxSectionNum | d$survey == "stationaryAntenna", T, F )
@@ -105,4 +77,26 @@ cleanData <- function(d,drainageIn){
 }
 
 
+#'Merge sites table
+#'
+#'@param d dataframe created with getCoreData()
+#'@param drainage Which drainage, "west" or "stanley"
+#'@return a data frame
+#'@export
 
+mergeSites <- function(d,drainageIn){
+  sites <- getSites(drainageIn)
+  # merge in riverMeter for sections
+  d <- left_join(d, sites, by = c("river","section","area"))
+  d$riverMeter <- ifelse( d$survey == "shock" | d$survey == "portableAntenna", d$river_meter, d$riverMeter )
+  return(d)
+}
+
+
+############# 2_prepare data
+# install dev version to fix NA problem with lag()
+#if (packageVersion("devtools") < 1.6) {
+#  install.packages("devtools")
+#}
+#devtools::install_github("hadley/lazyeval")
+#devtools::install_github("hadley/dplyr")
