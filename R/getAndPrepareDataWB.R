@@ -92,7 +92,15 @@ mergeSites <- function(d,drainageIn){
   return(d)
 }
 
+#'Show minimal data
+#'
+#'@param d dataframe created with getCoreData()
+#'@return a data frame with key selected columns
+#'@export
 
+minimalData <- function(d){
+  d %>% select(tag,detectionDate,sampleNumber,riverOrdered,observedLength,survey,enc,knownZ,grLength)
+}
 ############# 2_prepare data
 # install dev version to fix NA problem with lag()
 #if (packageVersion("devtools") < 1.6) {
