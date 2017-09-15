@@ -16,5 +16,6 @@ Suggests: knitr,
     getWBData,
     dplyr,
     dbplyr,
-    lubridate
+    lubridate,
+    jagsUI
 VignetteBuilder: knitr

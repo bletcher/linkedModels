@@ -2,6 +2,7 @@
 #devtools::install_github('bletcher/linkedModels')
 library(tidyverse)
 library(linkedModels)
+library(jagsUI)
 
 dr <- "west"
 cd <- getCoreData(dr) %>%
@@ -28,6 +29,8 @@ if (!exists("cd")) load(paste0('/home/ben/linkedModels/data/cd_',dr,'.RData'))
 #
 #
 
-dat <- cd %>% filter(species == "bkt")#,distMoved < 48, distMoved > 0, enc == 1)
-
+ddd <- cd %>%
+         filter(species == "bkt", year %in% c(2002:2005)) %>% #,distMoved < 48, distMoved > 0, enc == 1)
+         prepareDataForJags() %>%
+         runGrowthModel()
 

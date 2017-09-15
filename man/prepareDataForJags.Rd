@@ -4,13 +4,13 @@
 \alias{prepareDataForJags}
 \title{Get data ready to run the growth model}
 \usage{
-prepareDataForJags()
+prepareDataForJags(d)
 }
 \arguments{
 \item{d}{a data frame created using getCoreData()}
 }
 \value{
-a list for importing into the jags run. Run with runGrowthModel()
+A list for importing into the jags run. Run with runGrowthModel()
 }
 \description{
 Get data ready to run the growth model
