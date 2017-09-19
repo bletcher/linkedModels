@@ -39,7 +39,7 @@ propSampled <- 1
 start <- Sys.time()
 ddd <- cd %>%
   filter(  species == "bkt",
-           cohort %in% c(2006),
+           cohort %in% c(2002:2008),
            tag %in% sample(unique(tag), propSampled*length(unique(tag)))
   )  %>% #,distMoved < 48, distMoved > 0, enc == 1)
   prepareDataForJags()
@@ -47,6 +47,8 @@ ddd <- cd %>%
 dd <- ddd %>% runGrowthModel()
 done <- Sys.time()
 (elapsed <- done - start)
+
+
 
 st <- 9355
 end <- 9370
