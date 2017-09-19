@@ -6,16 +6,15 @@ library(jagsUI)
 
 dr <- "west"
 cd <- getCoreData(dr) %>%
-        cleanData(dr) %>%
-        mergeSites(dr) %>%
-        mutate(drainage = dr)
+  cleanData(dr) %>%
+  mergeSites(dr) %>%
+  mutate(drainage = dr)
 
-save(cd, file = paste0('/home/ben/linkedModels/data/cd_',dr,'.RData'))
+save(cd, file = paste0('./data/cd_',dr,'.RData'))
 
 
-# specific analyses
-# limit to bkt
-if (!exists("cd")) load(paste0('/home/ben/linkedModels/data/cd_',dr,'.RData'))
+# load cd if not yet loaded
+if (!exists("cd")) load(paste0('./data/cd_',dr,'.RData'))
 
 #################################
 # Movement model
@@ -27,10 +26,31 @@ if (!exists("cd")) load(paste0('/home/ben/linkedModels/data/cd_',dr,'.RData'))
 # Growth model
 #
 #
-#
+
+propSampled <- 1
 start <- Sys.time()
 ddd <- cd %>%
-         filter(species == "bkt", cohort %in% c(2006)) %>% #,distMoved < 48, distMoved > 0, enc == 1) %>%
-         prepareDataForJags() %>%
-         runGrowthModel()
-elapsed <- Sys.time() - start
+  filter(  species == "bkt",
+           cohort %in% c(2006),
+           tag %in% sample(unique(tag), propSampled*length(unique(tag)))
+  )  %>% #,distMoved < 48, distMoved > 0, enc == 1)
+  prepareDataForJags()
+
+dd <- ddd %>% runGrowthModel()
+done <- Sys.time()
+elapsed <- done - start
+
+st <- 9355
+end <- 9370
+data.frame(
+  occ = c(st:end),
+  ddd$lengthDATA[st:end],
+  ddd$ind[st:end],
+  ddd$occ[st:end],
+  ddd$season[st:end],
+  ddd$riverDATA[st:end]
+)
+
+#To do:
+# Line up ddd$YOY with actual year in model run
+# add intervalMeans back in to gr[]

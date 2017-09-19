@@ -41,18 +41,18 @@ prepareDataForJags <- function(d){
 
   data <- list( lengthDATA = d$observedLength,
                 riverDATA = d$riverN,
-                ind = d$tagIndex,
+                #ind = d$tagIndex,
                 nRivers = nRivers,
-                nInd = nInd,
-                nOcc = nOcc,
-                occ = d$sampleIndex - minOcc + 1,
+                #nInd = nInd,
+                #nOcc = nOcc,
+                #occ = d$sampleIndex - minOcc + 1,
                 season = d$season,
                 year = d$year - min(d$year) + 1,
                 nYears = nYears, #max(d$year) - min(d$year) + 1,
                 nEvalRows = nEvalRows, evalRows = evalRows,
                 nFirstObsRows = nFirstObsRows, firstObsRows = firstObsRows,
                 nLastObsRows = nLastObsRows, lastObsRows = lastObsRows,
-                nSeasons = nSeasons,
+                #nSeasons = nSeasons,
                 lengthMean = matrix(means$meanLen,c(nSeasons,nRivers),byrow = T),
                 lengthSD = matrix(means$sdLen,c(nSeasons,nRivers),byrow = T),
                 cutoffYOYDATA = cutoffYOYDATA
@@ -72,24 +72,24 @@ runGrowthModel <- function(d){   #iterToUse, firstNonBurnIter, chainToUse, simIn
 
   inits <- function(){
     #list(grBetaInt = array(rnorm(d$nSeasons*d$nRivers,0,2.25),c(d$nSeasons,d$nRivers)))
-    list(grBetaInt = array(rnorm(4*4,0,2.25),c(4,4)))
+    list(grBetaInt = array(rnorm(2*4*4*6,0,2.25),c(2,4,4,6)))
   }
 
-  params <- c("grBetaInt","grBeta","grSigmaBeta")#, "length")
+  params <- c("grBetaInt","muGrBetaInt","sigmaGrBetaInt","grBeta","grSigmaBeta","length")
 
   outGR <- jags(data = d,
                 inits = inits,
                 parameters.to.save = params,
                 model.file = "./jags/grModel.jags",
-                n.chains = 1,
-                n.adapt = 100, #1000
-                n.iter = 200,
-                n.burnin = 100,
+                n.chains = 3,
+                n.adapt = 1000, #1000
+                n.iter = 2000,
+                n.burnin = 1000,
                 n.thin = 3,
-                parallel = TRUE
+                parallel = FALSE
   )
 
-  outGR$movementModelIterUsed <- iter
+  #outGR$movementModelIterUsed <- iter
   return(outGR)
 }
 
