@@ -7,6 +7,8 @@
 getCoreData(drainage = "west")
 }
 \arguments{
+\item{drainage}{Which drainage, "west" or "stanley"#'Extract data from the PIT tag database}
+
 \item{drainage}{Which drainage, "west" or "stanley"}
 }
 \value{

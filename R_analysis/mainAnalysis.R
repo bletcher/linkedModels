@@ -1,29 +1,37 @@
 #install.packages("devtools")
 #devtools::install_github('bletcher/linkedModels')
+#install.packages("devtools")
+#devtools::install_github('Conte-Ecology/getWBData')
 library(tidyverse)
 library(linkedModels)
 library(jagsUI)
+library(getWBData)
+library(lubridate)
 
 dr <- "west"
-cd <- getCoreData(dr) %>%
-  cleanData(dr) %>%
-  mergeSites(dr) %>%
-  mutate(drainage = dr)
+cdFile <- paste0('./data/cd_',dr,'.RData')
 
-save(cd, file = paste0('./data/cd_',dr,'.RData'))
+if ( file.exists(cdFile) ) {
+  load(cdFile)
+} else {
+  cd <- getCoreData(dr) %>%
+    cleanData(dr) %>%
+    mergeSites(dr) %>%
+    mutate(drainage = dr)
 
-
-# load cd if not yet loaded
-if (!exists("cd")) load(paste0('./data/cd_',dr,'.RData'))
+  save(cd, file = cdFile)
+}
 
 #################################
 # Movement model
+#################
 # To start, will just assume fish don't move
 # until they are seen somewhere else.
 # Accomplished with %>% fillSizeLocation(size = F) in getCoreData()
 
 #################################
 # Growth model
+###############
 #
 #
 
@@ -38,7 +46,7 @@ ddd <- cd %>%
 
 dd <- ddd %>% runGrowthModel()
 done <- Sys.time()
-elapsed <- done - start
+(elapsed <- done - start)
 
 st <- 9355
 end <- 9370

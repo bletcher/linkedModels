@@ -24,7 +24,7 @@ model {
 
   for( i in 1:nEvalRows ){
     isYOY1[ evalRows[ i ] ] ~ dinterval( length[ evalRows[ i ] ],
-                                         cutoffYOYDATA[ season[ evalRows[i] ],riverDATA[ evalRows[ i ] ], year[ evalRows[ i ] ] ]
+                                         cutoffYOYDATA[ season[ evalRows[i] ],riverDATA[ evalRows[ i ] ], yearForCutoff[ evalRows[ i ] ] ]
     )
     isYOY[ evalRows[ i ] ] <- isYOY1[ evalRows[ i ] ] + 1
 
@@ -34,7 +34,7 @@ model {
   for( i in 1:( nLastObsRows ) ){
 
     isYOY1[ lastObsRows[ i ] ] ~ dinterval( length[ lastObsRows[ i ] ],
-                                            cutoffYOYDATA[ season[ lastObsRows[i] ],riverDATA[ lastObsRows[ i ] ], year[ lastObsRows[ i ] ] ]
+                                            cutoffYOYDATA[ season[ lastObsRows[i] ],riverDATA[ lastObsRows[ i ] ], yearForCutoff[ lastObsRows[ i ] ] ]
     )
     isYOY[ lastObsRows[ i ] ] <- isYOY1[ lastObsRows[ i ] ] + 1
   }
@@ -89,7 +89,7 @@ model {
   #   ############## Growth Priors
   for( yoy in 1:2 ){
     for( r in 1:( nRivers+0 ) ){
-      for( s in 1:4 ){
+      for( s in 1:nSeasons ){
         for(y in 1:nYears){
           grSigmaBeta[ yoy,s,r,y ] ~ dnorm( muGrSigmaBeta[ yoy,s,r ], 1 / sigmaGrSigmaBeta[ yoy,s,r ] ^ 2 )T(0,)
           grBetaInt[   yoy,s,r,y ] ~ dnorm(   muGrBetaInt[ yoy,s,r ], 1 /   sigmaGrBetaInt[ yoy,s,r ] ^ 2 )

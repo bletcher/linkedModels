@@ -30,7 +30,7 @@ prepareDataForJags <- function(d){
 
 
   load(file = "./data/cutoffYOYInclSpring1DATA.RData")
-  cutoffYOYDATA <- cutoffYOYInclSpring1DATA # will need to add years after 2012, I think
+  cutoffYOYDATA <- cutoffYOYInclSpring1DATA # update using getYOYCutoffs()
 
   d$riverN <- as.numeric(d$riverOrdered)
 
@@ -48,11 +48,12 @@ prepareDataForJags <- function(d){
                 #occ = d$sampleIndex - minOcc + 1,
                 season = d$season,
                 year = d$year - min(d$year) + 1,
+                yearForCutoff = d$year - d$minYear + 1, # minYear is watershed-specific
                 nYears = nYears, #max(d$year) - min(d$year) + 1,
                 nEvalRows = nEvalRows, evalRows = evalRows,
                 nFirstObsRows = nFirstObsRows, firstObsRows = firstObsRows,
                 nLastObsRows = nLastObsRows, lastObsRows = lastObsRows,
-                #nSeasons = nSeasons,
+                nSeasons = nSeasons,
                 lengthMean = matrix(means$meanLen,c(nSeasons,nRivers),byrow = T),
                 lengthSD = matrix(means$sdLen,c(nSeasons,nRivers),byrow = T),
                 cutoffYOYDATA = cutoffYOYDATA
@@ -72,7 +73,8 @@ runGrowthModel <- function(d){   #iterToUse, firstNonBurnIter, chainToUse, simIn
 
   inits <- function(){
     #list(grBetaInt = array(rnorm(d$nSeasons*d$nRivers,0,2.25),c(d$nSeasons,d$nRivers)))
-    list(grBetaInt = array(rnorm(2*4*4*6,0,2.25),c(2,4,4,6)))
+    #list(grBetaInt = array(rnorm(2*4*4*6,0,2.25),c(2,4,4,6)))
+    list(array(rnorm(2*ddd$nSeasons*ddd$nRivers*ddd$nYears,0,2.25),c(2,ddd$nSeasons,ddd$nRivers,ddd$nYears)))
   }
 
   params <- c("grBetaInt","muGrBetaInt","sigmaGrBetaInt","grBeta","grSigmaBeta","length")
