@@ -28,9 +28,9 @@ if (!exists("cd")) load(paste0('/home/ben/linkedModels/data/cd_',dr,'.RData'))
 #
 #
 #
-
+start <- Sys.time()
 ddd <- cd %>%
-         filter(species == "bkt", year %in% c(2002:2005)) %>% #,distMoved < 48, distMoved > 0, enc == 1)
+         filter(species == "bkt", cohort %in% c(2006)) %>% #,distMoved < 48, distMoved > 0, enc == 1) %>%
          prepareDataForJags() %>%
          runGrowthModel()
-
+elapsed <- Sys.time() - start
