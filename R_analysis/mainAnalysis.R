@@ -36,11 +36,11 @@ if ( file.exists(cdFile) ) {
 #
 
 propSampled <- 1
-start <- Sys.time()
+(start <- Sys.time())
 ddd <- cd %>%
   filter(  species == "bkt",
-           cohort %in% c(2002:2008),
-           tag %in% sample(unique(tag), propSampled*length(unique(tag)))
+           cohort >= 2002, sampleInterval < 200
+           # tag %in% sample(unique(tag), propSampled*length(unique(tag)))
   )  %>% #,distMoved < 48, distMoved > 0, enc == 1)
   prepareDataForJags()
 
@@ -48,7 +48,7 @@ dd <- ddd %>% runGrowthModel()
 done <- Sys.time()
 (elapsed <- done - start)
 
-
+# get cotoffYOY right
 
 st <- 9355
 end <- 9370

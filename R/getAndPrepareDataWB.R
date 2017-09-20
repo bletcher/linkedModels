@@ -78,6 +78,8 @@ cleanData <- function(d,drainageIn){
     ungroup()
 
   d$moveDir <- ifelse( d$section == d$lagSection, 0, ifelse( d$section > d$lagSection, 1,-1 ) )
+  d$sampleInterval = as.numeric(lagDetectionDate - detectionDate)
+
   return(d)
 }
 
@@ -104,7 +106,8 @@ mergeSites <- function(d,drainageIn){
 #'@export
 
 minimalData <- function(d){
-  d %>% select(tag,detectionDate,sampleNumber,riverOrdered,observedLength,survey,enc,knownZ,grLength)
+  d %>% select(tag,detectionDate,sampleNumber,riverOrdered,observedLength,
+               survey,enc,knownZ,grLength,lagDetectionDate,lagObservedLength)
 }
 
 
@@ -228,7 +231,7 @@ getYOYCutoffs <- function(d,dr){
 
   yy$riverOrdered <- factor(yy$river, levels=c('DEAD','west brook','wb jimmy','wb mitchell','wb obear'), ordered=T)
   yy <- yy[ order(yy$year,yy$riverOrdered,yy$season),]
-  cutoffYOYInclSpring1DATA <- array( yy$maxLength, c(4,5,14) )
+  cutoffYOYInclSpring1DATA <- array( yy$maxLength, c(4,5,16) )
 
   save(yy,cutoffYOYInclSpring1DATA,file='./data/cutoffYOYInclSpring1DATA.RData')
 

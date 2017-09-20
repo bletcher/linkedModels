@@ -88,7 +88,7 @@ runGrowthModel <- function(d){   #iterToUse, firstNonBurnIter, chainToUse, simIn
                 n.iter = 2000,
                 n.burnin = 1000,
                 n.thin = 4,
-                parallel = FALSE
+                parallel = TRUE
   )
 
   #outGR$movementModelIterUsed <- iter
