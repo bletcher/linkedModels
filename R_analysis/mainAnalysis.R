@@ -8,6 +8,11 @@ library(jagsUI)
 library(getWBData)
 library(lubridate)
 
+######################################################
+# Get data from database
+# Only need to run this when data have changed
+# or you want to change drainages
+
 dr <- "west"
 cdFile <- paste0('./data/cd_',dr,'.RData')
 
@@ -39,7 +44,8 @@ propSampled <- 1
 (start <- Sys.time())
 ddd <- cd %>%
   filter(  species == "bkt",
-           cohort >= 2002, sampleInterval < 200
+           cohort >= 2002,
+           sampleInterval < 200 # this removes the later yearly samples. Want to stick with seasonal samples
            # tag %in% sample(unique(tag), propSampled*length(unique(tag)))
   )  %>% #,distMoved < 48, distMoved > 0, enc == 1)
   prepareDataForJags()

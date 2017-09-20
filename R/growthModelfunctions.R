@@ -56,7 +56,8 @@ prepareDataForJags <- function(d){
                 nSeasons = nSeasons,
                 lengthMean = matrix(means$meanLen,c(nSeasons,nRivers),byrow = T),
                 lengthSD = matrix(means$sdLen,c(nSeasons,nRivers),byrow = T),
-                cutoffYOYDATA = cutoffYOYDATA
+                cutoffYOYDATA = cutoffYOYDATA,
+                sampleInterval = sampleInterval
   )
   return(data)
 }

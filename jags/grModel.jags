@@ -9,7 +9,6 @@ model {
   for( i in 1:(nEvalRows) ){
     stdLength[ evalRows[i] ] <-  ( length[ evalRows[i] ] - lengthMean[ season[ evalRows[i]],riverDATA[ evalRows[i] ] ] ) /
       lengthSD[ season[ evalRows[i]],riverDATA[ evalRows[i] ] ]
-
   }
 
   for( i in 1:( nLastObsRows ) ){
@@ -56,7 +55,7 @@ model {
     lengthDATA[ evalRows[i] + 1 ] ~ dnorm( length[ evalRows[i] + 1 ], 9 ) # length measurement error
 
     # add intervalMeans back in
-    gr[ evalRows[i] ] ~ dnorm( expectedGR[ evalRows[i] ],
+    gr[ evalRows[i] ] ~ dnorm( expectedGR[ evalRows[i] ] / sampleInterval[ evalRows[i] ],
                                1/expectedGRSigma[ evalRows[i] ]^2
     )
 
