@@ -78,7 +78,7 @@ cleanData <- function(d,drainageIn){
     ungroup()
 
   d$moveDir <- ifelse( d$section == d$lagSection, 0, ifelse( d$section > d$lagSection, 1,-1 ) )
-  d$sampleInterval <- as.numeric(d$lagDetectionDate - d$detectionDate)
+  d$sampleInterval = as.numeric(d$lagDetectionDate - d$detectionDate)
 
   return(d)
 }

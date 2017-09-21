@@ -80,11 +80,6 @@ model {
 
   }
 
-  ############## Growth Priors ###############
-
-
-
-
   #   ############## Growth Priors
   for( yoy in 1:2 ){
     for( r in 1:( nRivers+0 ) ){

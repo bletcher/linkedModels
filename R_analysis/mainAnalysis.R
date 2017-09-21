@@ -1,3 +1,15 @@
+# species-, age, location-specific rates of size-dep growth
+#estimate spp-sp abundances for each river for each sample
+# size effect ~ 1/spp/river/season/year
+# run models:
+# size
+# size*spp
+# size*spp*river
+# size*spp*river*season
+# then add in variable for 'harshness', either production (biomass) over interval or abundance
+# (overall and spp-specific) or env (flow, temp). Test how size-dep gr varies across harshness for best model from moedl selection.
+
+
 #install.packages("devtools")
 #devtools::install_github('bletcher/linkedModels')
 #install.packages("devtools")
@@ -9,23 +21,54 @@ library(getWBData)
 library(lubridate)
 
 ######################################################
+# selection criteria
+
+drainage <- "west" # ==
+speciesIn == "bkt" # ==
+minCohort == 2002 # >=
+maxSampleInterval == 200 # <
+
+
+######################################################
 # Get data from database
-# Only need to run this when data have changed
+# Only need to run this when data or functions have changed
 # or you want to change drainages
 
-dr <- "west"
-cdFile <- paste0('./data/cd_',dr,'.RData')
+cdFile <- paste0('./data/cd_',drainage,'.RData')
 
 if ( file.exists(cdFile) ) {
   load(cdFile)
 } else {
-  cd <- getCoreData(dr) %>%
-    cleanData(dr) %>%
-    mergeSites(dr) %>%
-    mutate(drainage = dr)
+  cd <- getCoreData(drainage) %>%
+    cleanData(drainage) %>%
+    mergeSites(drainage) %>%
+    mutate(drainage = drainage)
 
   save(cd, file = cdFile)
 }
+
+#################################
+# Detection model
+##################
+#
+#
+
+propSampled <- 1
+(start <- Sys.time())
+dddD <- cd %>%
+  filter(  species == speciesIn,
+           cohort >= minCohort,
+           sampleInterval < maxSampleInterval # this removes the later yearly samples. Want to stick with seasonal samples
+
+           # tag %in% sample(unique(tag), propSampled*length(unique(tag)))
+  )  %>% #,distMoved < 48, distMoved > 0, enc == 1)
+  prepareDataForJags()
+
+ddD <- dddD %>% runDetectionModel(parallel = TRUE)
+done <- Sys.time()
+(elapsed <- done - start)
+
+
 
 #################################
 # Movement model
@@ -40,31 +83,41 @@ if ( file.exists(cdFile) ) {
 #
 #
 
+# need to check grBeta estimates
+
 propSampled <- 1
 (start <- Sys.time())
-ddd <- cd %>%
-  filter(  species == "bkt",
-           cohort >= 2002,
-           sampleInterval < 200 # this removes the later yearly samples. Want to stick with seasonal samples
+dddG <- cd %>%
+  filter(  species == speciesIn,
+           cohort >= minCohort,
+           sampleInterval < maxSampleInterval, # this removes the later yearly samples. Want to stick with seasonal samples
+           enc == 1
            # tag %in% sample(unique(tag), propSampled*length(unique(tag)))
   )  %>% #,distMoved < 48, distMoved > 0, enc == 1)
   prepareDataForJags()
 
-dd <- ddd %>% runGrowthModel()
+ddG <- dddG %>% runGrowthModel(parallel = TRUE)
 done <- Sys.time()
 (elapsed <- done - start)
 
-# get cotoffYOY right
+# get cutoffYOY right
+
+whiskerplot(ddG, parameters = "muGrBetaInt")
+traceplot(ddG, parameters = "muGrBetaInt")
+
+whiskerplot(ddG, parameters = "muGrBeta")
+
+
 
 st <- 9355
 end <- 9370
 data.frame(
   occ = c(st:end),
-  ddd$lengthDATA[st:end],
-  ddd$ind[st:end],
-  ddd$occ[st:end],
-  ddd$season[st:end],
-  ddd$riverDATA[st:end]
+  dddG$lengthDATA[st:end],
+  dddG$ind[st:end],
+  dddG$occ[st:end],
+  dddG$season[st:end],
+  dddG$riverDATA[st:end]
 )
 
 #To do:

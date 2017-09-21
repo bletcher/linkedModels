@@ -1,0 +1,288 @@
+var z[ nAllRows ], isYOY[ nAllRows ];
+
+model{
+
+  ############################
+  # Variable standardization #
+  ############################
+
+  ############ standardized length for sizeBetas
+  for( i in 1:(nEvalRows) ){
+    stdLength[ evalRows[i] ] <-  ( length[ evalRows[i] ] - lengthMean[ season[ evalRows[i]],zRiv[ evalRows[i] ] ] ) /
+      lengthSd[ season[ evalRows[i]],zRiv[ evalRows[i] ] ]
+
+
+    #### std temp and flow for all observations [including augmented zRiv obs]
+    stdFlow[ evalRows[ i ] ] <- ( flowDATA[ evalRows[ i ] ] -  flowMeanDATA[ season[ evalRows[i] ],zRiv[ evalRows[ i ] ] ])/
+      flowSDDATA[ season[ evalRows[i] ],zRiv[ evalRows[ i ] ] ]
+
+    stdTemp[ evalRows[ i ] ] <- ( tempDATA[ evalRows[ i ] ] -  tempMeanDATA[ season[ evalRows[i] ],zRiv[ evalRows[ i ] ] ])/
+      tempSDDATA[ season[ evalRows[i] ],zRiv[ evalRows[ i ] ] ]
+
+  }
+
+  # standardized values for the last row for each individual
+  for( i in 1:( nLastRows ) ){
+    stdLength[ lastRows[ i ] ] <-  ( length[ lastRows[i] ] - lengthMean[ season[ lastRows[i]],zRiv[ lastRows[i] ] ] ) /
+      lengthSd[ season[ lastRows[i]],zRiv[ lastRows[i] ] ]
+
+    stdFlow[ lastRows[ i ] ] <- ( flowDATA[ lastRows[ i ] ] -  flowMeanDATA[ season[ lastRows[i] ],zRiv[ lastRows[ i ] ] ])/
+      flowSDDATA[ season[ lastRows[i] ],zRiv[ lastRows[ i ] ] ]
+
+    stdTemp[ lastRows[ i ] ] <- ( tempDATA[ lastRows[ i ] ] -  tempMeanDATA[ season[ lastRows[i] ],zRiv[ lastRows[ i ] ] ])/
+      tempSDDATA[ season[ lastRows[i] ],zRiv[ lastRows[ i ] ] ]
+  }
+
+  # Length estimates for the first observation of each individual
+  for( i in 1:nFirstObsRows ){
+    length[ firstObsRows[i] ] ~ dnorm( 80,0.001 )
+    lengthDATA[ firstObsRows[i] ] ~ dnorm( length[ firstObsRows[i] ],9 )
+  }
+
+  ############################
+  ###### YOY variable ########
+  ############################
+  # 1 for YOY, 2 for not YOY
+
+  for( i in 1:nEvalRows ){
+    isYOY1[ evalRows[ i ] ] ~ dinterval( length[ evalRows[ i ] ],
+                                         cutoffYOYDATA[ season[ evalRows[i] ],zRiv[ evalRows[ i ] ], year[ evalRows[ i ] ] ]
+    )
+    isYOY[ evalRows[ i ] ] <- isYOY1[ evalRows[ i ] ] + 1
+
+  }
+
+  # isYOY for last observation for each individual
+  for( i in 1:( nLastRows ) ){
+
+    isYOY1[ lastRows[ i ] ] ~ dinterval( length[ lastRows[ i ] ],
+                                         cutoffYOYDATA[ season[ lastRows[i] ],zRiv[ lastRows[ i ] ], year[ lastRows[ i ] ] ]
+    )
+    isYOY[ lastRows[ i ] ] <- isYOY1[ lastRows[ i ] ] + 1
+  }
+
+  ############################
+  ###### Growth Model ########
+  ############################
+
+  for( i in 1:nEvalRows ){
+
+    length[ evalRows[i]+1 ] <- length[ evalRows[i] ] +  gr[ evalRows[i] ]
+
+    lengthDATA[ evalRows[i] + 1 ] ~ dnorm( length[ evalRows[i] + 1 ], 9/1 )
+
+    gr[ evalRows[i] ] ~ dnorm( expectedGR[ evalRows[ i ] ] / intervalDays[ evalRows[ i ] ] * intervalMeans[ season[ evalRows[i] ],zRiv[ evalRows[ i ] ] ]  ,
+                               1/expectedGRSigma[ evalRows[ i ] ]^2 )
+
+
+    expectedGR[ evalRows[ i ] ]  <-
+
+      grBetaInt[ isYOY[ evalRows[i] ],season[ evalRows[i] ],zRiv[ evalRows[ i ] ], year[ evalRows[ i ] ] ]
+
+    + grBeta[ 1,isYOY[ evalRows[i] ],season[ evalRows[i] ],zRiv[ evalRows[ i ] ] ] * stdLength[ evalRows[ i ] ]
+    + grBeta[ 2,isYOY[ evalRows[i] ],season[ evalRows[i] ],zRiv[ evalRows[ i ] ] ] *   stdFlow[ evalRows[ i ] ]
+    + grBeta[ 3,isYOY[ evalRows[i] ],season[ evalRows[i] ],zRiv[ evalRows[ i ] ] ] *   stdTemp[ evalRows[ i ] ]
+    + grBeta[ 4,isYOY[ evalRows[i] ],season[ evalRows[i] ],zRiv[ evalRows[ i ] ] ] *   stdFlow[ evalRows[ i ] ] * stdTemp[ evalRows[ i ] ]
+
+    expectedGRSigma[ evalRows[ i ] ]  <- grSigmaBeta[ isYOY[ evalRows[i] ],season[ evalRows[i] ],zRiv[ evalRows[ i ] ], year[ evalRows[ i ] ] ]
+
+  }
+
+  ############## Growth Priors ###############
+
+  for( yoy in 1:2 ){
+    for( r in 1:( nRivers+1 ) ){
+      for( s in 1:4 ){
+
+
+        for(y in 1:nYears){
+
+          grSigmaBeta[ yoy,s,r,y ]  ~ dnorm( muGrSigmaBeta[ yoy,s,r ], 1 / sigmaGrSigmaBeta[ yoy,s,r ] ^ 2 )T(0,)
+          grBetaInt[ yoy,s,r,y ]  ~ dnorm(   muGrBetaInt[ yoy,s,r ],   1 / sigmaGrBetaInt[ yoy,s,r ] ^ 2 )
+
+        }
+
+        muGrSigmaBeta[ yoy,s,r ] ~ dnorm( 0,0.001 )T(0,)
+        sigmaGrSigmaBeta[ yoy,s,r ] ~ dunif( 0,100 )
+
+        sigmaGrBetaInt[ yoy,s,r ] ~ dunif( 0,100 )
+
+      }
+
+      muGrBetaInt[ yoy,1,r ] ~ dnorm( 25, 0.01 )
+      muGrBetaInt[ yoy,2,r ] ~ dnorm( 10, 0.01 )
+      muGrBetaInt[ yoy,3,r ] ~ dnorm( 8, 0.01 )
+      muGrBetaInt[ yoy,4,r ] ~ dnorm( 4, 0.01 )
+
+    }
+  }
+
+  for( r in 1:( nRivers+1 ) ){
+    for (i in 1:4){
+
+      for( s in 1 ){
+        grBeta[ i,1,s,r ] ~ dnorm( muGrBeta[ i,1 ],sigmaGrBeta[ i,1 ] )
+      }
+
+      for( s in 2 ){
+        grBeta[ i,1,s,r ] ~ dunif( -0.001,0.001 ) # essentially set these = 0. Very little data
+      }
+
+      for( s in 3:4 ){
+        grBeta[ i,1,s,r ] ~ dnorm( muGrBeta[ i,1 ],sigmaGrBeta[ i,1 ] )
+      }
+
+      for( s in 1:4 ){
+        grBeta[ i,2,s,r ] ~ dnorm( muGrBeta[ i,2 ],sigmaGrBeta[ i,2 ] )
+      }
+
+    }
+  }
+
+  for ( yoy in 1:2 ){
+    for(i in 1:4){
+
+      muGrBeta[ i,yoy ] ~ dnorm( 0,0.001 )
+      sigmaGrBeta[ i,yoy ] ~ dunif( 0,100 )
+
+    }
+  }
+
+  ############################
+  ##### Recapture model#######
+  ############################
+
+  for(i in 1:nEvalRows){
+
+    logit( p[ evalRows[i]+1 ] ) <- pBetaInt[ isYOY[ evalRows[i] + 1 ],season[ evalRows[i] + 1 ],year[ evalRows[i] + 1 ],zRiv[ evalRows[ i ] + 1 ] ]
+    + pBeta[ isYOY[ evalRows[i] + 1 ],season[ evalRows[i] + 1 ],year[ evalRows[i] + 1 ],zRiv[ evalRows[ i ] + 1 ] ] * stdLength[ evalRows[ i ] + 1 ]
+
+  }
+  ############## Recapture priors ##################
+
+  for( yoy in 1:2 ){
+    for( s in 1:4 ){
+      for( r in 1:(nRivers+1) ){
+        for(y in 1:nYears){
+
+          pBetaInt[ yoy,s,y,r ] ~ dnorm( 0,0.667 )
+          pBeta[ yoy,s,y,r ] ~ dnorm( muPBeta[ yoy ],sigmaPBeta[ yoy ]  )
+
+        }
+      }
+    }
+  }
+
+  for ( yoy in 1:2 ){
+    muPBeta[ yoy ] ~ dnorm( 0,0.667 )
+    sigmaPBeta[ yoy ] ~ dgamma( 2,1/10 )
+  }
+
+  ############################
+  ##### Survival model########
+  ############################
+
+  for(i in 1:nEvalRows){
+    logit( phi[ evalRows[i] ] ) <-
+
+      phiBetaInt[ isYOY[ evalRows[i] ], season[ evalRows[i] ],zRiv[ evalRows[ i ] ] ]
+
+
+    +  phiBeta[ 1,isYOY[ evalRows[i] ],season[ evalRows[i] ],zRiv[ evalRows[ i ] ] ] *  stdLength[ evalRows[ i ] ]
+    +  phiBeta[ 2,isYOY[ evalRows[i] ],season[ evalRows[i] ],zRiv[ evalRows[ i ] ] ] *  stdFlow[ evalRows[ i ] ]
+    +  phiBeta[ 3,isYOY[ evalRows[i] ],season[ evalRows[i] ],zRiv[ evalRows[ i ] ] ] *  stdTemp[ evalRows[ i ] ]
+    +  phiBeta[ 4,isYOY[ evalRows[i] ],season[ evalRows[i] ],zRiv[ evalRows[ i ] ] ] *  stdFlow[ evalRows[ i ] ] *   stdTemp[ evalRows[ i ] ]
+
+  }
+
+  ############## survival priors #####################
+
+  for ( yoy in 1:2 ){
+    for( s in 1:4 ){
+      for( r in 1:(nRivers+1) ){
+        for(i in 1:4){
+
+          phiBeta[ i,yoy,s,r ] ~ dnorm( muPhiBeta[ i,yoy ],sigmaPhiBeta[ i,yoy ] )
+
+        }
+
+        phiBetaInt[ yoy,s,r ]  ~ dnorm( 0,1.5 )T(-3.5,3.5)
+      }
+    }
+  }
+
+  for ( yoy in 1:2 ){
+    for(i in 1:4){
+      muPhiBeta[ i,yoy ] ~ dnorm( 0,0.667 )
+      sigmaPhiBeta[ i,yoy ] ~ dgamma( 2,1/10 )
+    }
+  }
+
+  ############################
+  ######## psi model #########
+  ############################
+
+  for( i in 1:nEvalRows ){
+    sumPsi[evalRows[i]]<-sum(ePsi[evalRows[i],])
+
+    for( r2 in 1:nRivers ){
+      # normal priors on logit
+      lpsi[evalRows[i],r2] <- psiBeta[season[evalRows[i]],riverDATA[evalRows[i]],r2]
+
+      ePsi[evalRows[i],r2]<-exp(lpsi[evalRows[i],r2])*(1-(riverDATA[evalRows[i]]==r2))
+
+      #Constrain each set of psi's to sum to one
+      psi[evalRows[i],r2]<-( ePsi[evalRows[i],r2] / (1+sumPsi[evalRows[i]]) ) * ( 1-(riverDATA[evalRows[i]]==r2) )
+      + ( 1 / (1+sumPsi[evalRows[i]]) )  *    (riverDATA[evalRows[i]]==r2)
+    }
+  }
+
+  ############## Psi Priors ##################
+  for( s in 1:4 ) {
+    for(r in 1:(nRivers)){
+      for(r2 in 1:(nRivers)){
+
+        psiBeta[s,r,r2]~dnorm(0,1/2.25)
+
+      }
+    }
+  }
+
+  ############################
+  ##### Likelihoods ##########
+  ############################
+
+  # Initial conditions:
+  # 1) individuals enter the sample with probability 1
+  # 2) individuals enter the sample alive, with probability 1
+
+  for(i in 1:nFirstObsRows){
+    z[ firstObsRows[i] ] <- 1
+    zRiv[ firstObsRows[i] ] <- riverDATA[ firstObsRows[i] ] + 1
+  }
+
+  for(i in 1:nEvalRows){
+
+    # State of alive (z)
+    z[ evalRows[i]+1 ] ~ dbern( survProb[ evalRows[i] ] ) #Do or don't suvive to i
+    survProb[evalRows[i]] <- phi[ evalRows[i] ] ^ ( intervalDays[ evalRows[i] ] / intervalMeans[ season[ evalRows[i] ],zRiv[ evalRows[ i ] ] ] )
+    * z[ evalRows[i] ]
+
+    # State of location (zRiv)
+    riverDATA[ evalRows[i]+1 ] ~ dcat( psi[ evalRows[i], ] ^ ( intervalDays[ evalRows[i] ] / intervalMeans[ season[ evalRows[i] ],zRiv[ evalRows[ i ] ] ] ) )
+
+    zRiv[evalRows[i]+1] <- riverDATA[ evalRows[i]+1 ]
+    * z[ evalRows[i]+1 ]
+    + 1
+
+    # Observation of live encounters
+    encDATA[ evalRows[i]+1 ] ~ dbern( obsProb[ evalRows[i]+1 ] )
+
+    obsProb[ evalRows[i]+1 ]<-
+      p[ evalRows[i]+1 ]                 # Capture probability (calculated above).
+    * z[ evalRows[i]+1 ]                 # Must be alive to be capturable.
+    * availableDATA[ evalRows[i]+1 ]     # Must be on the study site to be capturable.
+    * propSampledDATA[ season[ evalRows[i] + 1 ],zRiv[ evalRows[ i ] + 1 ], year[ evalRows[ i ] + 1 ] ]   # proportion of the stream section that was sampled for each season,river,year combination
+  }
+
+} #model bracket

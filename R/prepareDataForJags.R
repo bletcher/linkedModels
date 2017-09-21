@@ -28,6 +28,7 @@ prepareDataForJags <- function(d){
   nFirstObsRows <- length(firstObsRows)
   nLastObsRows <- length(lastObsRows)
 
+  nAllRows <- nEvalRows + nLastObsRows
 
   load(file = "./data/cutoffYOYInclSpring1DATA.RData")
   cutoffYOYDATA <- cutoffYOYInclSpring1DATA # update using getYOYCutoffs()
@@ -39,7 +40,8 @@ prepareDataForJags <- function(d){
     summarize( meanLen = mean(observedLength, na.rm = T),
                sdLen = sd(observedLength, na.rm = T))
 
-  data <- list( lengthDATA = d$observedLength,
+  data <- list( encDATA = d$enc,
+                lengthDATA = d$observedLength,
                 riverDATA = d$riverN,
                 #ind = d$tagIndex,
                 nRivers = nRivers,
@@ -53,46 +55,13 @@ prepareDataForJags <- function(d){
                 nEvalRows = nEvalRows, evalRows = evalRows,
                 nFirstObsRows = nFirstObsRows, firstObsRows = firstObsRows,
                 nLastObsRows = nLastObsRows, lastObsRows = lastObsRows,
+                nAllRows = nAllRows,
                 nSeasons = nSeasons,
                 lengthMean = matrix(means$meanLen,c(nSeasons,nRivers),byrow = T),
                 lengthSD = matrix(means$sdLen,c(nSeasons,nRivers),byrow = T),
                 cutoffYOYDATA = cutoffYOYDATA,
-                sampleInterval = sampleInterval
+                sampleInterval = d$sampleInterval
   )
   return(data)
-}
-
-
-
-#'Run the growth model
-#'
-#'@param drainage Which drainage, "west" or "stanley"
-#'@return a data frame
-#'@export
-
-runGrowthModel <- function(d){   #iterToUse, firstNonBurnIter, chainToUse, simInfo, grDir, out){
-
-  inits <- function(){
-    #list(grBetaInt = array(rnorm(d$nSeasons*d$nRivers,0,2.25),c(d$nSeasons,d$nRivers)))
-    #list(grBetaInt = array(rnorm(2*4*4*6,0,2.25),c(2,4,4,6)))
-    list(grBetaInt = array(rnorm(2*ddd$nSeasons*ddd$nRivers*ddd$nYears,0,2.25),c(2,ddd$nSeasons,ddd$nRivers,ddd$nYears)))
-  }
-
-  params <- c("grBetaInt","muGrBetaInt","sigmaGrBetaInt","grBeta","grSigmaBeta","length")
-
-  outGR <- jags(data = d,
-                inits = inits,
-                parameters.to.save = params,
-                model.file = "./jags/grModel.jags",
-                n.chains = 3,
-                n.adapt = 1000, #1000
-                n.iter = 2000,
-                n.burnin = 1000,
-                n.thin = 4,
-                parallel = TRUE
-  )
-
-  #outGR$movementModelIterUsed <- iter
-  return(outGR)
 }
 
