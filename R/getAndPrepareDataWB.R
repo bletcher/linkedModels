@@ -11,9 +11,9 @@ getCoreData <- function(drainage = "west"){
   cdWB <- createCoreData(sampleType = "electrofishing", #"stationaryAntenna","portableAntenna"),
                          whichDrainage = drainage,
                          columnsToAdd=c("sampleNumber","river","riverMeter","survey",'observedLength','observedWeight')) %>%
-    addTagProperties( columnsToAdd=c("cohort","species","dateEmigrated","sex","species")) %>%
+    addTagProperties( columnsToAdd = c("cohort","species","dateEmigrated","sex","species")) %>%
     dplyr::filter( !is.na(tag), area %in% c("trib","inside","below","above") ) %>%
-    createCmrData( maxAgeInSamples=20, inside=F) %>%
+    createCmrData( maxAgeInSamples = 20, inside = F, censorDead = F, censorEmigrated = T) %>%
     addSampleProperties() %>%
     addEnvironmental() %>%
     addKnownZ() %>%
@@ -117,7 +117,7 @@ minimalData <- function(d){
 #'@return a list of propSampleDATA, and zeroSectionsDATA
 #'@export
 
-getPropSampled <- function(){
+getPropSampled <- function(nSeasons,nRivers,nYears){
 
   #check data
 

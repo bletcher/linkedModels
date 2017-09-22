@@ -56,9 +56,7 @@ prepareDataForJags <- function(d){
     summarize( meanLen = mean(observedLength, na.rm = T),
                sdLen = sd(observedLength, na.rm = T))
 
-  propSampled <- getPropSampled()
-
-  d$available01 <- ifelse(d$detectionDate < d$dateEmigrated, 1, 0)
+  propSampled <- getPropSampled(nSeasons,nRivers,nYears)
 
   data <- list( encDATA = d$enc,
                 lengthDATA = d$observedLength,
@@ -83,8 +81,8 @@ prepareDataForJags <- function(d){
                 cutoffYOYDATA = cutoffYOYDATA,
                 sampleInterval = d$sampleInterval,
                 zForInit = d$zForInit, # z for firstObs gets set to zero in jags. Can't set values in inits for values assigned in jags
-                propSampledDATA = propSampled$propSampledDATA,
-                available01 = d$available01
+                propSampledDATA = propSampled$propSampledDATA
+
   )
   return(data)
 }

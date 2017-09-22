@@ -56,14 +56,11 @@ if ( file.exists(cdFile) ) {
 #
 #
 
-propSampled <- 1
 (start <- Sys.time())
 dddD <- cd %>%
   filter(  species == speciesIn,
            cohort >= minCohort,
            sampleInterval < maxSampleInterval # this removes the later yearly samples. Want to stick with seasonal samples
-
-           # tag %in% sample(unique(tag), propSampled*length(unique(tag)))
   )  %>%
   prepareDataForJags()
 
@@ -73,18 +70,19 @@ done <- Sys.time()
 
 # save output, calc densities
 
-st <- 2580
-end <- 2600
-data.frame(
+st <- 160
+end <- 180
 
-  dddD$lengthDATA[st:end],
-  dddD$ind[st:end],
-  dddD$zForInit[st:end],
-  dddD$season[st:end],
-  dddD$riverDATA[st:end],
-  dddD$encDATA[st:end],
-  dddD$year[st:end],
-  dddD$yearForCutoff[st:end]
+data.frame(
+  len = dddD$lengthDATA[st:end],
+  sample = dddD$sample[st:end],
+  ind = dddD$ind[st:end],
+  enc = dddD$encDATA[st:end],
+  zForInit = dddD$zForInit[st:end],
+  season = dddD$season[st:end],
+  river = dddD$riverDATA[st:end],
+  year = dddD$year[st:end],
+  yearForCutoff = dddD$yearForCutoff[st:end]
 )
 
 #################################
