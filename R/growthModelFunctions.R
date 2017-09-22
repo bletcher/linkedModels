@@ -11,7 +11,7 @@ runGrowthModel <- function(d, parallel = FALSE){   #iterToUse, firstNonBurnIter,
   inits <- function(){
     #list(grBetaInt = array(rnorm(d$nSeasons*d$nRivers,0,2.25),c(d$nSeasons,d$nRivers)))
     #list(grBetaInt = array(rnorm(2*4*4*6,0,2.25),c(2,4,4,6)))
-    list(grBetaInt = array(rnorm(2*ddd$nSeasons*ddd$nRivers*ddd$nYears,0,2.25),c(2,ddd$nSeasons,ddd$nRivers,ddd$nYears)))
+    list(grBetaInt = array(rnorm(2*dddG$nSeasons*dddG$nRivers*dddG$nYears,0,2.25),c(2,dddG$nSeasons,dddG$nRivers,dddG$nYears)))
   }
 
   params <- c("grBetaInt","muGrBetaInt","sigmaGrBetaInt","grBeta","muGrBeta","grSigmaBeta","length")

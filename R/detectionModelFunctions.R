@@ -7,7 +7,10 @@
 runDetectionModel <- function(d, parallel = FALSE){   #iterToUse, firstNonBurnIter, chainToUse, simInfo, grDir, out){
 
   inits <- function(){
-    list(pBetaInt = array(rnorm(2*ddd$nSeasons*ddd$nRivers*ddd$nYears,0,2.25),c(2,ddd$nSeasons,ddd$nRivers,ddd$nYears)))
+    list(#pBetaInt = array(rnorm(dddD$nSeasons*dddD$nRivers*dddD$nYears,0,2.25),c(dddD$nSeasons,dddD$nRivers,dddD$nYears)),
+         pBetaInt = array(runif(dddD$nSeasons*dddD$nRivers*dddD$nYears, -2.5, 2),c(dddD$nSeasons,dddD$nRivers,dddD$nYears)),
+         z = dddD$zForInit
+         )
   }
 
   params <- c("pBetaInt","phiBetaInt")

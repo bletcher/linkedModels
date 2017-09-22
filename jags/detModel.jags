@@ -8,7 +8,7 @@ model{
 
   for(i in 1:nEvalRows){
 
-    logit( p[ evalRows[i]+1 ] ) <- pBetaInt[ season[ evalRows[i] + 1 ],riverDATA[ evalRows[ i ] + 1 ],year[ evalRows[i] + 1 ] ]
+    logit( p[ evalRows[i] + 1 ] ) <- pBetaInt[ season[ evalRows[i] + 1 ],riverDATA[ evalRows[i] + 1 ],year[ evalRows[i] + 1 ] ]
 #                                    + pBeta[ season[ evalRows[i] + 1 ],year[ evalRows[i] + 1 ],riverDATA[ evalRows[ i ] + 1 ] ] * stdLength[ evalRows[ i ] + 1 ]
 
   }
@@ -29,16 +29,16 @@ model{
   ############################
 
   for(i in 1:nEvalRows){
-    logit( phi[ evalRows[i] ] ) <-
 
-      phiBetaInt[ season[ evalRows[i] ],riverDATA[ evalRows[ i ] ] ]
+    logit( phi[ evalRows[i] ] ) <-
+      phiBetaInt[ season[ evalRows[i] ],riverDATA[ evalRows[i] ] ]
 
   }
 
   ############## survival priors #####################
 
-    for( s in 1:4 ){
-      for( r in 1:(nRivers+1) ){
+    for( s in 1:nSeasons ){
+      for( r in 1:(nRivers) ){
 
         # ADD year since have no flow or temp?
         phiBetaInt[ s,r ]  ~ dnorm( 0,1.5 )T(-3.5,3.5)
@@ -61,7 +61,7 @@ model{
 
     # State of alive (z)
     z[ evalRows[i]+1 ] ~ dbern( survProb[ evalRows[i] ] ) #Do or don't suvive to i
-    survProb[evalRows[i]] <- phi[ evalRows[i] ] ^ ( sampleInterval[ evalRows[i] ] )
+    survProb[evalRows[i]] <- phi[ evalRows[i] ] #^ ( sampleInterval[ evalRows[i] ] )
                              * z[ evalRows[i] ]
 
     # Observation of live encounters
@@ -70,8 +70,8 @@ model{
     obsProb[ evalRows[i] + 1 ] <-
       p[ evalRows[i] + 1 ]                 # Capture probability (calculated above).
     * z[ evalRows[i] + 1 ]                 # Must be alive to be capturable.
-#    * availableDATA[ evalRows[i] + 1 ]     # Must be on the study site to be capturable.
-# ADD BACK IN    * propSampledDATA[ season[ evalRows[i] + 1 ],riverDATA[ evalRows[ i ] + 1 ], year[ evalRows[ i ] + 1 ] ]   # proportion of the stream section that was sampled for each season,river,year combination
+    * availableDATA[ evalRows[i] + 1 ]     # Must be on the study site to be capturable.
+    * propSampledDATA[ season[ evalRows[i] + 1 ],riverDATA[ evalRows[ i ] + 1 ], year[ evalRows[ i ] + 1 ] ]   # proportion of the stream section that was sampled for each season,river,year combination
   }
 
 } #model bracket

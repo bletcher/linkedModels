@@ -1,5 +1,8 @@
+# next - add species to det and gr models (everywhere)
+
+
 # species-, age, location-specific rates of size-dep growth
-#estimate spp-sp abundances for each river for each sample
+# estimate spp-sp abundances for each river for each sample
 # size effect ~ 1/spp/river/season/year
 # run models:
 # size
@@ -24,9 +27,9 @@ library(lubridate)
 # selection criteria
 
 drainage <- "west" # ==
-speciesIn == "bkt" # ==
-minCohort == 2002 # >=
-maxSampleInterval == 200 # <
+speciesIn <- "bkt" # ==
+minCohort <- 2002 # >=
+maxSampleInterval <- 200 # <
 
 
 ######################################################
@@ -61,14 +64,28 @@ dddD <- cd %>%
            sampleInterval < maxSampleInterval # this removes the later yearly samples. Want to stick with seasonal samples
 
            # tag %in% sample(unique(tag), propSampled*length(unique(tag)))
-  )  %>% #,distMoved < 48, distMoved > 0, enc == 1)
+  )  %>%
   prepareDataForJags()
 
 ddD <- dddD %>% runDetectionModel(parallel = TRUE)
 done <- Sys.time()
 (elapsed <- done - start)
 
+# save output, calc densities
 
+st <- 2580
+end <- 2600
+data.frame(
+
+  dddD$lengthDATA[st:end],
+  dddD$ind[st:end],
+  dddD$zForInit[st:end],
+  dddD$season[st:end],
+  dddD$riverDATA[st:end],
+  dddD$encDATA[st:end],
+  dddD$year[st:end],
+  dddD$yearForCutoff[st:end]
+)
 
 #################################
 # Movement model
@@ -84,6 +101,7 @@ done <- Sys.time()
 #
 
 # need to check grBeta estimates
+# add species variable category
 
 propSampled <- 1
 (start <- Sys.time())
