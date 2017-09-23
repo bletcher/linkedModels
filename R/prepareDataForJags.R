@@ -67,6 +67,7 @@ prepareDataForJags <- function(d){
                 #nInd = nInd,
                 #nOcc = nOcc,
                 #occ = d$sampleIndex - minOcc + 1,
+                species = as.numeric(as.factor(d$species)),
                 season = d$season,
                 year = d$year - min(d$year) + 1,
                 yearForCutoff = d$year - d$minYear + 1, # minYear is watershed-specific

@@ -8,22 +8,22 @@ model{
 
   for(i in 1:nEvalRows){
 
-    logit( p[ evalRows[i] + 1 ] ) <- pBetaInt[ species[ evalRows[i] + 1 ],season[ evalRows[i] + 1 ],riverDATA[ evalRows[i] + 1 ],year[ evalRows[i] + 1 ] ]
+    logit( p[ evalRows[i] + 1 ] ) <- pBetaInt[ season[ evalRows[i] + 1 ],riverDATA[ evalRows[i] + 1 ],year[ evalRows[i] + 1 ] ]
 #                                    + pBeta[ season[ evalRows[i] + 1 ],year[ evalRows[i] + 1 ],riverDATA[ evalRows[ i ] + 1 ] ] * stdLength[ evalRows[ i ] + 1 ]
 
   }
   ############## Recapture priors ##################
-  for( spp in 1:nSpecies ){
+
     for( s in 1:nSeasons ){
       for( r in 1:(nRivers) ){
         for(y in 1:nYears){
 
-          pBetaInt[ spp,s,r,y ] ~ dnorm( 0,0.667 )
+          pBetaInt[ s,r,y ] ~ dnorm( 0,0.667 )
 
         }
       }
     }
-  }
+
   ############################
   ##### Survival model########
   ############################
@@ -31,20 +31,20 @@ model{
   for(i in 1:nEvalRows){
 
     logit( phi[ evalRows[i] ] ) <-
-      phiBetaInt[ species[ evalRows[i] ],season[ evalRows[i] ],riverDATA[ evalRows[i] ] ]
+      phiBetaInt[ season[ evalRows[i] ],riverDATA[ evalRows[i] ] ]
 
   }
 
   ############## survival priors #####################
-  for( spp in 1:nSpecies ){
+
     for( s in 1:nSeasons ){
       for( r in 1:(nRivers) ){
 
         # ADD year since have no flow or temp?
-        phiBetaInt[ spp,s,r ]  ~ dnorm( 0,1.5 )T(-3.5,3.5)
+        phiBetaInt[ s,r ]  ~ dnorm( 0,1.5 )T(-3.5,3.5)
       }
     }
-  }
+
   ############################
   ##### Likelihoods ##########
   ############################

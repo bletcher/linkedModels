@@ -27,7 +27,7 @@ library(lubridate)
 # selection criteria
 
 drainage <- "west" # ==
-speciesIn <- "bkt" # ==
+speciesIn <- c("bkt", "bnt") #"bkt" # ==
 minCohort <- 2002 # >=
 maxSampleInterval <- 200 # <
 
@@ -67,6 +67,10 @@ dddD <- cd %>%
 ddD <- dddD %>% runDetectionModel(parallel = TRUE)
 done <- Sys.time()
 (elapsed <- done - start)
+
+whiskerplot(ddD, parameters = "pBetaInt")
+
+#getDensities(ddD)
 
 # save output, calc densities
 

@@ -8,7 +8,7 @@ runDetectionModel <- function(d, parallel = FALSE){   #iterToUse, firstNonBurnIt
 
   inits <- function(){
     list(#pBetaInt = array(rnorm(dddD$nSeasons*dddD$nRivers*dddD$nYears,0,2.25),c(dddD$nSeasons,dddD$nRivers,dddD$nYears)),
-         pBetaInt = array(runif(dddD$nSeasons*dddD$nRivers*dddD$nYears, -2.5, 2),c(dddD$nSeasons,dddD$nRivers,dddD$nYears)),
+         pBetaInt = array(runif(dddD$nSpecies*dddD$nSeasons*dddD$nRivers*dddD$nYears, -2.5, 2),c(dddD$nSpecies,dddD$nSeasons,dddD$nRivers,dddD$nYears)),
          z = dddD$zForInit
          )
   }
@@ -29,4 +29,20 @@ runDetectionModel <- function(d, parallel = FALSE){   #iterToUse, firstNonBurnIt
 
   #outDet$movementModelIterUsed <- iter
   return(outDet)
+}
+
+
+#'Get (estimate) densities by section, river, year based on num sammples and p from the density model
+#'
+#'@param d a dataset created using  runDetectionModel()
+#'@return a data frame
+#'@export
+
+getDensities <- function(d){
+
+  d %>%
+    filter( enc == 1 ) %>%
+    group_by( season,riverOrdered,year ) %>%
+    summarise(  count = n() )
+
 }
