@@ -42,11 +42,9 @@ runDetectionModel <- function(d, parallel = FALSE){   #iterToUse, firstNonBurnIt
 #'@return a data frame
 #'@export
 
-getDensities <- function(dddd,dd, meanOrIter = "mean", sampleToUse = 1, chainToUse = 1){
+getDensities <- function(dddd,dd, meanOrIter = "mean", sampleToUse = sampleToUse){
 
-  try( if (sampleToUse > dd$mcmc.info$n.samples/dd$mcmc.info$n.chains) stop("requested iteration beyond max # of iterations") )
-  try( if (chainToUse > dd$mcmc.info$n.chains) stop("requested chain beyond max # of chains") )
-
+  try( if (sampleToUse > dd$mcmc.info$n.samples) stop("requested iteration beyond max # of iterations") )
 
   counts <- dddd %>%
     filter( enc == 1 ) %>%
@@ -57,16 +55,10 @@ getDensities <- function(dddd,dd, meanOrIter = "mean", sampleToUse = 1, chainToU
             riverN = as.numeric(riverOrdered),
             yearN = year - min(year) + 1
           ) %>%
-    ungroup() #%>%
-#    dplyr::select( speciesN, seasonN, riverN, yearN, count )
-
+    ungroup()
 
   if ( meanOrIter == 'mean') ddIn <- dd$q50$pBetaInt
-
-  if ( meanOrIter == 'iter') {
-    sampleN <- sampleToUse + dd$mcmc.info$n.samples/dd$mcmc.info$n.chains * (chainToUse - 1)
-    ddIn <- dd$sims.list$pBetaInt[ sampleN,,,, ]
-  }
+  if ( meanOrIter == 'iter') ddIn <- dd$sims.list$pBetaInt[ sampleToUse,,,, ]
 
   #pBetaInt[ species,season,riverDATA,year ]
   # convert array to data frame

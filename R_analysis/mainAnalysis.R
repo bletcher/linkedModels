@@ -46,7 +46,8 @@ if ( file.exists(cdFile) ) {
   cd <- getCoreData(drainage) %>%
     cleanData(drainage) %>%
     mergeSites(drainage) %>%
-    mutate(drainage = drainage)
+    mutate(drainage = drainage,
+           countP = NA) # placeholder so prepareDataForJags() works for detection model
 
   save(cd, file = cdFile)
 }
@@ -70,27 +71,8 @@ ddD <- dddD %>% runDetectionModel(parallel = TRUE)
 done <- Sys.time()
 (elapsed <- done - start)
 
-whiskerplot(ddD, parameters = "pBetaInt")
-
-den <- getDensities(ddddD, ddD, meanOrIter = "mean", sampleToUse = 30, chainToUse = 1 )
-ggplot(filter(den,!is.na(countP)),aes(year,countP, color = species)) + geom_point() + geom_line() + facet_grid(riverOrdered~season)
-ggplot(filter(den,!is.na(countP)),aes(count,countP, color = species)) + geom_point()
-# save output, calc densities
-
-st <- 160
-end <- 180
-
-data.frame(
-  len = dddD$lengthDATA[st:end],
-  sample = dddD$sample[st:end],
-  ind = dddD$ind[st:end],
-  enc = dddD$encDATA[st:end],
-  zForInit = dddD$zForInit[st:end],
-  season = dddD$season[st:end],
-  river = dddD$riverDATA[st:end],
-  year = dddD$year[st:end],
-  yearForCutoff = dddD$yearForCutoff[st:end]
-)
+save(ddD, file = './data/out/ddD.RData')
+#whiskerplot(ddD, parameters = "pBetaInt")
 
 #################################
 # Movement model
@@ -108,20 +90,58 @@ data.frame(
 # need to check grBeta estimates
 # add species variable category
 
-propSampled <- 1
-(start <- Sys.time())
-dddG <- cd %>%
-  filter(  species == speciesIn,
+ddddG <- cd %>%
+  filter(  species %in% speciesIn,
            cohort >= minCohort,
            sampleInterval < maxSampleInterval, # this removes the later yearly samples. Want to stick with seasonal samples
            enc == 1
-           # tag %in% sample(unique(tag), propSampled*length(unique(tag)))
-  )  %>% #,distMoved < 48, distMoved > 0, enc == 1)
-  prepareDataForJags()
+  )
 
-ddG <- dddG %>% runGrowthModel(parallel = TRUE)
-done <- Sys.time()
-(elapsed <- done - start)
+# merge in density data, either overall means or single iterations at a time
+# meanOrIter ="mean" uses means of all iterations
+# meanOrIter ="iter" uses the sample that is the combo of sampleToUse and chainToUse (ignored if meanOrIter="mean")
+#  for numOfItersToUse samples
+
+######################################
+######################################
+meanOrIter = "mean"
+  itersToUse <- 1 #dummy placeholder
+
+### or  ###
+
+#meanOrIter = "iter"
+  chainToUse <- 1
+  numItersToUse <- 3
+  itersToUse <- sort(sample(((dd$mcmc.info$n.samples/dd$mcmc.info$n.chains) * (chainToUse - 1)):
+                            ((dd$mcmc.info$n.samples/dd$mcmc.info$n.chains) * (chainToUse - 0)),
+                          numItersToUse))
+######################################
+######################################
+###loop
+
+runOverIters <- list()
+elapsed <- list()
+# run the growth model for detection model iterations in itersToUse
+ii <- 0
+for (iter in itersToUse) {
+  ii <- ii + 1
+  print(c(ii,iter))
+  (start <- Sys.time())
+  # saving into a list for now, could also concat a dataframe with identifiers or map()
+
+  ddddG <- addDensityData( ddddG,ddD,ddddD,meanOrIter,iter )
+
+  dddG <- ddddG %>% prepareDataForJags()
+
+  ddG[[ii]] <- dddG %>% runGrowthModel(parallel = TRUE) #runGrowthModel(iter, firstNonBurnIter, chainToUse, simInfo, grDir, out)
+
+  done <- Sys.time()
+  (elapsed[[ii]] <- done - start)
+}
+
+
+
+
 
 # get cutoffYOY right
 

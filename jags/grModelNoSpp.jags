@@ -7,13 +7,13 @@ model {
 
   ############ standardized length for sizeBetas
   for( i in 1:(nEvalRows) ){
-    stdLength[ evalRows[i] ] <-  ( length[ evalRows[i] ] - lengthMean[ season[ evalRows[i]],riverDATA[ evalRows[i] ],species[ evalRows[i]] ] ) /
-      lengthSD[ season[ evalRows[i]],riverDATA[ evalRows[i] ],species[ evalRows[i]] ]
+    stdLength[ evalRows[i] ] <-  ( length[ evalRows[i] ] - lengthMean[ season[ evalRows[i]],riverDATA[ evalRows[i] ] ] ) /
+      lengthSD[ season[ evalRows[i]],riverDATA[ evalRows[i] ] ]
   }
 
   for( i in 1:( nLastObsRows ) ){
-    stdLength[ lastObsRows[ i ] ] <-  ( length[ lastObsRows[i] ] - lengthMean[ season[ lastObsRows[i]],riverDATA[ lastObsRows[i] ],species[ lastObsRows[i]] ] ) /
-      lengthSD[ season[ lastObsRows[i]],riverDATA[ lastObsRows[i] ],species[ lastObsRows[i]] ]
+    stdLength[ lastObsRows[ i ] ] <-  ( length[ lastObsRows[i] ] - lengthMean[ season[ lastObsRows[i]],riverDATA[ lastObsRows[i] ] ] ) /
+      lengthSD[ season[ lastObsRows[i]],riverDATA[ lastObsRows[i] ] ]
   }
 
   ############################
@@ -60,11 +60,11 @@ model {
     )
 
     expectedGR[ evalRows[i] ]  <-
-      grBetaInt[   isYOY[ evalRows[i] ],species[ evalRows[i]],season[ evalRows[i] ],riverDATA[ evalRows[i] ],year[ evalRows[i] ] ]
-    +    grBeta[1, isYOY[ evalRows[i] ],species[ evalRows[i]],season[ evalRows[i] ],riverDATA[ evalRows[i] ] ] * stdLength[ evalRows[ i ] ]
+      grBetaInt[   isYOY[ evalRows[i] ],season[ evalRows[i] ],riverDATA[ evalRows[i] ],year[ evalRows[i] ] ]
+    +    grBeta[1, isYOY[ evalRows[i] ],season[ evalRows[i] ],riverDATA[ evalRows[i] ] ] * stdLength[ evalRows[ i ] ]
     #      + grBeta[    season[ evalRows[i] ],riverDATA[ evalRows[i] ], 2 ] * isYOY[ evalRows[ i ] ]
 
-    expectedGRSigma[ evalRows[i] ] <- grSigmaBeta[ isYOY[ evalRows[i] ],species[ evalRows[i]],season[ evalRows[i] ],riverDATA[ evalRows[i] ],year[ evalRows[i] ] ]
+    expectedGRSigma[ evalRows[i] ] <- grSigmaBeta[ isYOY[ evalRows[i] ],season[ evalRows[i] ],riverDATA[ evalRows[i] ],year[ evalRows[i] ] ]
 
 
     #       expectedGR[ evalRows[ i ] ]  <-
@@ -82,47 +82,41 @@ model {
 
   #   ############## Growth Priors
   for( yoy in 1:2 ){
-   for( spp in 1:nSpecies ) {
     for( r in 1:( nRivers+0 ) ){
       for( s in 1:nSeasons ){
-
         for(y in 1:nYears){
-          grSigmaBeta[ yoy,spp,s,r,y ] ~ dnorm( muGrSigmaBeta[ yoy,spp,s,r ], 1 / sigmaGrSigmaBeta[ yoy,spp,s,r ] ^ 2 )T(0,)
-          grBetaInt[   yoy,spp,s,r,y ] ~ dnorm(   muGrBetaInt[ yoy,spp,s,r ], 1 /   sigmaGrBetaInt[ yoy,spp,s,r ] ^ 2 )
+          grSigmaBeta[ yoy,s,r,y ] ~ dnorm( muGrSigmaBeta[ yoy,s,r ], 1 / sigmaGrSigmaBeta[ yoy,s,r ] ^ 2 )T(0,)
+          grBetaInt[   yoy,s,r,y ] ~ dnorm(   muGrBetaInt[ yoy,s,r ], 1 /   sigmaGrBetaInt[ yoy,s,r ] ^ 2 )
         }
+        muGrSigmaBeta[ yoy,s,r ] ~ dnorm( 0,0.001 )T(0,)
+        sigmaGrSigmaBeta[ yoy,s,r ] ~ dunif( 0,100 )
 
-        muGrSigmaBeta[ yoy,spp,s,r ] ~ dnorm( 0,0.001 )T(0,)
-        sigmaGrSigmaBeta[ yoy,spp,s,r ] ~ dunif( 0,100 )
-
-        sigmaGrBetaInt[ yoy,spp,s,r ] ~ dunif( 0,100 )
+        sigmaGrBetaInt[ yoy,s,r ] ~ dunif( 0,100 )
       }
-      muGrBetaInt[ yoy,spp,1,r ] ~ dnorm( 25, 0.01 )
-      muGrBetaInt[ yoy,spp,2,r ] ~ dnorm( 10, 0.01 )
-      muGrBetaInt[ yoy,spp,3,r ] ~ dnorm( 8, 0.01 )
-      muGrBetaInt[ yoy,spp,4,r ] ~ dnorm( 4, 0.01 )
+      muGrBetaInt[ yoy,1,r ] ~ dnorm( 25, 0.01 )
+      muGrBetaInt[ yoy,2,r ] ~ dnorm( 10, 0.01 )
+      muGrBetaInt[ yoy,3,r ] ~ dnorm( 8, 0.01 )
+      muGrBetaInt[ yoy,4,r ] ~ dnorm( 4, 0.01 )
     }
-   }
   }
 
-for( spp in 1:nSpecies ) {
   for( r in 1:( nRivers+0 ) ){
     for (i in 1){  # change range for more betas
 
       for( s in 1 ){
-        grBeta[ i,1,spp,s,r ] ~ dnorm( muGrBeta[ i,1 ],sigmaGrBeta[ i,1 ] )
+        grBeta[ i,1,s,r ] ~ dnorm( muGrBeta[ i,1 ],sigmaGrBeta[ i,1 ] )
       }
       for( s in 2 ){
-        grBeta[ i,1,spp,s,r ] ~ dunif( -0.001,0.001 ) # essentially set these = 0. very little data for these and dont want big values to mess up growth model
+        grBeta[ i,1,s,r ] ~ dunif( -0.001,0.001 ) # essentially set these = 0. very little data for these and dont want big values to mess up growth model
       }
       for( s in 3:4 ){
-        grBeta[ i,1,spp,s,r ] ~ dnorm( muGrBeta[ i,1 ],sigmaGrBeta[ i,1 ] )
+        grBeta[ i,1,s,r ] ~ dnorm( muGrBeta[ i,1 ],sigmaGrBeta[ i,1 ] )
       }
       for( s in 1:4 ){
-        grBeta[ i,2,spp,s,r ] ~ dnorm( muGrBeta[ i,2 ],sigmaGrBeta[ i,2 ] )
+        grBeta[ i,2,s,r ] ~ dnorm( muGrBeta[ i,2 ],sigmaGrBeta[ i,2 ] )
       }
     }
   }
-}
 
   for ( yoy in 1:2 ){
     for(i in 1){  # change range for more betas
@@ -132,6 +126,37 @@ for( spp in 1:nSpecies ) {
 
     }
   }
+
+
+  # for( r in 1:( nRivers ) ){
+  #   for( yoy in 1:2 ){
+  #
+  #     grBetaInt[ yoy,1,r ] ~ dnorm( 8, 0.01 )
+  #     grBetaInt[ yoy,2,r ] ~ dnorm( 4, 0.01 )
+  #     grBetaInt[ yoy,3,r ] ~ dnorm( 25, 0.01 )
+  #     grBetaInt[ yoy,4,r ] ~ dnorm( 10, 0.01 )
+  #
+  #     grSigmaBeta[ yoy,1,r ] ~ dgamma(0.001,0.001)
+  #     grSigmaBeta[ yoy,2,r ] ~ dgamma(0.001,0.001)
+  #     grSigmaBeta[ yoy,3,r ] ~ dgamma(0.001,0.001)
+  #     grSigmaBeta[ yoy,4,r ] ~ dgamma(0.001,0.001)
+  #   }
+  #
+  #   grBeta[ 1,1,1,r ] ~ dnorm( 0,0.0001 )
+  #   grBeta[ 1,1,2,r ] ~ dunif(-0.001,0.001)
+  #   grBeta[ 1,1,3,r ] ~ dnorm( 0,0.0001 )
+  #   grBeta[ 1,1,4,r ] ~ dnorm( 0,0.0001 )
+  #
+  #   grBeta[ 1,2,1,r ] ~ dnorm( 0,0.0001 )
+  #   grBeta[ 1,2,2,r ] ~ dnorm( 0,0.0001 )
+  #   grBeta[ 1,2,3,r ] ~ dnorm( 0,0.0001 )
+  #   grBeta[ 1,2,4,r ] ~ dnorm( 0,0.0001 )
+  #
+  # }
+
+
+
+
 
 } # model
 

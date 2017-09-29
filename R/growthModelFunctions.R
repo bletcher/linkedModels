@@ -6,12 +6,10 @@
 #'@return a data frame
 #'@export
 
-runGrowthModel <- function(d, parallel = FALSE){   #iterToUse, firstNonBurnIter, chainToUse, simInfo, grDir, out){
+runGrowthModel <- function(d, parallel = FALSE){
 
   inits <- function(){
-    #list(grBetaInt = array(rnorm(d$nSeasons*d$nRivers,0,2.25),c(d$nSeasons,d$nRivers)))
-    #list(grBetaInt = array(rnorm(2*4*4*6,0,2.25),c(2,4,4,6)))
-    list(grBetaInt = array(rnorm(2*dddG$nSeasons*dddG$nRivers*dddG$nYears,0,2.25),c(2,dddG$nSeasons,dddG$nRivers,dddG$nYears)))
+    list(grBetaInt = array(rnorm(2*dddG$nSpecies*dddG$nSeasons*dddG$nRivers*dddG$nYears,0,2.25),c(2,dddG$nSpecies,dddG$nSeasons,dddG$nRivers,dddG$nYears)))
   }
 
   params <- c("grBetaInt","muGrBetaInt","sigmaGrBetaInt","grBeta","muGrBeta","grSigmaBeta","length")
@@ -30,4 +28,32 @@ runGrowthModel <- function(d, parallel = FALSE){   #iterToUse, firstNonBurnIter,
 
   #outGR$movementModelIterUsed <- iter
   return(outGR)
+}
+
+#'Add density data
+#'
+#'@param drainage Which drainage, "west" or "stanley"
+#'@return a data frame
+#'@export
+#'
+
+addDensityData <- function( ddddG,ddD,ddddD,meanOrIter,sampleToUse ){
+
+  if ( meanOrIter == "mean") {
+    den <- getDensities(ddddD, ddD, meanOrIter = meanOrIter, sampleToUse = sampleToUse )
+    #ggplot(filter(den,!is.na(countP)),aes(year,countP, color = species)) + geom_point() + geom_line() + facet_grid(riverOrdered~season)
+    #ggplot(filter(den,!is.na(countP)),aes(count,countP, color = species)) + geom_point()
+  }
+
+  if ( meanOrIter == "iter") {
+    den <- getDensities(ddddD, ddD, meanOrIter = meanOrIter, sampleToUse = sampleToUse )
+  }
+
+  denForMerge <- den %>%
+    dplyr::select(species, season, riverOrdered, year, countP) %>%
+    filter( !is.na(countP) )
+
+  ddddG <- left_join( ddddG,denForMerge )
+  return(ddddG)
+
 }

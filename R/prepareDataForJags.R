@@ -33,26 +33,27 @@ prepareDataForJags <- function(d){
 
   # add column for z initial values
   obsOcc <- d %>%
-    select( tag,sampleNumber,enc ) %>%
+    dplyr::select( tag,sampleNumber,enc ) %>%
     filter(enc == 1) %>%
     group_by(tag) %>%
     mutate( minObsOcc = min(sampleNumber),
             maxObsOcc = max(sampleNumber)
     ) %>%
-    select( tag,minObsOcc,maxObsOcc ) %>%
+    dplyr::select( tag,minObsOcc,maxObsOcc ) %>%
     distinct()
 
   d <- left_join( d,obsOcc )
   d$zForInit <- ifelse( (d$sampleNumber > d$minObsOcc) & (d$sampleNumber <= d$maxObsOcc), 1, NA )
 
   load(file = "./data/cutoffYOYInclSpring1DATA.RData")
+  ##### udpate with species
   cutoffYOYDATA <- cutoffYOYInclSpring1DATA # update using getYOYCutoffs()
 
   d$riverN <- as.numeric(d$riverOrdered)
-  d$speciesN <- as.numeric(d$species)
+  d$speciesN <- as.numeric(as.factor(d$species))
 
   means <- d %>%
-    group_by(season,riverN) %>%
+    group_by(speciesN,season,riverN) %>%
     summarize( meanLen = mean(observedLength, na.rm = T),
                sdLen = sd(observedLength, na.rm = T))
 
@@ -77,12 +78,13 @@ prepareDataForJags <- function(d){
                 nLastObsRows = nLastObsRows, lastObsRows = lastObsRows,
                 nAllRows = nAllRows,
                 nSeasons = nSeasons,
-                lengthMean = matrix(means$meanLen,c(nSeasons,nRivers),byrow = T),
-                lengthSD = matrix(means$sdLen,c(nSeasons,nRivers),byrow = T),
+                lengthMean = array(means$meanLen, dim = c(nRivers,nSeasons,nSpecies)),
+                lengthSD = array(means$sdLen, dim = c(nRivers,nSeasons,nSpecies)),
                 cutoffYOYDATA = cutoffYOYDATA,
                 sampleInterval = d$sampleInterval,
                 zForInit = d$zForInit, # z for firstObs gets set to zero in jags. Can't set values in inits for values assigned in jags
-                propSampledDATA = propSampled$propSampledDATA
+                propSampledDATA = propSampled$propSampledDATA,
+                countP = d$countP
 
   )
   return(data)
