@@ -17,6 +17,7 @@
 #devtools::install_github('bletcher/linkedModels')
 #install.packages("devtools")
 #devtools::install_github('Conte-Ecology/getWBData')
+library(arm)
 library(tidyverse)
 library(linkedModels)
 library(jagsUI)
@@ -57,12 +58,13 @@ if ( file.exists(cdFile) ) {
 #
 
 (start <- Sys.time())
-dddD <- cd %>%
-  filter(  species == speciesIn,
+ddddD <- cd %>%
+  filter(  species %in% speciesIn,
            cohort >= minCohort,
            sampleInterval < maxSampleInterval # this removes the later yearly samples. Want to stick with seasonal samples
-  )  %>%
-  prepareDataForJags()
+  )
+
+dddD <- ddddD %>% prepareDataForJags()
 
 ddD <- dddD %>% runDetectionModel(parallel = TRUE)
 done <- Sys.time()
@@ -70,8 +72,9 @@ done <- Sys.time()
 
 whiskerplot(ddD, parameters = "pBetaInt")
 
-#getDensities(ddD)
-
+den <- getDensities(ddddD, ddD, meanOrIter = "mean", sampleToUse = 30, chainToUse = 1 )
+ggplot(filter(den,!is.na(countP)),aes(year,countP, color = species)) + geom_point() + geom_line() + facet_grid(riverOrdered~season)
+ggplot(filter(den,!is.na(countP)),aes(count,countP, color = species)) + geom_point()
 # save output, calc densities
 
 st <- 160
