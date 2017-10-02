@@ -106,7 +106,7 @@ ddddG <- cd %>%
 ######################################
 
 meanOrIter = "mean"
-### or  ###
+####### or ########
 meanOrIter = "iter"
 
 chainToUse <- 1
@@ -122,22 +122,25 @@ if (meanOrIter == "iter") {
 ######################################
 ######################################
 ### loop over iters
+
 dddG <- list()
 ddG <- list()
+dG <- list()
 elapsed <- list()
 # run the growth model for detection model iterations in itersToUse
 ii <- 0
 for (iter in itersToUse) {
   ii <- ii + 1
-  print(c(meanOrIter,ii,iter))
-  (start <- Sys.time())
+  start <- Sys.time()
+  print(c("in loop",as.POSIXct(start),meanOrIter,ii,iter))
+
   # saving into a list for now, could also map()
 
-  ddddG <- addDensityData( ddddG,ddD,ddddD,meanOrIter,iter )
+  dddG[[ii]] <- addDensityData( ddddG,ddD,ddddD,meanOrIter,iter )
 
-  dddG[[ii]] <- ddddG %>% prepareDataForJags()
+  ddG[[ii]] <- dddG[[ii]] %>% prepareDataForJags()
 
-  ddG[[ii]] <- dddG[[ii]] %>% runGrowthModel(parallel = TRUE)
+  dG[[ii]] <- ddG[[ii]] %>% runGrowthModel( parallel = TRUE )
 
   done <- Sys.time()
   (elapsed[[ii]] <- done - start)

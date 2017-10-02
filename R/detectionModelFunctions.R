@@ -7,9 +7,9 @@
 runDetectionModel <- function(d, parallel = FALSE){   #iterToUse, firstNonBurnIter, chainToUse, simInfo, grDir, out){
 
   inits <- function(){
-    list(#pBetaInt = array(rnorm(dddD$nSeasons*dddD$nRivers*dddD$nYears,0,2.25),c(dddD$nSeasons,dddD$nRivers,dddD$nYears)),
-         pBetaInt = array(runif(dddD$nSpecies*dddD$nSeasons*dddD$nRivers*dddD$nYears, -2.5, 2),c(dddD$nSpecies,dddD$nSeasons,dddD$nRivers,dddD$nYears)),
-         z = dddD$zForInit
+    list(#pBetaInt = array(rnorm(d$nSeasons*d$nRivers*d$nYears,0,2.25),c(d$nSeasons,d$nRivers,d$nYears)),
+         pBetaInt = array(runif(d$nSpecies*d$nSeasons*d$nRivers*d$nYears, -2.5, 2),c(d$nSpecies,d$nSeasons,d$nRivers,d$nYears)),
+         z = d$zForInit
          )
   }
 
@@ -59,6 +59,8 @@ getDensities <- function(dddd,dd, meanOrIter = "mean", sampleToUse = sampleToUse
 
   if ( meanOrIter == 'mean') ddIn <- dd$q50$pBetaInt
   if ( meanOrIter == 'iter') ddIn <- dd$sims.list$pBetaInt[ sampleToUse,,,, ]
+
+  print("in getDensities()",meanOrIter,ddIn)
 
   #pBetaInt[ species,season,riverDATA,year ]
   # convert array to data frame

@@ -9,7 +9,7 @@
 runGrowthModel <- function(d, parallel = FALSE){
 
   inits <- function(){
-    list(grBetaInt = array(rnorm(2*dddG[[ii]]$nSpecies*dddG[[ii]]$nSeasons*dddG[[ii]]$nRivers*dddG[[ii]]$nYears,0,2.25),c(2,dddG[[ii]]$nSpecies,dddG[[ii]]$nSeasons,dddG[[ii]]$nRivers,dddG[[ii]]$nYears)))
+    list(grBetaInt = array(rnorm(2*d$nSpecies*d$nSeasons*d$nRivers*d$nYears,0,2.25),c(2,d$nSpecies,d$nSeasons,d$nRivers,d$nYears)))
   }
 
   params <- c("grBetaInt","muGrBetaInt","sigmaGrBetaInt","grBeta","muGrBeta","grSigmaBeta","length")
@@ -37,27 +37,31 @@ runGrowthModel <- function(d, parallel = FALSE){
 #'@export
 #'
 
-addDensityData <- function( ddddG,ddD,ddddD,meanOrIter,sampleToUse ){
+addDensityData <- function( ddddG,ddD,ddddD,meanOrIterIn,sampleToUse ){
 
-  if ( meanOrIter == "mean") {
-    den <- getDensities(ddddD, ddD, meanOrIter = meanOrIter, sampleToUse = sampleToUse )
+  if ( meanOrIterIn == "mean") {
+    den <- getDensities(ddddD, ddD, meanOrIterIn, sampleToUse )
     #ggplot(filter(den,!is.na(countP)),aes(year,countP, color = species)) + geom_point() + geom_line() + facet_grid(riverOrdered~season)
     #ggplot(filter(den,!is.na(countP)),aes(count,countP, color = species)) + geom_point()
-    den$meanOrIter <- meanOrIter
-    den$iterIn <- meanOrIter
+    den$meanOrIter <- meanOrIterIn
+    den$iterIn <- meanOrIterIn
+    print("in mean")
   }
 
-  if ( meanOrIter == "iter") {
-    den <- getDensities(ddddD, ddD, meanOrIter = meanOrIter, sampleToUse = sampleToUse )
-    den$meanOrIter <- meanOrIter
+  if ( meanOrIterIn == "iter") {
+    den <- getDensities(ddddD, ddD, meanOrIterIn, sampleToUse )
+    den$meanOrIter <- meanOrIterIn
     den$iterIn <- sampleToUse
+
+    print("in iter ")
+    print(c(meanOrIterIn,sampleToUse))
   }
 
   denForMerge <- den %>%
     dplyr::select(species, season, riverOrdered, year, countP, meanOrIter, iterIn) %>%
     filter( !is.na(countP) )
 
-  ddddG <- left_join( ddddG,denForMerge )
+  ddddG <- left_join( ddddG,denForMerge, by = (c("species", "year", "season", "riverOrdered")) )
   return(ddddG)
 
 }

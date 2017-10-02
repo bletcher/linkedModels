@@ -4,8 +4,7 @@
 \alias{getDensities}
 \title{Get (estimate) densities by section, river, year based on num sammples and p from the density model}
 \usage{
-getDensities(dddd, dd, meanOrIter = "mean", sampleToUse = 1,
-  chainToUse = 1)
+getDensities(dddd, dd, meanOrIter = "mean", sampleToUse = sampleToUse)
 }
 \arguments{
 \item{dddd}{the input data frame for the detection model run}
