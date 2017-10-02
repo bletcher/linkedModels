@@ -9,7 +9,7 @@
 runGrowthModel <- function(d, parallel = FALSE){
 
   inits <- function(){
-    list(grBetaInt = array(rnorm(2*dddG$nSpecies*dddG$nSeasons*dddG$nRivers*dddG$nYears,0,2.25),c(2,dddG$nSpecies,dddG$nSeasons,dddG$nRivers,dddG$nYears)))
+    list(grBetaInt = array(rnorm(2*dddG[[ii]]$nSpecies*dddG[[ii]]$nSeasons*dddG[[ii]]$nRivers*dddG[[ii]]$nYears,0,2.25),c(2,dddG[[ii]]$nSpecies,dddG[[ii]]$nSeasons,dddG[[ii]]$nRivers,dddG[[ii]]$nYears)))
   }
 
   params <- c("grBetaInt","muGrBetaInt","sigmaGrBetaInt","grBeta","muGrBeta","grSigmaBeta","length")
@@ -43,14 +43,18 @@ addDensityData <- function( ddddG,ddD,ddddD,meanOrIter,sampleToUse ){
     den <- getDensities(ddddD, ddD, meanOrIter = meanOrIter, sampleToUse = sampleToUse )
     #ggplot(filter(den,!is.na(countP)),aes(year,countP, color = species)) + geom_point() + geom_line() + facet_grid(riverOrdered~season)
     #ggplot(filter(den,!is.na(countP)),aes(count,countP, color = species)) + geom_point()
+    den$meanOrIter <- meanOrIter
+    den$iterIn <- meanOrIter
   }
 
   if ( meanOrIter == "iter") {
     den <- getDensities(ddddD, ddD, meanOrIter = meanOrIter, sampleToUse = sampleToUse )
+    den$meanOrIter <- meanOrIter
+    den$iterIn <- sampleToUse
   }
 
   denForMerge <- den %>%
-    dplyr::select(species, season, riverOrdered, year, countP) %>%
+    dplyr::select(species, season, riverOrdered, year, countP, meanOrIter, iterIn) %>%
     filter( !is.na(countP) )
 
   ddddG <- left_join( ddddG,denForMerge )

@@ -104,36 +104,40 @@ ddddG <- cd %>%
 
 ######################################
 ######################################
+
 meanOrIter = "mean"
-  itersToUse <- 1 #dummy placeholder
-
 ### or  ###
+meanOrIter = "iter"
 
-#meanOrIter = "iter"
-  chainToUse <- 1
-  numItersToUse <- 3
+chainToUse <- 1
+numItersToUse <- 2
+if (meanOrIter == "iter") {
   itersToUse <- sort(sample(((dd$mcmc.info$n.samples/dd$mcmc.info$n.chains) * (chainToUse - 1)):
                             ((dd$mcmc.info$n.samples/dd$mcmc.info$n.chains) * (chainToUse - 0)),
                           numItersToUse))
-######################################
-######################################
-###loop
+} else {
+  itersToUse == 1 # only run one loop over iter
+}
 
-runOverIters <- list()
+######################################
+######################################
+### loop over iters
+dddG <- list()
+ddG <- list()
 elapsed <- list()
 # run the growth model for detection model iterations in itersToUse
 ii <- 0
 for (iter in itersToUse) {
   ii <- ii + 1
-  print(c(ii,iter))
+  print(c(meanOrIter,ii,iter))
   (start <- Sys.time())
-  # saving into a list for now, could also concat a dataframe with identifiers or map()
+  # saving into a list for now, could also map()
 
   ddddG <- addDensityData( ddddG,ddD,ddddD,meanOrIter,iter )
 
-  dddG <- ddddG %>% prepareDataForJags()
+  dddG[[ii]] <- ddddG %>% prepareDataForJags()
 
-  ddG[[ii]] <- dddG %>% runGrowthModel(parallel = TRUE) #runGrowthModel(iter, firstNonBurnIter, chainToUse, simInfo, grDir, out)
+  ddG[[ii]] <- dddG[[ii]] %>% runGrowthModel(parallel = TRUE)
 
   done <- Sys.time()
   (elapsed[[ii]] <- done - start)
@@ -152,16 +156,6 @@ whiskerplot(ddG, parameters = "muGrBeta")
 
 
 
-st <- 9355
-end <- 9370
-data.frame(
-  occ = c(st:end),
-  dddG$lengthDATA[st:end],
-  dddG$ind[st:end],
-  dddG$occ[st:end],
-  dddG$season[st:end],
-  dddG$riverDATA[st:end]
-)
 
 #To do:
 # Line up ddd$YOY with actual year in model run
