@@ -37,10 +37,10 @@ runGrowthModel <- function(d, parallel = FALSE){
 #'@export
 #'
 
-addDensityData <- function( ddddG,ddD,ddddD,meanOrIterIn,sampleToUse ){
+addDensityData <- function( ddddGIn,ddDIn,ddddDIn,meanOrIterIn,sampleToUse ){
 
   if ( meanOrIterIn == "mean") {
-    den <- getDensities(ddddD, ddD, meanOrIterIn, sampleToUse )
+    den <- getDensities(ddddDIn, ddDIn, meanOrIterIn, sampleToUse )
     #ggplot(filter(den,!is.na(countP)),aes(year,countP, color = species)) + geom_point() + geom_line() + facet_grid(riverOrdered~season)
     #ggplot(filter(den,!is.na(countP)),aes(count,countP, color = species)) + geom_point()
     den$meanOrIter <- meanOrIterIn
@@ -49,7 +49,7 @@ addDensityData <- function( ddddG,ddD,ddddD,meanOrIterIn,sampleToUse ){
   }
 
   if ( meanOrIterIn == "iter") {
-    den <- getDensities(ddddD, ddD, meanOrIterIn, sampleToUse )
+    den <- getDensities(ddddDIn, ddDIn, meanOrIterIn, sampleToUse )
     den$meanOrIter <- meanOrIterIn
     den$iterIn <- sampleToUse
 
@@ -61,7 +61,15 @@ addDensityData <- function( ddddG,ddD,ddddD,meanOrIterIn,sampleToUse ){
     dplyr::select(species, season, riverOrdered, year, countP, meanOrIter, iterIn) %>%
     filter( !is.na(countP) )
 
-  ddddG <- left_join( ddddG,denForMerge, by = (c("species", "year", "season", "riverOrdered")) )
-  return(ddddG)
+  denForMergeSummary <- denForMerge %>%
+    group_by( species,season,riverOrdered ) %>%
+    summarize( countPMean = mean(countP, na.rm = T),
+               countPSD = sd(countP, na.rm = T))
+
+  denForMerge2 <- left_join( denForMerge, denForMergeSummary ) %>%
+    mutate( countPStd = ( countP - countPMean )/countPSD )
+
+  ddddGIn <- left_join( ddddGIn,denForMerge2, by = (c("species", "year", "season", "riverOrdered")) )
+  return(ddddGIn)
 
 }

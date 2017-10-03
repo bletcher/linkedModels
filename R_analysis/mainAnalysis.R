@@ -28,7 +28,7 @@ library(lubridate)
 # selection criteria
 
 drainage <- "west" # ==
-speciesIn <- c("bkt", "bnt") #"bkt" # ==
+speciesIn <- "bkt"#c("bkt", "bnt") #"bkt" # ==
 minCohort <- 2002 # >=
 maxSampleInterval <- 200 # <
 
@@ -97,6 +97,8 @@ ddddG <- cd %>%
            enc == 1
   )
 
+load(file = './data/out/ddD.RData')
+
 # merge in density data, either overall means or single iterations at a time
 # meanOrIter ="mean" uses means of all iterations
 # meanOrIter ="iter" uses the sample that is the combo of sampleToUse and chainToUse (ignored if meanOrIter="mean")
@@ -107,7 +109,7 @@ ddddG <- cd %>%
 
 meanOrIter = "mean"
 ####### or ########
-meanOrIter = "iter"
+#meanOrIter = "iter"
 
 chainToUse <- 1
 numItersToUse <- 2
@@ -116,7 +118,7 @@ if (meanOrIter == "iter") {
                             ((dd$mcmc.info$n.samples/dd$mcmc.info$n.chains) * (chainToUse - 0)),
                           numItersToUse))
 } else {
-  itersToUse == 1 # only run one loop over iter
+  itersToUse <- 1 # only run one loop over iter
 }
 
 ######################################
@@ -132,7 +134,7 @@ ii <- 0
 for (iter in itersToUse) {
   ii <- ii + 1
   start <- Sys.time()
-  print(c("in loop",as.POSIXct(start),meanOrIter,ii,iter))
+  print(c("in loop",Sys.time(),meanOrIter,ii,iter))
 
   # saving into a list for now, could also map()
 
@@ -143,7 +145,8 @@ for (iter in itersToUse) {
   dG[[ii]] <- ddG[[ii]] %>% runGrowthModel( parallel = TRUE )
 
   done <- Sys.time()
-  (elapsed[[ii]] <- done - start)
+  elapsed[[ii]] <- done - start
+  print(paste("Elapsed =",elapsed))
 }
 
 
@@ -151,11 +154,21 @@ for (iter in itersToUse) {
 
 
 # get cutoffYOY right
+# 2, isYOY[ evalRows[i] ],species[ evalRows[i]],season[ evalRows[i] ],riverDATA[ evalRows[i] ]
+whiskerplot(dG[[1]], parameters = "grBeta[2,2,1,3,]")
 
-whiskerplot(ddG, parameters = "muGrBetaInt")
-traceplot(ddG, parameters = "muGrBetaInt")
 
-whiskerplot(ddG, parameters = "muGrBeta")
+#  isYOY[ evalRows[i] ],species[ evalRows[i]],season[ evalRows[i] ],riverDATA[ evalRows[i] ]
+whiskerplot(dG[[1]], parameters = "muGrBetaInt[,2,2,]")
+#  isYOY[ evalRows[i] ],species[ evalRows[i]],season[ evalRows[i] ],riverDATA[ evalRows[i] ],year[ evalRows[i] ]
+whiskerplot(dG[[1]], parameters = "grBetaInt[2,,,,6]")
+
+# get units for gr correct
+
+
+traceplot(dG[[1]], parameters = "muGrBetaInt")
+
+whiskerplot(dG[[1]], parameters = "muGrBeta")
 
 
 

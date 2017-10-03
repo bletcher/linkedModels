@@ -55,7 +55,8 @@ prepareDataForJags <- function(d){
   means <- d %>%
     group_by(speciesN,season,riverN) %>%
     summarize( meanLen = mean(observedLength, na.rm = T),
-               sdLen = sd(observedLength, na.rm = T))
+               sdLen = sd(observedLength, na.rm = T),
+               sampleIntervalMean = mean(sampleInterval, na.rm = T))
 
   propSampled <- getPropSampled(nSeasons,nRivers,nYears)
 
@@ -80,11 +81,12 @@ prepareDataForJags <- function(d){
                 nSeasons = nSeasons,
                 lengthMean = array(means$meanLen, dim = c(nRivers,nSeasons,nSpecies)),
                 lengthSD = array(means$sdLen, dim = c(nRivers,nSeasons,nSpecies)),
+                sampleIntervalMean = array(means$sampleIntervalMean, dim = c(nRivers,nSeasons,nSpecies)),
                 cutoffYOYDATA = cutoffYOYDATA,
                 sampleInterval = d$sampleInterval,
                 zForInit = d$zForInit, # z for firstObs gets set to zero in jags. Can't set values in inits for values assigned in jags
                 propSampledDATA = propSampled$propSampledDATA,
-                countP = d$countP
+                countPStd = d$countPStd
 
   )
   return(data)

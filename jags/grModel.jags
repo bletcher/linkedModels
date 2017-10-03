@@ -54,15 +54,15 @@ model {
 
     lengthDATA[ evalRows[i] + 1 ] ~ dnorm( length[ evalRows[i] + 1 ], 9 ) # length measurement error
 
-    # add intervalMeans back in
-    gr[ evalRows[i] ] ~ dnorm( expectedGR[ evalRows[i] ] / sampleInterval[ evalRows[i] ],
+    gr[ evalRows[i] ] ~ dnorm( expectedGR[ evalRows[i] ] / sampleInterval[ evalRows[i] ] *
+                                 sampleIntervalMean[ season[ evalRows[i]],riverDATA[ evalRows[i] ],species[ evalRows[i]] ],
                                1/expectedGRSigma[ evalRows[i] ]^2
     )
 
     expectedGR[ evalRows[i] ]  <-
       grBetaInt[   isYOY[ evalRows[i] ],species[ evalRows[i]],season[ evalRows[i] ],riverDATA[ evalRows[i] ],year[ evalRows[i] ] ]
     +    grBeta[1, isYOY[ evalRows[i] ],species[ evalRows[i]],season[ evalRows[i] ],riverDATA[ evalRows[i] ] ] * stdLength[ evalRows[ i ] ]
-    #      + grBeta[    season[ evalRows[i] ],riverDATA[ evalRows[i] ], 2 ] * isYOY[ evalRows[ i ] ]
+    +    grBeta[2, isYOY[ evalRows[i] ],species[ evalRows[i]],season[ evalRows[i] ],riverDATA[ evalRows[i] ] ] * countPStd[ evalRows[ i ] ]
 
     expectedGRSigma[ evalRows[i] ] <- grSigmaBeta[ isYOY[ evalRows[i] ],species[ evalRows[i]],season[ evalRows[i] ],riverDATA[ evalRows[i] ],year[ evalRows[i] ] ]
 
@@ -87,8 +87,8 @@ model {
       for( s in 1:nSeasons ){
 
         for(y in 1:nYears){
-          grSigmaBeta[ yoy,spp,s,r,y ] ~ dnorm( muGrSigmaBeta[ yoy,spp,s,r ], 1 / sigmaGrSigmaBeta[ yoy,spp,s,r ] ^ 2 )T(0,)
           grBetaInt[   yoy,spp,s,r,y ] ~ dnorm(   muGrBetaInt[ yoy,spp,s,r ], 1 /   sigmaGrBetaInt[ yoy,spp,s,r ] ^ 2 )
+          grSigmaBeta[ yoy,spp,s,r,y ] ~ dnorm( muGrSigmaBeta[ yoy,spp,s,r ], 1 / sigmaGrSigmaBeta[ yoy,spp,s,r ] ^ 2 )T(0,)
         }
 
         muGrSigmaBeta[ yoy,spp,s,r ] ~ dnorm( 0,0.001 )T(0,)
@@ -106,7 +106,7 @@ model {
 
 for( spp in 1:nSpecies ) {
   for( r in 1:( nRivers+0 ) ){
-    for (i in 1){  # change range for more betas
+    for (i in 1:2){  # change range for more betas
 
       for( s in 1 ){
         grBeta[ i,1,spp,s,r ] ~ dnorm( muGrBeta[ i,1 ],sigmaGrBeta[ i,1 ] )
@@ -125,7 +125,7 @@ for( spp in 1:nSpecies ) {
 }
 
   for ( yoy in 1:2 ){
-    for(i in 1){  # change range for more betas
+    for(i in 1:2){  # change range for more betas
 
       muGrBeta[ i,yoy ] ~ dnorm( 0,0.001 )
       sigmaGrBeta[ i,yoy ] ~ dunif( 0,100 )

@@ -113,7 +113,7 @@ minimalData <- function(d){
 
 #'Get propoortion of sections sampled by river,sample
 #'
-#'@param none
+#'@param nSeasons,nRivers,nYears counts
 #'@return a list of propSampleDATA, and zeroSectionsDATA
 #'@export
 

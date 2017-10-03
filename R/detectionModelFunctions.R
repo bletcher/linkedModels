@@ -60,7 +60,7 @@ getDensities <- function(dddd,dd, meanOrIter = "mean", sampleToUse = sampleToUse
   if ( meanOrIter == 'mean') ddIn <- dd$q50$pBetaInt
   if ( meanOrIter == 'iter') ddIn <- dd$sims.list$pBetaInt[ sampleToUse,,,, ]
 
-  print("in getDensities()",meanOrIter,ddIn)
+  #print(c("in getDensities()",meanOrIter,ddIn))
 
   #pBetaInt[ species,season,riverDATA,year ]
   # convert array to data frame
