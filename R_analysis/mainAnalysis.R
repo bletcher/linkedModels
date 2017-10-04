@@ -28,9 +28,18 @@ library(lubridate)
 # selection criteria
 
 drainage <- "west" # ==
-speciesIn <- "bkt"#c("bkt", "bnt") #"bkt" # ==
+species <- c("bkt", "bnt") #"bkt" # ==
 minCohort <- 2002 # >=
 maxSampleInterval <- 200 # <
+runDetectionModelTF <- FALSE
+
+#make sure species are always in order and indexed correctly for arrays
+speciesIn <- factor(species, levels = c('bkt','bnt','ats'), ordered = T)
+
+# update yoy cutoffs as get new data using
+# getYOYCutoffs(d,drainage)
+# which is called within prepareDataForJags() and is saved in
+# getAndPrepareDataWB.R
 
 
 ######################################################
@@ -67,11 +76,14 @@ ddddD <- cd %>%
 
 dddD <- ddddD %>% prepareDataForJags()
 
-ddD <- dddD %>% runDetectionModel(parallel = TRUE)
+if (runDetectionModelTF) {
+  ddD <- dddD %>% runDetectionModel(parallel = TRUE)
+  save(ddD, file = './data/out/ddD.RData')
+}
 done <- Sys.time()
 (elapsed <- done - start)
 
-save(ddD, file = './data/out/ddD.RData')
+
 #whiskerplot(ddD, parameters = "pBetaInt")
 
 #################################
@@ -149,30 +161,32 @@ for (iter in itersToUse) {
   print(paste("Elapsed =",elapsed))
 }
 
-
+######################################
 
 
 
 # get cutoffYOY right
 # 2, isYOY[ evalRows[i] ],species[ evalRows[i]],season[ evalRows[i] ],riverDATA[ evalRows[i] ]
-whiskerplot(dG[[1]], parameters = "grBeta[2,2,1,3,]")
+whiskerplot(dG[[1]], parameters = "grBeta[4,2,,,]")
 
 
-#  isYOY[ evalRows[i] ],species[ evalRows[i]],season[ evalRows[i] ],riverDATA[ evalRows[i] ]
-whiskerplot(dG[[1]], parameters = "muGrBetaInt[,2,2,]")
-#  isYOY[ evalRows[i] ],species[ evalRows[i]],season[ evalRows[i] ],riverDATA[ evalRows[i] ],year[ evalRows[i] ]
-whiskerplot(dG[[1]], parameters = "grBetaInt[2,,,,6]")
-
-# get units for gr correct
-
-
-traceplot(dG[[1]], parameters = "muGrBetaInt")
-
-whiskerplot(dG[[1]], parameters = "muGrBeta")
+#  [isYOY,species,season,riverDATA]
+whiskerplot(dG[[1]], parameters = "muGrBetaInt[2,,1,]")
+#  [1:2,isYOY,species,season,riverDATA]
+whiskerplot(dG[[1]], parameters = "grBeta[2,,,,]")
+#  [isYOY,species,season,riverDATA,year]
+whiskerplot(dG[[1]], parameters = "grBetaInt[2,,,1]")
 
 
+whiskerplot(dG[[1]], parameters = "muGrBeta[,]")
+
+ggplot(dddG[[1]], aes(countPStd,grLength)) + geom_point() +
+  geom_smooth(method='lm') +
+  facet_grid(riverOrdered~season)
+
+pairs(ddG[[1]][c('countPStd','tempStd','flowStd')])
 
 
 #To do:
 # Line up ddd$YOY with actual year in model run
-# add intervalMeans back in to gr[]
+

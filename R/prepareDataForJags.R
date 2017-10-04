@@ -47,18 +47,34 @@ prepareDataForJags <- function(d){
 
   load(file = "./data/cutoffYOYInclSpring1DATA.RData")
   ##### udpate with species
-  cutoffYOYDATA <- cutoffYOYInclSpring1DATA # update using getYOYCutoffs()
+  cutoffYOYDATA <- cutoffYOYInclSpring1DATA # update as needed using getYOYCutoffs()
 
   d$riverN <- as.numeric(d$riverOrdered)
   d$speciesN <- as.numeric(as.factor(d$species))
 
   means <- d %>%
-    group_by(speciesN,season,riverN) %>%
+    group_by( speciesN,season,riverN ) %>%
     summarize( meanLen = mean(observedLength, na.rm = T),
                sdLen = sd(observedLength, na.rm = T),
-               sampleIntervalMean = mean(sampleInterval, na.rm = T))
+               sampleIntervalMean = mean(sampleInterval, na.rm = T)
+             )
 
   propSampled <- getPropSampled(nSeasons,nRivers,nYears)
+
+  ## standardize env variables
+  meansEnv <- d %>%
+    group_by( season,riverOrdered ) %>%
+    summarize( meanTemperatureMean = mean(meanTemperature, na.rm = T),
+               meanTemperatureSD = sd(meanTemperature, na.rm = T),
+               meanFlowMean = mean(meanFlow, na.rm = T),
+               meanFlowSD = sd(meanFlow, na.rm = T)
+
+             )
+
+  d <- left_join( d, meansEnv ) %>%
+    mutate( tempStd = (meanTemperature - meanTemperatureMean)/meanTemperatureSD,
+            flowStd = (meanFlow - meanFlowMean)/meanFlowSD
+          )
 
   data <- list( encDATA = d$enc,
                 lengthDATA = d$observedLength,
@@ -86,7 +102,9 @@ prepareDataForJags <- function(d){
                 sampleInterval = d$sampleInterval,
                 zForInit = d$zForInit, # z for firstObs gets set to zero in jags. Can't set values in inits for values assigned in jags
                 propSampledDATA = propSampled$propSampledDATA,
-                countPStd = d$countPStd
+                countPStd = d$countPStd,
+                tempStd = d$tempStd,
+                flowStd = d$flowStd
 
   )
   return(data)

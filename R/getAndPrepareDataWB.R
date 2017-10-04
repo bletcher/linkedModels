@@ -158,10 +158,178 @@ getPropSampled <- function(nSeasons,nRivers,nYears){
 #'@return a data frame
 #'@export
 
-getYOYCutoffs <- function(d,dr){
+getYOYCutoffs <- function(d,dr = 'west'){
 
   ####################################
-  # create a data frame of max lengths for YOYs from Matt,..
+  # create a data frame of max lengths for YOYs from Matt, available here:
+  # /home/projects/westbrook/dataIn/originalData/yoy_bins.csv
+
+  # need to get riverLists for different watersheds...ie.e riverOrdered Not hardcoded
+
+  y3 <- read.csv(file='./data/yoy_bins.csv', header=T)
+
+  y2 <- y3 %>%
+    rename( maxLength = Max.Length,
+            minLength = Min.Length,
+            drainage = Drainage,
+            year = YOS,
+            river = River,
+            species = Species,
+            sample = Sample,
+            age = Age) %>%
+    mutate( species = factor(tolower(species), levels = c('bkt','bnt','ats'), ordered = T),
+            drainage = tolower(drainage),
+            river = tolower(river),
+            riverOrdered = factor(river, levels = c('west brook','wb jimmy','wb mitchell','wb obear'), ordered = T) ) %>%
+    filter( drainage == dr,
+            age == 0,
+            species %in% speciesIn ) %>%
+    dplyr::select( -river )
+
+  # get season for each sample
+  snOrigSeason <- data.frame(unique(cbind(d$sampleNumber,d$season)))
+  names(snOrigSeason) <- c('sample', 'season')
+
+  y1 <- left_join(y2, snOrigSeason, by='sample')
+
+  riverList <- unique(d$riverOrdered)
+  nRivers <- n_distinct(d$riverOrdered, na.rm = T)
+  nSeasons <- n_distinct(d$season, na.rm = T)
+  nYears <- n_distinct(d$year, na.rm = T)
+  nSpecies <- n_distinct(d$species, na.rm = T)
+
+  yTemplate <- data.frame( species = rep(speciesIn,     each = nYears*nRivers*nSeasons),
+                           year = rep(min(d$year):max(d$year), each = nRivers*nSeasons),
+                           river = rep(riverList,                      each = nSeasons),
+                           season =                                         1:nSeasons
+                         ) %>%
+    mutate( riverOrdered = factor(river, levels = c('west brook','wb jimmy','wb mitchell','wb obear'), ordered = T) )
+
+  y <- left_join( yTemplate, y1, by=c('riverOrdered','year','species','season') )
+
+  y$maxLength <- ifelse( is.na(y$maxLength), 90, y$maxLength) # fill in missing obs with 90
+  y$maxLength <- ifelse( y$season == 1, 50, y$maxLength )
+
+    # some visual fixes
+  y$maxLength[ y$year == 2003 & y$season == 3 & y$river == 'wb jimmy' ] <- 85
+  y$maxLength[ y$year == 2011 & y$season == 2 & y$river == 'wb obear' ] <- 70
+  y$maxLength[ y$year == 2010 & y$season == 3 & y$river == 'wb obear' ] <- 72
+  y$maxLength[ y$year == 2011 & y$season == 3 & y$river == 'west brook' ] <- 100
+  y$maxLength[ y$year == 2011 & y$season == 4 & y$river == 'west brook' ] <- 110
+
+  y <- y[ order(y$species,y$year,y$riverOrdered,y$season),]
+  cutoffYOYDATA <- array( y$maxLength, c(nSeasons,nRivers,nYears,nSpecies) )
+
+#  save(cutoffYOYDATA,file = './data/cutoffYOYDATA.RData')
+  #######################################
+
+  # river <- 'wb mitchell'#,
+  # river <- 'west brook'#'wb obear'##'#''#'wb obear' #
+  # river <- 'wb obear'##'#''#'wb obear' #
+  # river <- 'wb jimmy'
+  #
+  # ggplot( cd %>% filter(drainage == dr), aes(observedLength) ) +
+  #   geom_histogram( binwidth=3 )+
+  #   geom_vline(aes(xintercept=maxLength), y[y$year>=2002 & y$river==river,])+
+  #   facet_grid(season~year ) +
+  #   ggtitle(river)
+
+  # incorporating the spring sample 1+ fish into the yoy category
+  yy <- y
+
+  yy$maxLength[ yy$species=='bkt' & yy$year==2002 & yy$season==1 & yy$river == 'west brook' ] <- 102
+  yy$maxLength[ yy$species=='bkt' & yy$year==2003 & yy$season==1 & yy$river == 'west brook' ] <- 110
+  yy$maxLength[ yy$species=='bkt' & yy$year==2004 & yy$season==1 & yy$river == 'west brook' ] <- 105
+  yy$maxLength[ yy$species=='bkt' & yy$year==2005 & yy$season==1 & yy$river == 'west brook' ] <- 115
+  yy$maxLength[ yy$species=='bkt' & yy$year==2006 & yy$season==1 & yy$river == 'west brook' ] <- 100
+  yy$maxLength[ yy$species=='bkt' & yy$year==2007 & yy$season==1 & yy$river == 'west brook' ] <- 109
+  yy$maxLength[ yy$species=='bkt' & yy$year==2008 & yy$season==1 & yy$river == 'west brook' ] <- 110
+  yy$maxLength[ yy$species=='bkt' & yy$year==2009 & yy$season==1 & yy$river == 'west brook' ] <- 125
+  yy$maxLength[ yy$species=='bkt' & yy$year==2010 & yy$season==1 & yy$river == 'west brook' ] <- 127
+  yy$maxLength[ yy$species=='bkt' & yy$year==2011 & yy$season==1 & yy$river == 'west brook' ] <- 110
+  yy$maxLength[ yy$species=='bkt' & yy$year==2012 & yy$season==1 & yy$river == 'west brook' ] <- 114
+  yy$maxLength[ yy$species=='bkt' & yy$year==2013 & yy$season==1 & yy$river == 'west brook' ] <- 118
+  yy$maxLength[ yy$species=='bkt' & yy$year==2014 & yy$season==1 & yy$river == 'west brook' ] <- 116
+  yy$maxLength[ yy$species=='bkt' & yy$year==2015 & yy$season==1 & yy$river == 'west brook' ] <- 114
+
+  yy$maxLength[ yy$species=='bkt' & yy$year==2002 & yy$season==1 & yy$river == 'wb jimmy' ] <- 95
+  yy$maxLength[ yy$species=='bkt' & yy$year==2003 & yy$season==1 & yy$river == 'wb jimmy' ] <- 95
+  yy$maxLength[ yy$species=='bkt' & yy$year==2004 & yy$season==1 & yy$river == 'wb jimmy' ] <- 95
+  yy$maxLength[ yy$species=='bkt' & yy$year==2005 & yy$season==1 & yy$river == 'wb jimmy' ] <- 92
+  yy$maxLength[ yy$species=='bkt' & yy$year==2006 & yy$season==1 & yy$river == 'wb jimmy' ] <- 82
+  yy$maxLength[ yy$species=='bkt' & yy$year==2007 & yy$season==1 & yy$river == 'wb jimmy' ] <- 92
+  yy$maxLength[ yy$species=='bkt' & yy$year==2008 & yy$season==1 & yy$river == 'wb jimmy' ] <- 87
+  yy$maxLength[ yy$species=='bkt' & yy$year==2009 & yy$season==1 & yy$river == 'wb jimmy' ] <- 93
+  yy$maxLength[ yy$species=='bkt' & yy$year==2010 & yy$season==1 & yy$river == 'wb jimmy' ] <- 92
+  yy$maxLength[ yy$species=='bkt' & yy$year==2011 & yy$season==1 & yy$river == 'wb jimmy' ] <- 92
+  yy$maxLength[ yy$species=='bkt' & yy$year==2012 & yy$season==1 & yy$river == 'wb jimmy' ] <- 90
+  yy$maxLength[ yy$species=='bkt' & yy$year==2013 & yy$season==1 & yy$river == 'wb jimmy' ] <- 94
+  yy$maxLength[ yy$species=='bkt' & yy$year==2014 & yy$season==1 & yy$river == 'wb jimmy' ] <- 94
+  yy$maxLength[ yy$species=='bkt' & yy$year==2015 & yy$season==1 & yy$river == 'wb jimmy' ] <- 93
+
+  yy$maxLength[ yy$species=='bkt' & yy$year==2002 & yy$season==1 & yy$river == 'wb mitchell' ] <- 95
+  yy$maxLength[ yy$species=='bkt' & yy$year==2003 & yy$season==1 & yy$river == 'wb mitchell' ] <- 110
+  yy$maxLength[ yy$species=='bkt' & yy$year==2004 & yy$season==1 & yy$river == 'wb mitchell' ] <- 109
+  yy$maxLength[ yy$species=='bkt' & yy$year==2005 & yy$season==1 & yy$river == 'wb mitchell' ] <- 107
+  yy$maxLength[ yy$species=='bkt' & yy$year==2006 & yy$season==1 & yy$river == 'wb mitchell' ] <- 88
+  yy$maxLength[ yy$species=='bkt' & yy$year==2007 & yy$season==1 & yy$river == 'wb mitchell' ] <- 83
+  yy$maxLength[ yy$species=='bkt' & yy$year==2008 & yy$season==1 & yy$river == 'wb mitchell' ] <- 102
+  yy$maxLength[ yy$species=='bkt' & yy$year==2009 & yy$season==1 & yy$river == 'wb mitchell' ] <- 114
+  yy$maxLength[ yy$species=='bkt' & yy$year==2010 & yy$season==1 & yy$river == 'wb mitchell' ] <- 132
+  yy$maxLength[ yy$species=='bkt' & yy$year==2011 & yy$season==1 & yy$river == 'wb mitchell' ] <- 92
+  yy$maxLength[ yy$species=='bkt' & yy$year==2012 & yy$season==1 & yy$river == 'wb mitchell' ] <- 92
+  yy$maxLength[ yy$species=='bkt' & yy$year==2013 & yy$season==1 & yy$river == 'wb mitchell' ] <- 90
+  yy$maxLength[ yy$species=='bkt' & yy$year==2014 & yy$season==1 & yy$river == 'wb mitchell' ] <- 92
+  yy$maxLength[ yy$species=='bkt' & yy$year==2015 & yy$season==1 & yy$river == 'wb mitchell' ] <- 78
+
+  yy$maxLength[ yy$species=='bkt' & yy$year==2002 & yy$season==1 & yy$river == 'wb obear' ] <- 95
+  yy$maxLength[ yy$species=='bkt' & yy$year==2003 & yy$season==1 & yy$river == 'wb obear' ] <- 90
+  yy$maxLength[ yy$species=='bkt' & yy$year==2004 & yy$season==1 & yy$river == 'wb obear' ] <- 94
+  yy$maxLength[ yy$species=='bkt' & yy$year==2005 & yy$season==1 & yy$river == 'wb obear' ] <- 83
+  yy$maxLength[ yy$species=='bkt' & yy$year==2006 & yy$season==1 & yy$river == 'wb obear' ] <- 92
+  yy$maxLength[ yy$species=='bkt' & yy$year==2007 & yy$season==1 & yy$river == 'wb obear' ] <- 103
+  yy$maxLength[ yy$species=='bkt' & yy$year==2008 & yy$season==1 & yy$river == 'wb obear' ] <- 94
+  yy$maxLength[ yy$species=='bkt' & yy$year==2009 & yy$season==1 & yy$river == 'wb obear' ] <- 103
+  yy$maxLength[ yy$species=='bkt' & yy$year==2010 & yy$season==1 & yy$river == 'wb obear' ] <- 106
+  yy$maxLength[ yy$species=='bkt' & yy$year==2011 & yy$season==1 & yy$river == 'wb obear' ] <- 92
+  yy$maxLength[ yy$species=='bkt' & yy$year==2012 & yy$season==1 & yy$river == 'wb obear' ] <- 92
+  yy$maxLength[ yy$species=='bkt' & yy$year==2013 & yy$season==1 & yy$river == 'wb obear' ] <- 100
+  yy$maxLength[ yy$species=='bkt' & yy$year==2014 & yy$season==1 & yy$river == 'wb obear' ] <- 92
+  yy$maxLength[ yy$species=='bkt' & yy$year==2015 & yy$season==1 & yy$river == 'wb obear' ] <- 84
+
+  yy <- yy[ order(yy$year,yy$riverOrdered,yy$season,yy$species),]
+  cutoffYOYInclSpring1DATA <- array( yy$maxLength, c(nSeasons,nRivers,nYears,nSpecies) )
+
+  #save(yy,cutoffYOYInclSpring1DATA,file='./data/cutoffYOYInclSpring1DATA.RData')
+
+  #check cutOffs
+  #  yy[  yy$season==4 & yy$river == 'wb obear' ,c('year','maxLength')]
+
+  # river <- 'wb mitchell'#,
+   river <- 'west brook'#'wb obear'##'#''#'wb obear' #
+  # river <- 'wb obear'##'#''#'wb obear' #
+  # river <- 'wb jimmy'
+  #
+   spp <- "bkt"
+
+   ggplot( cd[cd$river==river & !is.na(cd$season),], aes(observedLength) ) +
+     geom_histogram( binwidth=3 )+
+     geom_vline(aes(xintercept=maxLength), yy[yy$year>=2002 & yy$river==river & yy$species==spp,])+
+     facet_grid(season~year ) +
+     ggtitle(river)
+
+}
+
+############# 2_prepare data
+# install dev version to fix NA problem with lag()
+#if (packageVersion("devtools") < 1.6) {
+#  install.packages("devtools")
+#}
+#devtools::install_github("hadley/lazyeval")
+#devtools::install_github("hadley/dplyr")
+
+
+getYOYCutoffs_Old <- function(d,dr){
 
   yoySizeLimits <- read.csv(file='./data/yoySizeLimits.csv', header=T)
   yoySizeLimits$year <- yoySizeLimits$YOS
@@ -290,11 +458,3 @@ getYOYCutoffs <- function(d,dr){
   #   ggtitle(river)
 
 }
-
-############# 2_prepare data
-# install dev version to fix NA problem with lag()
-#if (packageVersion("devtools") < 1.6) {
-#  install.packages("devtools")
-#}
-#devtools::install_github("hadley/lazyeval")
-#devtools::install_github("hadley/dplyr")
