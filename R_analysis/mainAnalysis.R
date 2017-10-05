@@ -37,7 +37,7 @@ runDetectionModelTF <- FALSE
 speciesIn <- factor(species, levels = c('bkt','bnt','ats'), ordered = T)
 
 # update yoy cutoffs as get new data using
-# getYOYCutoffs(d,drainage)
+# getYOYCutoffs(cd,drainage)
 # which is called within prepareDataForJags() and is saved in
 # getAndPrepareDataWB.R
 

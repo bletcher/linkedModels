@@ -46,8 +46,7 @@ prepareDataForJags <- function(d){
   d$zForInit <- ifelse( (d$sampleNumber > d$minObsOcc) & (d$sampleNumber <= d$maxObsOcc), 1, NA )
 
   load(file = "./data/cutoffYOYInclSpring1DATA.RData")
-  ##### udpate with species
-  cutoffYOYDATA <- cutoffYOYInclSpring1DATA # update as needed using getYOYCutoffs()
+  cutoffYOYDATA <- cutoffYOYInclSpring1DATA # update as needed using getYOYCutoffs(cd,drainage)
 
   d$riverN <- as.numeric(d$riverOrdered)
   d$speciesN <- as.numeric(as.factor(d$species))
@@ -88,7 +87,7 @@ prepareDataForJags <- function(d){
                 species = as.numeric(as.factor(d$species)),
                 season = d$season,
                 year = d$year - min(d$year) + 1,
-                yearForCutoff = d$year - d$minYear + 1, # minYear is watershed-specific
+                yearForCutoff = d$year - d$minYear + 1 + (d$minYear - 1997), # minYear is watershed-specific, -1997 because min year in cutoffYOYDATA is 1997
                 nYears = nYears, #max(d$year) - min(d$year) + 1,
                 nEvalRows = nEvalRows, evalRows = evalRows,
                 nFirstObsRows = nFirstObsRows, firstObsRows = firstObsRows,

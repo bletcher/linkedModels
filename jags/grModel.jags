@@ -23,7 +23,7 @@ model {
 
   for( i in 1:nEvalRows ){
     isYOY1[evalRows[i]] ~ dinterval( length[evalRows[i]],
-                                         cutoffYOYDATA[ season[evalRows[i]],riverDATA[evalRows[i]], yearForCutoff[evalRows[i]] ]
+                                         cutoffYOYDATA[ season[evalRows[i]],riverDATA[evalRows[i]], yearForCutoff[evalRows[i]], species[ lastObsRows[i] ] ]
     )
     isYOY[evalRows[i]] <- isYOY1[evalRows[i]] + 1
 
@@ -33,7 +33,7 @@ model {
   for( i in 1:( nLastObsRows ) ){
 
     isYOY1[ lastObsRows[ i ] ] ~ dinterval( length[ lastObsRows[ i ] ],
-                                            cutoffYOYDATA[ season[ lastObsRows[i] ],riverDATA[ lastObsRows[ i ] ], yearForCutoff[ lastObsRows[ i ] ] ]
+                                            cutoffYOYDATA[ season[ lastObsRows[i] ],riverDATA[ lastObsRows[ i ] ], yearForCutoff[ lastObsRows[ i ] ], species[ lastObsRows[i] ]  ]
     )
     isYOY[ lastObsRows[ i ] ] <- isYOY1[ lastObsRows[ i ] ] + 1
   }
