@@ -37,9 +37,10 @@ runDetectionModelTF <- FALSE
 speciesIn <- factor(species, levels = c('bkt','bnt','ats'), ordered = T)
 
 # update yoy cutoffs as get new data using
-# getYOYCutoffs(cd,drainage)
+# getYOYCutoffs(cd,drainage) - make sure to call with cd so all data enter and minYear==1997
 # which is called within prepareDataForJags() and is saved in
 # getAndPrepareDataWB.R
+# will need to update code for stanley
 
 
 ######################################################
@@ -58,8 +59,11 @@ if ( file.exists(cdFile) ) {
     mutate(drainage = drainage,
            countP = NA) # placeholder so prepareDataForJags() works for detection model
 
+  cd <- addNPasses(cd,drainage)
+
   save(cd, file = cdFile)
 }
+
 
 #################################
 # Detection model
@@ -159,13 +163,12 @@ for (iter in itersToUse) {
   done <- Sys.time()
   elapsed[[ii]] <- done - start
   print(paste("Elapsed =",elapsed))
+  save(dG, file = './data/out/dG.RData')
 }
 
 ######################################
 
 
-
-# get cutoffYOY right
 # 2, isYOY[ evalRows[i] ],species[ evalRows[i]],season[ evalRows[i] ],riverDATA[ evalRows[i] ]
 whiskerplot(dG[[1]], parameters = "grBeta[4,2,,,]")
 

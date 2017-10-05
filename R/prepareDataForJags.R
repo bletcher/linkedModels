@@ -45,7 +45,7 @@ prepareDataForJags <- function(d){
   d <- left_join( d,obsOcc )
   d$zForInit <- ifelse( (d$sampleNumber > d$minObsOcc) & (d$sampleNumber <= d$maxObsOcc), 1, NA )
 
-  load(file = "./data/cutoffYOYInclSpring1DATA.RData")
+  load(file = paste0("./data/cutoffYOYInclSpring1DATA_",drainage,".RData"))
   cutoffYOYDATA <- cutoffYOYInclSpring1DATA # update as needed using getYOYCutoffs(cd,drainage)
 
   d$riverN <- as.numeric(d$riverOrdered)

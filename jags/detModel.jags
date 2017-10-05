@@ -31,7 +31,7 @@ model{
   for(i in 1:nEvalRows){
 
     logit( phi[ evalRows[i] ] ) <-
-      phiBetaInt[ species[ evalRows[i] ],season[ evalRows[i] ],riverDATA[ evalRows[i] ] ]
+      phiBetaInt[ species[ evalRows[i] ],season[ evalRows[i] ],riverDATA[ evalRows[i] ],year[ evalRows[i] ] ]
 
   }
 
@@ -39,9 +39,11 @@ model{
   for( spp in 1:nSpecies ){
     for( s in 1:nSeasons ){
       for( r in 1:(nRivers) ){
+        for(y in 1:nYears){
 
-        # ADD year since have no flow or temp?
-        phiBetaInt[ spp,s,r ]  ~ dnorm( 0,1.5 )T(-3.5,3.5)
+          phiBetaInt[ spp,s,r,y ]  ~ dnorm( 0,1.5 )T(-3.5,3.5)
+
+        }
       }
     }
   }

@@ -20,6 +20,34 @@ getCoreData <- function(drainage = "west"){
     fillSizeLocation(size = F) #assumes fish stay in same location until observed elsewhere
 }
 
+#'Get pass data from raw data table
+#'
+#'@param drainage Which drainage, "west" or "stanley"
+#'@return a data frame
+#'@export
+
+addNPasses <- function(cd,dr){
+
+  reconnect()
+
+  nPasses <- tbl(conDplyr,"data_tagged_captures") %>%
+    filter(drainage == dr) %>%
+    dplyr::select(river,sample_number,pass) %>%
+    distinct() %>%
+    collect() %>%
+    arrange(sample_number,river) %>%
+
+    group_by(river,sample_number) %>%
+      summarize( nPasses = max(pass,na.rm=T) ) %>%
+    rename( sampleNumber = sample_number )
+
+
+  cd <- left_join( cd,nPasses, by = c('river',"sampleNumber") )
+  cd$nPasses <- ifelse( is.na(cd$nPasses) & cd$proportionSampled == 0, 1, cd$nPasses )
+  #coreData[is.na(nPasses)&proportionSampled==0,nPasses:=1] #when proportionSampled==0 no pass info
+  return(cd)
+}
+
 
 #'Get data from sites table
 #'
@@ -366,7 +394,7 @@ getYOYCutoffs <- function(d,dr = 'west'){
   yy <- yy[ order(yy$species,yy$year,yy$riverOrdered,yy$season),]
   cutoffYOYInclSpring1DATA <- array( yy$maxLength, c(nSeasons,nRivers,nYears,nSpecies) )
 
-  save(yy,cutoffYOYInclSpring1DATA,file='./data/cutoffYOYInclSpring1DATA.RData')
+  save(yy,cutoffYOYInclSpring1DATA,file = paste0('./data/cutoffYOYInclSpring1DATA_',dr,'.RData'))
 
   #check cutOffs
   #  yy[  yy$season==4 & yy$river == 'wb obear' ,c('year','maxLength')]
