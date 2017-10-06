@@ -18,12 +18,12 @@
 #install.packages("devtools")
 #devtools::install_github('Conte-Ecology/getWBData')
 library(arm)
-library(tidyverse)
+library(arrayhelpers)
 library(linkedModels)
 library(jagsUI)
 library(getWBData)
 library(lubridate)
-
+library(tidyverse)
 ######################################################
 # selection criteria
 
@@ -182,7 +182,18 @@ whiskerplot(dG[[1]], parameters = "grBetaInt[2,,,1]")
 
 whiskerplot(dG[[1]], parameters = "muGrBeta[,]")
 
-ggplot(dddG[[1]], aes(countPStd,grLength)) + geom_point() +
+# isYOY[evalRows[i]], species[evalRows[i]], season[evalRows[i]], riverDATA[evalRows[i]]
+grBetaInt <- array2df(dG[[1]]$sims.list$grBetaInt, list(iter=NA,isYOY=NA,species=NA,season=NA,river=NA), label.x="est")
+
+ggplot(grBetaInt, aes(est, color = as.factor(river))) + geom_freqpoly() +facet_grid(season~species)
+
+
+ggplot(filter(dddG[[1]], grLength<0.95 & grLength > (-0.5)), aes(countPStd,grLength)) + geom_point() +
+#ggplot(filter(dddG[[1]], grLength<0.95 & grLength > (-0.5)), aes(countPAllSppStd,grLength)) + geom_point() +
+  geom_smooth(method='lm') +
+  facet_grid(riverOrdered~season)
+
+ggplot(filter(dddG[[1]], grLength<0.95 & grLength > (-0.5)), aes(countPAllSppStd,countPStd)) + geom_point() +
   geom_smooth(method='lm') +
   facet_grid(riverOrdered~season)
 
