@@ -34,8 +34,12 @@ runGrowthModel <- function(d, parallel = FALSE){
 
 #'Add density data
 #'
-#'@param drainage Which drainage, "west" or "stanley"
-#'@return a data frame
+#'@param ddddGIn growth data
+#'@param ddDIn results from the detection model
+#'@param ddddGIn detection data
+#'@param meanOrIterIn whether the growth model gets mean P from the detection model, or results from an iteration
+#'@param sampleToUse if detection results are from an iteration, which iteration
+#'@return a data frame with standardized counts, countPStd is standardized by species counts, countPAllSppStd is standardized by the sum of counts of all species in the analysis
 #'@export
 #'
 
@@ -63,15 +67,34 @@ addDensityData <- function( ddddGIn,ddDIn,ddddDIn,meanOrIterIn,sampleToUse ){
     dplyr::select(species, season, riverOrdered, year, countP, meanOrIter, iterIn) %>%
     filter( !is.na(countP) )
 
+  # counts by species
   denForMergeSummary <- denForMerge %>%
     group_by( species,season,riverOrdered ) %>%
-    summarize( countPMean = mean(countP, na.rm = T),
-               countPSD = sd(countP, na.rm = T))
+    summarize( countPMean = mean( countP, na.rm = T ),
+               countPSD = sd( countP, na.rm = T) )
 
   denForMerge2 <- left_join( denForMerge, denForMergeSummary ) %>%
     mutate( countPStd = ( countP - countPMean )/countPSD )
 
   ddddGIn <- left_join( ddddGIn,denForMerge2, by = (c("species", "year", "season", "riverOrdered")) )
+
+  # counts across species (those in the analysis - e.g. species <- c("bkt", "bnt"))
+  # sum over species
+  denForMergeAllSpp <- denForMerge %>%
+    group_by( season,riverOrdered,year ) %>%
+    summarize( countPAllSpp = sum( countP, na.rm = T ) )
+
+  denForMergeSummaryAllSpp <- denForMergeAllSpp %>%
+    group_by( season,riverOrdered ) %>%
+    summarize( countPAllSppMean = mean( countPAllSpp, na.rm = T ),
+               countPAllSppSD = sd( countPAllSpp, na.rm = T) )
+
+  denForMerge2AllSpp <- left_join( denForMergeAllSpp, denForMergeSummaryAllSpp ) %>%
+    mutate( countPAllSppStd = ( countPAllSpp - countPAllSppMean )/countPAllSppSD )
+
+  ddddGIn <- left_join( ddddGIn,denForMerge2AllSpp, by = (c("year", "season", "riverOrdered")) )
+
+
   return(ddddGIn)
 
 }

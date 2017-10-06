@@ -1,4 +1,4 @@
-# next - add species to det and gr models (everywhere)
+# next -
 
 
 # species-, age, location-specific rates of size-dep growth
@@ -31,7 +31,7 @@ drainage <- "west" # ==
 species <- c("bkt", "bnt") #"bkt" # ==
 minCohort <- 2002 # >=
 maxSampleInterval <- 200 # <
-runDetectionModelTF <- FALSE
+runDetectionModelTF <- TRUE
 
 #make sure species are always in order and indexed correctly for arrays
 speciesIn <- factor(species, levels = c('bkt','bnt','ats'), ordered = T)
@@ -78,7 +78,7 @@ ddddD <- cd %>%
            sampleInterval < maxSampleInterval # this removes the later yearly samples. Want to stick with seasonal samples
   )
 
-dddD <- ddddD %>% prepareDataForJags()
+dddD <- ddddD %>% prepareDataForJags('detection')
 
 if (runDetectionModelTF) {
   ddD <- dddD %>% runDetectionModel(parallel = TRUE)
@@ -104,7 +104,6 @@ done <- Sys.time()
 #
 
 # need to check grBeta estimates
-# add species variable category
 
 ddddG <- cd %>%
   filter(  species %in% speciesIn,
@@ -156,7 +155,7 @@ for (iter in itersToUse) {
 
   dddG[[ii]] <- addDensityData( ddddG,ddD,ddddD,meanOrIter,iter )
 
-  ddG[[ii]] <- dddG[[ii]] %>% prepareDataForJags()
+  ddG[[ii]] <- dddG[[ii]] %>% prepareDataForJags("growth")
 
   dG[[ii]] <- ddG[[ii]] %>% runGrowthModel( parallel = TRUE )
 

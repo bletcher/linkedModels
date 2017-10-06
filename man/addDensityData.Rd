@@ -4,13 +4,21 @@
 \alias{addDensityData}
 \title{Add density data}
 \usage{
-addDensityData(ddddG, ddD, ddddD, meanOrIterIn, sampleToUse)
+addDensityData(ddddGIn, ddDIn, ddddDIn, meanOrIterIn, sampleToUse)
 }
 \arguments{
-\item{drainage}{Which drainage, "west" or "stanley"}
+\item{ddddGIn}{growth data}
+
+\item{ddDIn}{results from the detection model}
+
+\item{meanOrIterIn}{whether the growth model gets mean P from the detection model, or results from an iteration}
+
+\item{sampleToUse}{if detection results are from an iteration, which iteration}
+
+\item{ddddGIn}{detection data}
 }
 \value{
-a data frame
+a data frame with standardized counts, countPStd is standardized by species counts, countPAllSppStd is standardized by the sum of counts of all species in the analysis
 }
 \description{
 Add density data

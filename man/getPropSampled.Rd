@@ -6,6 +6,9 @@
 \usage{
 getPropSampled(nSeasons, nRivers, nYears)
 }
+\arguments{
+\item{nSeasons, nRivers, nYears}{counts}
+}
 \value{
 a list of propSampleDATA, and zeroSectionsDATA
 }

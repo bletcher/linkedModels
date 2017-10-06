@@ -4,7 +4,7 @@
 \alias{getYOYCutoffs}
 \title{Get cutoFFYoy data}
 \usage{
-getYOYCutoffs(d, dr)
+getYOYCutoffs(d, dr = "west")
 }
 \arguments{
 \item{d}{dataframe created with getCoreData()}

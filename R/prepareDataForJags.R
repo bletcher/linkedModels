@@ -1,10 +1,11 @@
 #'Get data ready to run the growth model
 #'
 #'@param d a data frame created using getCoreData()
-#'@return A list for importing into the jags run. Run with runGrowthModel()
+#'@param modelType a character variable specifying the model type, ("detection', "growth"). This specifies the data that go into 'data'
+#'@return A list for importing into the jags run. Run with run"modelType"Model()
 #'@export
 
-prepareDataForJags <- function(d){
+prepareDataForJags <- function(d,modelType){
 
   nInd <- n_distinct(d$tag, na.rm = T)
   nOcc <- n_distinct(d$sampleIndex, na.rm = T)
@@ -75,6 +76,7 @@ prepareDataForJags <- function(d){
             flowStd = (meanFlow - meanFlowMean)/meanFlowSD
           )
 
+  if ( modelType == "detection" ){
   data <- list( encDATA = d$enc,
                 lengthDATA = d$observedLength,
                 riverDATA = d$riverN,
@@ -101,11 +103,43 @@ prepareDataForJags <- function(d){
                 sampleInterval = d$sampleInterval,
                 zForInit = d$zForInit, # z for firstObs gets set to zero in jags. Can't set values in inits for values assigned in jags
                 propSampledDATA = propSampled$propSampledDATA,
-                countPStd = d$countPStd,
                 tempStd = d$tempStd,
                 flowStd = d$flowStd
+    )
+  }
+  if ( modelType == "growth" ){
+    data <- list( encDATA = d$enc,
+                  lengthDATA = d$observedLength,
+                  riverDATA = d$riverN,
+                  ind = d$tagIndex,
+                  nRivers = nRivers,
+                  nSpecies = nSpecies,
+                  #nInd = nInd,
+                  #nOcc = nOcc,
+                  #occ = d$sampleIndex - minOcc + 1,
+                  species = as.numeric(as.factor(d$species)),
+                  season = d$season,
+                  year = d$year - min(d$year) + 1,
+                  yearForCutoff = d$year - d$minYear + 1 + (d$minYear - 1997), # minYear is watershed-specific, -1997 because min year in cutoffYOYDATA is 1997
+                  nYears = nYears, #max(d$year) - min(d$year) + 1,
+                  nEvalRows = nEvalRows, evalRows = evalRows,
+                  nFirstObsRows = nFirstObsRows, firstObsRows = firstObsRows,
+                  nLastObsRows = nLastObsRows, lastObsRows = lastObsRows,
+                  nAllRows = nAllRows,
+                  nSeasons = nSeasons,
+                  lengthMean = array(means$meanLen, dim = c(nRivers,nSeasons,nSpecies)),
+                  lengthSD = array(means$sdLen, dim = c(nRivers,nSeasons,nSpecies)),
+                  sampleIntervalMean = array(means$sampleIntervalMean, dim = c(nRivers,nSeasons,nSpecies)),
+                  cutoffYOYDATA = cutoffYOYDATA,
+                  sampleInterval = d$sampleInterval,
+                  zForInit = d$zForInit, # z for firstObs gets set to zero in jags. Can't set values in inits for values assigned in jags
+                  propSampledDATA = propSampled$propSampledDATA,
+                  countPStd = d$countPStd,
+                  tempStd = d$tempStd,
+                  flowStd = d$flowStd
+    )
+  }
 
-  )
   return(data)
 }
 
