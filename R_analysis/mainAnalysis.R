@@ -35,9 +35,11 @@ runDetectionModelTF <- TRUE
 
 #make sure species are always in order and indexed correctly for arrays
 speciesIn <- factor(species, levels = c('bkt','bnt','ats'), ordered = T)
+riverOrderedIn <- factor(c('west brook', 'wb jimmy', 'wb mitchell',"wb obear"),levels=c('west brook', 'wb jimmy', 'wb mitchell',"wb obear"),labels = c("west brook","wb jimmy","wb mitchell","wb obear"), ordered = T)
+#riverOrderedIn <- factor(1:3,levels=c('mainstem', 'west', 'east'),labels = c('mainstem', 'west', 'east'), ordered=T)
 
 # update yoy cutoffs as get new data using
-# getYOYCutoffs(cd,drainage) - make sure to call with cd so all data enter and minYear==1997
+# getYOYCutoffs(cd,drainage) - make sure to call with cd so all data enter and minYear==1997 for 'west'
 # which is called within prepareDataForJags() and is saved in
 # getAndPrepareDataWB.R
 # will need to update code for stanley
@@ -167,6 +169,19 @@ for (iter in itersToUse) {
 
 ######################################
 
+# Explore predictions
+limits <- 2
+nPoints <- 5
+iterForPred <- 100
+preds <- getPrediction(dG[[1]], limits, nPoints, iterForPred)
+
+p <- preds %>% filter(flow == 0,temp==0,count==0)
+
+ggplot(p, aes(len,predGr,color = species)) +
+  geom_point() +
+  geom_line() +
+  facet_grid(river~season+isYOY)
+
 
 # 2, isYOY[ evalRows[i] ],species[ evalRows[i]],season[ evalRows[i] ],riverDATA[ evalRows[i] ]
 whiskerplot(dG[[1]], parameters = "grBeta[4,2,,,]")
@@ -182,10 +197,6 @@ whiskerplot(dG[[1]], parameters = "grBetaInt[2,,,1]")
 
 whiskerplot(dG[[1]], parameters = "muGrBeta[,]")
 
-# isYOY[evalRows[i]], species[evalRows[i]], season[evalRows[i]], riverDATA[evalRows[i]]
-grBetaInt <- array2df(dG[[1]]$sims.list$grBetaInt, list(iter=NA,isYOY=NA,species=NA,season=NA,river=NA), label.x="est")
-
-ggplot(grBetaInt, aes(est, color = as.factor(river))) + geom_freqpoly() +facet_grid(season~species)
 
 
 ggplot(filter(dddG[[1]], grLength<0.95 & grLength > (-0.5)), aes(countPStd,grLength)) + geom_point() +

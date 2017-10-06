@@ -86,7 +86,7 @@ prepareDataForJags <- function(d,modelType){
                 #nInd = nInd,
                 #nOcc = nOcc,
                 #occ = d$sampleIndex - minOcc + 1,
-                species = as.numeric(as.factor(d$species)),
+                species = as.numeric(factor(species, levels = c('bkt','bnt','ats'), ordered = T)), #this might screw up the indexing if a lower level is ignored in the species list   as.numeric(as.factor(d$species)),
                 season = d$season,
                 year = d$year - min(d$year) + 1,
                 yearForCutoff = d$year - d$minYear + 1 + (d$minYear - 1997), # minYear is watershed-specific, -1997 because min year in cutoffYOYDATA is 1997
@@ -117,7 +117,7 @@ prepareDataForJags <- function(d,modelType){
                   #nInd = nInd,
                   #nOcc = nOcc,
                   #occ = d$sampleIndex - minOcc + 1,
-                  species = as.numeric(as.factor(d$species)),
+                  species = as.numeric(factor(species, levels = c('bkt','bnt','ats'), ordered = T)), #this might screw up the indexing if a lower level is ignored in the species list   as.numeric(as.factor(d$species)),
                   season = d$season,
                   year = d$year - min(d$year) + 1,
                   yearForCutoff = d$year - d$minYear + 1 + (d$minYear - 1997), # minYear is watershed-specific, -1997 because min year in cutoffYOYDATA is 1997
