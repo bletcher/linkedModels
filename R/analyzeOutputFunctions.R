@@ -8,7 +8,7 @@
 #'@return a data frame
 #'@export
 
-getPrediction <- function(d, limits = 2, nPoints, iterForPred){
+getPrediction <- function(d, limits = 2, nPoints = 5, iterForPred){
 
   # get grBetaInt in df format
   grBetaInt <- array2df(d$sims.list$grBetaInt, levels = list(iter=NA,isYOY=c(0,1),species=species,season=1:nSeasons,river=riverOrderedIn), label.x="betaInt")

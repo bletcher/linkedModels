@@ -175,12 +175,13 @@ nPoints <- 5
 iterForPred <- 100
 preds <- getPrediction(dG[[1]], limits, nPoints, iterForPred)
 
-p <- preds %>% filter(flow == 0,temp==0,count==0)
+p <- preds %>% filter(flow == 0,temp==0,isYOY==1,count==0)
 
-ggplot(p, aes(len,predGr,color = species)) +
+ggplot(p, aes(len,predGr,color=species)) +
   geom_point() +
-  geom_line() +
-  facet_grid(river~season+isYOY)
+ # geom_line() +
+  geom_smooth(method="lm") +
+  facet_grid(river~season)
 
 
 # 2, isYOY[ evalRows[i] ],species[ evalRows[i]],season[ evalRows[i] ],riverDATA[ evalRows[i] ]
