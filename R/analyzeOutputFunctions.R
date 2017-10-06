@@ -38,14 +38,19 @@ getPrediction <- function(d, limits = 2, nPoints = 5, iterForPred){
   # Put them together
   preds <- cbind( predTemplateLong,grBetaLong )
 
+  # This model structure needs to match that in grModel.jags
   preds <- preds %>%
     mutate( predGr = betaInt +
               beta1 * len +
               beta2 * count +
-              beta3 * len * count +
-              beta4 * temp +
-              beta5 * flow +
-              beta6 * temp * flow
+              beta3 * len^2 +
+              beta4 * count^2 +
+              beta5 * len * count +
+              beta6 * temp +
+              beta7 * flow +
+              beta8 * temp^2 +
+              beta9 * flow^2 +
+              beta610 * temp * flow
     )
 
 

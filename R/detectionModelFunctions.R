@@ -49,7 +49,7 @@ getDensities <- function(dddd,dd, meanOrIter = "mean", sampleToUse = sampleToUse
   counts <- dddd %>%
     filter( enc == 1 ) %>%
     group_by( species,season,riverOrdered,year ) %>%
-    summarise( count = n() ) %>%
+    dplyr::summarise( count = n() ) %>%
     mutate( speciesN = as.numeric(as.factor(species)),
             seasonN = season,
             riverN = as.numeric(riverOrdered),
