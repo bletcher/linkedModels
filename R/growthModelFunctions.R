@@ -10,16 +10,16 @@ runGrowthModel <- function(d, parallel = FALSE){
 
   inits <- function(){
 #    list(grBetaInt = array(rnorm(2*d$nSpecies*d$nSeasons*d$nRivers*d$nYears,0,2.25),c(2,d$nSpecies,d$nSeasons,d$nRivers,d$nYears)))
-    list(grBetaInt = array(rnorm(2*d$nSpecies*d$nSeasons*d$nRivers,0,2.25),c(2,d$nSpecies,d$nSeasons,d$nRivers)))
-
+    list(grInt = array(rnorm(2*d$nSpecies*d$nSeasons*d$nRivers,0,2.25),c(2,d$nSpecies,d$nSeasons,d$nRivers)))
      }
 
-  params <- c("grBetaInt","muGrBetaInt","sigmaGrBetaInt","grBeta","muGrBeta","grSigmaBeta")
+#  params <- c("grBetaInt","muGrBetaInt","sigmaGrBetaInt","grBeta","muGrBeta","grSigmaBeta","sigmaGrSigmaBeta")
+  params <- c('grInt','sigmaInt','grBeta','sigmaBeta','grIntMu','sigmaIntMu','grBetaMu','grBetaSigma','sigmaBetaMu','sigmaBetaSigma')
 
   outGR <- jags(data = d,
                 inits = inits,
                 parameters.to.save = params,
-                model.file = "./jags/grModel.jags",
+                model.file = "./jags/grModel2.jags",
                 n.chains = 3,
                 n.adapt = 1000, #1000
                 n.iter = 2000,

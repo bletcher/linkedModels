@@ -50,7 +50,7 @@ getPrediction <- function(d, limits = 2, nPoints = 5, iterForPred){
               beta7 * flow +
               beta8 * temp^2 +
               beta9 * flow^2 +
-              beta610 * temp * flow
+              beta10 * temp * flow
     )
 
 

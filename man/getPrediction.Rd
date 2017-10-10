@@ -4,7 +4,7 @@
 \alias{getPrediction}
 \title{Generate predictions from an iteration of a jags model run}
 \usage{
-getPrediction(d, limits = 2, nPoints, iterForPred)
+getPrediction(d, limits = 2, nPoints = 5, iterForPred)
 }
 \arguments{
 \item{d}{a model run dataFrame}

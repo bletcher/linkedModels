@@ -31,7 +31,7 @@ drainage <- "west" # ==
 species <- c("bkt", "bnt") #"bkt" # ==
 minCohort <- 2002 # >=
 maxSampleInterval <- 200 # <
-runDetectionModelTF <- TRUE
+runDetectionModelTF <- FALSE
 
 #make sure species are always in order and indexed correctly for arrays
 speciesIn <- factor(species, levels = c('bkt','bnt','ats'), ordered = T)
@@ -164,13 +164,13 @@ for (iter in itersToUse) {
   done <- Sys.time()
   elapsed[[ii]] <- done - start
   print(paste("Elapsed =",elapsed))
-  save(dG, file = './data/out/dG.RData')
+  save(dG, file = paste0('./data/out/dG_', as.integer(Sys.time()), '.RData'))
 }
 
 ######################################
 
 # Explore predictions
-limits <- 2
+limits <- 2 # -/+ limits on standatrdized range of input variable
 nPoints <- 5
 iterForPred <- 100
 preds <- getPrediction(dG[[1]], limits, nPoints, iterForPred)
@@ -179,24 +179,40 @@ p <- preds %>% filter(flow == 0,temp==0,isYOY==1,count==0)
 
 ggplot(p, aes(len,predGr,color=species)) +
   geom_point() +
- # geom_line() +
-  geom_smooth(method="lm") +
+  geom_line() +
+ # geom_smooth(method="lm") +
   facet_grid(river~season)
 
+#plotPreds <- function( preds, x, y, len = 0, count = 0, flow = 0, temp = 0, isYOY = 1 ){
+
+  p <- preds %>% filter(count == 0, temp == 0, isYOY == 0, len == 0)
+
+  ggplot(p, aes(flow,predGr,color=species)) +
+    geom_point() +
+    geom_line() +
+    # geom_smooth(method="lm") +
+    ylim(-5,70) +
+    facet_grid(river~season)
+
+
+
+  meanGRs <- ddddG %>%
+    group_by(species,riverOrdered,season) %>%
+    summarize(mean=mean(grLength*sampleInterval,na.rm=T))
 
 # 2, isYOY[ evalRows[i] ],species[ evalRows[i]],season[ evalRows[i] ],riverDATA[ evalRows[i] ]
 whiskerplot(dG[[1]], parameters = "grBeta[4,2,,,]")
 
 
 #  [isYOY,species,season,riverDATA]
-whiskerplot(dG[[1]], parameters = "muGrBetaInt[2,,1,]")
+whiskerplot(dG[[1]], parameters = "muGrBetaInt[2,,4,]")
 #  [1:2,isYOY,species,season,riverDATA]
-whiskerplot(dG[[1]], parameters = "grBeta[2,,,,]")
-#  [isYOY,species,season,riverDATA,year]
-whiskerplot(dG[[1]], parameters = "grBetaInt[2,,,1]")
+whiskerplot(dG[[1]], parameters = "grBeta[3,2,1,1,]")
+#  [isYOY,species,season,riverDATA]
+whiskerplot(dG[[1]], parameters = "grBetaInt[2,1,,2]")
 
-
-whiskerplot(dG[[1]], parameters = "muGrBeta[,]")
+# yoy,spp,s,r,y
+whiskerplot(dG[[1]], parameters = "grSigmaBeta[2,1,2,1,]")
 
 
 
