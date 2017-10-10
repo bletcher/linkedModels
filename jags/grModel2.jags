@@ -71,6 +71,7 @@ model {
     +    grBeta[ 8, isYOY[evalRows[i]], species[evalRows[i]], season[evalRows[i]], riverDATA[evalRows[i]] ] * tempStd[evalRows[i]]^2
     +    grBeta[ 9, isYOY[evalRows[i]], species[evalRows[i]], season[evalRows[i]], riverDATA[evalRows[i]] ] * flowStd[evalRows[i]]^2
     +    grBeta[10, isYOY[evalRows[i]], species[evalRows[i]], season[evalRows[i]], riverDATA[evalRows[i]] ] * tempStd[evalRows[i]] * flowStd[evalRows[i]]
+#   +    grIndRE[ ind[evalRows[i]] ]
 
     expectedGRSigma[evalRows[i]] <-
       sigmaInt[        isYOY[evalRows[i]], species[evalRows[i]], season[evalRows[i]], riverDATA[evalRows[i]] ]
@@ -93,10 +94,10 @@ model {
       for( s in 1:nSeasons ){
         for( r in 1:nRivers ){
 
-             grInt[ yoy,spp,s,r ] ~ dnorm( grIntMu[ yoy,s ], 1 / grIntSigma[ yoy,spp,s,r ] ^ 2 )
+             grInt[ yoy,spp,s,r ] ~ dnorm(    grIntMu[ yoy,s ], 1 /    grIntSigma[ yoy,s ] ^ 2 )
           sigmaInt[ yoy,spp,s,r ] ~ dnorm( sigmaIntMu[ yoy,s ], 1 / sigmaIntSigma[ yoy,s ] ^ 2 )
 
-          for (i in 1:10){  # change range for more betas
+          for (i in 1:10){  # change range to match number of betas
 
                grBeta[ i,yoy,spp,s,r ] ~ dnorm(    grBetaMu[ i,yoy,s ],   grBetaSigma[ i,yoy,s ] )
             sigmaBeta[ i,yoy,spp,s,r ] ~ dnorm( sigmaBetaMu[ i,yoy,s ],sigmaBetaSigma[ i,yoy,s ] )T(0,)
@@ -122,18 +123,24 @@ model {
     }
   }
 
-  for ( i in 1:10 ){ # change range for more betas
+  for ( i in 1:10 ){ # change range to match number of betas
     for ( yoy in 1:2 ){
       for ( s in 1:nSeasons ){
 
-         grBetaMu[ i,yoy,s ] ~ dnorm( 0,0.001 )
-      grBetaSigma[ i,yoy,s ] ~ dunif( 0,100 )
+           grBetaMu[ i,yoy,s ] ~ dnorm( 0,0.001 )
+        grBetaSigma[ i,yoy,s ] ~ dunif( 0,100 )
 
-         sigmaBetaMu[ i,yoy,s ] ~ dnorm( 0,0.001 )
-      sigmaBetaSigma[ i,yoy,s ] ~ dunif( 0,100 )
+           sigmaBetaMu[ i,yoy,s ] ~ dnorm( 0,0.001 )
+        sigmaBetaSigma[ i,yoy,s ] ~ dunif( 0,100 )
 
+      }
     }
   }
+
+# for ( ind in 1:nInd ){
+#    grIndRE[ ind ] ~ dnorm( 0,0.001 ) # structure by spp?
+#}
+
 
 } # model
 
