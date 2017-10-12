@@ -14,7 +14,13 @@ runGrowthModel <- function(d, parallel = FALSE){
      }
 
 #  params <- c("grBetaInt","muGrBetaInt","sigmaGrBetaInt","grBeta","muGrBeta","grSigmaBeta","sigmaGrSigmaBeta")
-  params <- c('grInt','sigmaInt','grBeta','sigmaBeta','grIntMu','sigmaIntMu','grBetaMu','grBetaSigma','sigmaBetaMu','sigmaBetaSigma')
+  params <- c('grInt','sigmaInt','grBeta',
+  #            'sigmaBeta',
+              'grIntMu','grIntSigma','sigmaIntMu','sigmaIntSigma','grBetaMu','grBetaSigma'
+  #            'sigmaBetaMu',
+  #            'sigmaBetaSigma'
+               , 'grIndRE'
+              )
 
   outGR <- jags(data = d,
                 inits = inits,
@@ -22,9 +28,9 @@ runGrowthModel <- function(d, parallel = FALSE){
                 model.file = "./jags/grModel2.jags",
                 n.chains = 3,
                 n.adapt = 1000, #1000
-                n.iter = 2000,
-                n.burnin = 1000,
-                n.thin = 4,
+                n.iter = 200,
+                n.burnin = 100,
+                n.thin = 2,
                 parallel = parallel
   )
 

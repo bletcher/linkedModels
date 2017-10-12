@@ -10,13 +10,13 @@
 
 getPrediction <- function(d, limits = 2, nPoints = 5, iterForPred){
 
-  # get grBetaInt in df format
-  grBetaInt <- array2df(d$sims.list$grBetaInt, levels = list(iter=NA,isYOY=c(0,1),species=species,season=1:nSeasons,river=riverOrderedIn), label.x="betaInt")
+  # get grInt in df format
+  grInt <- array2df(d$sims.list$grInt, levels = list(iter=NA,isYOY=c(0,1),species=species,season=1:nSeasons,river=riverOrderedIn), label.x="int")
 
-  # get grBeta in df format and merge in grBetaInt
+  # get grBeta in df format and merge in grInt
   grBeta1 <- array2df(d$sims.list$grBeta, levels = list(iter=NA,beta=NA,isYOY=c(0,1),species=species,season=1:nSeasons,river=riverOrderedIn), label.x="est")
-  grBeta <- spread( grBeta1, key = beta, value = est, sep="" )  %>%
-    left_join( .,grBetaInt )
+  grBeta <- spread( grBeta1, key = beta, value = est, sep = "" )  %>%
+    left_join( .,grInt )
 
   # prediction template
   x <- seq( -limits,limits,length.out = nPoints )
@@ -40,7 +40,7 @@ getPrediction <- function(d, limits = 2, nPoints = 5, iterForPred){
 
   # This model structure needs to match that in grModel.jags
   preds <- preds %>%
-    mutate( predGr = betaInt +
+    mutate( predGr = int +
               beta1 * len +
               beta2 * count +
               beta3 * len^2 +
@@ -52,7 +52,6 @@ getPrediction <- function(d, limits = 2, nPoints = 5, iterForPred){
               beta9 * flow^2 +
               beta10 * temp * flow
     )
-
 
   return(preds)
 }

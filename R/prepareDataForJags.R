@@ -76,11 +76,13 @@ prepareDataForJags <- function(d,modelType){
             flowStd = (meanFlow - meanFlowMean)/meanFlowSD
           )
 
+  d$tagIndexJags <- as.numeric(as.factor(d$tagIndex)) #make sure have right tagIndices for subset of fish for Jags
+
   if ( modelType == "detection" ){
   data <- list( encDATA = d$enc,
                 lengthDATA = d$observedLength,
                 riverDATA = d$riverN,
-                ind = d$tagIndex,
+                ind = d$tagIndexJags,
                 nRivers = nRivers,
                 nSpecies = nSpecies,
                 #nInd = nInd,
@@ -111,10 +113,10 @@ prepareDataForJags <- function(d,modelType){
     data <- list( encDATA = d$enc,
                   lengthDATA = d$observedLength,
                   riverDATA = d$riverN,
-                  ind = d$tagIndex,
+                  ind = d$tagIndexJags,
                   nRivers = nRivers,
                   nSpecies = nSpecies,
-                  #nInd = nInd,
+                  nInd = nInd,
                   #nOcc = nOcc,
                   #occ = d$sampleIndex - minOcc + 1,
                   species = as.numeric(factor(d$species, levels = c('bkt','bnt','ats'), ordered = T)), #this might screw up the indexing if a lower level is ignored in the species list   as.numeric(as.factor(d$species)),
