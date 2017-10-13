@@ -4,11 +4,11 @@
 #'@param d a model run dataFrame
 #'@param limits symetrical lower and upper limit for the predictions
 #'@param nPoints the number of points between the limits. Use an odd # to ensure a value of 0
-#'@param iterForPred, the iteration from the model for prediction
+#'@param itersForPred, the iterations from the model for prediction
 #'@return a data frame
 #'@export
 
-getPrediction <- function(d, limits = 2, nPoints = 5, iterForPred){
+getPrediction <- function(d, limits = 2, nPoints = 5, itersForPred){
 
   # get grInt in df format
   grInt <- array2df(d$sims.list$grInt, levels = list(iter=NA,isYOY=c(0,1),species=species,season=1:nSeasons,river=riverOrderedIn), label.x="int")
@@ -26,17 +26,18 @@ getPrediction <- function(d, limits = 2, nPoints = 5, iterForPred){
                               count = rep(x, each = nPoints ^ 2),
                               flow =  rep(x, each = nPoints ^ 1),
                               temp =      x
-  )
+                            )
 
-  # expand predTemplate across grBeta rows for a given iteration
-  grBetaIter <- grBeta %>% filter( iter == iterForPred )
 
-  # repeat predTemplate nrow( grBetaIter ) times
-  predTemplateLong <- do.call("rbind", replicate( nrow( grBetaIter ), predTemplate, simplify = FALSE) )
-  # repeat each row of grbetaIter nrow(predTemplate) times
-  grBetaLong <- grBetaIter[rep(seq_len(nrow(grBetaIter)), each = nrow(predTemplate)),]
-  # Put them together
-  preds <- cbind( predTemplateLong,grBetaLong )
+    # expand predTemplate across grBeta rows for a given set of iterations
+    grBetaIter <- grBeta %>% filter( iter %in% itersForPred)
+
+    # repeat predTemplate nrow( grBetaIter ) times
+    predTemplateLong <- do.call("rbind", replicate( nrow( grBetaIter ), predTemplate, simplify = FALSE) )
+    # repeat each row of grbetaIter nrow(predTemplate) times
+    grBetaLong <- grBetaIter[rep(seq_len(nrow(grBetaIter)), each = nrow(predTemplate)),]
+    # Put them together
+    preds <- cbind( predTemplateLong,grBetaLong )
 
   # This model structure needs to match that in grModel.jags
   preds <- preds %>%

@@ -175,18 +175,15 @@ for (iter in itersToUse) {
 limits <- 2 # -/+ limits on standatrdized range of input variable
 nPoints <- 5
 
-iterForPred <- 100
-preds <- getPrediction(dG[[1]], limits, nPoints, iterForPred)
+nItersForPred <- 100
+itersForPred <- sample( 1:dG[[1]]$mcmc.info$n.samples,nItersForPred )
+preds <- getPrediction( dG[[1]], limits, nPoints, itersForPred )
 
-itersForPred <- sample( 1:dG[[1]]$mcmc.info$n.samples,100 )
-preds <- NULL
-for ( i in itersForPred ){
-  preds <- bind_rows( preds,getPrediction( dG[[1]], limits, nPoints, i ) )
-}
-# need to adapt getPrediction() to do a set of iters at once
+#######################
+# length graph
 p <- preds %>% filter(flow == 0,temp==0,isYOY==0,count==0,species=="bkt")
 
-ggplot(p, aes(len,predGr,group=iter)) +
+ggplot(p, aes(len,predGr,group = iter)) +
 #  geom_point() +
   geom_line( color="lightgrey", alpha=0.25 ) +
  # geom_smooth(method="lm") +
@@ -275,10 +272,10 @@ gg2 <- array2df(dG[[1]]$sims.list$sigmaIntSigma, label.x = "est")
 
 gg2$chain <- rep(1:dG[[1]]$mcmc.info$n.chains, each = dG[[1]]$mcmc.info$n.samples/dG[[1]]$mcmc.info$n.chains)
 gg2$iter <- 1:as.numeric(dG[[1]]$mcmc.info$n.samples/dG[[1]]$mcmc.info$n.chains)
-ggplot(gg2, aes(iter,est)) + geom_point( aes(color=factor(chain)), size = 0.1 ) + facet_grid(d2~d3)
+ggplot(gg2, aes(iter,est)) + geom_point( aes(color = factor(chain)), size = 0.1 ) + facet_grid(d2~d3)
 
 gg3 <- array2df(dG[[1]]$sims.list$grBetaMu, label.x = "est")
-gg3 <- array2df(dG[[1]]$sims.list$grBetaSigma, label.x = "est")
+gg3 <- array2df(dG[[1]]$sims.list$grBetaSigma, label.x = "est") # seems uninformative
 
 gg3$chain <- rep(1:dG[[1]]$mcmc.info$n.chains, each = dG[[1]]$mcmc.info$n.samples/dG[[1]]$mcmc.info$n.chains)
 gg3$iter <- 1:as.numeric(dG[[1]]$mcmc.info$n.samples/dG[[1]]$mcmc.info$n.chains)
@@ -306,6 +303,7 @@ whiskerplot(dG[[1]], parameters = "grBetaMu[,2,]")
 
 # 2, isYOY[ evalRows[i] ],species[ evalRows[i]],season[ evalRows[i] ],riverDATA[ evalRows[i] ]
 whiskerplot(dG[[1]], parameters = "grBeta[,2,,,]")
+whiskerplot(dG[[1]], parameters = "sigmaBeta[,2,,,]")
 
 
 #  [isYOY,species,season,riverDATA]

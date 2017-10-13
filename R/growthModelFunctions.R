@@ -15,11 +15,11 @@ runGrowthModel <- function(d, parallel = FALSE){
 
 #  params <- c("grBetaInt","muGrBetaInt","sigmaGrBetaInt","grBeta","muGrBeta","grSigmaBeta","sigmaGrSigmaBeta")
   params <- c('grInt','sigmaInt','grBeta',
-  #            'sigmaBeta',
+              'sigmaBeta',
               'grIntMu','grIntSigma','sigmaIntMu','sigmaIntSigma','grBetaMu','grBetaSigma'
-  #            'sigmaBetaMu',
-  #            'sigmaBetaSigma'
-               , 'grIndRE'
+            ,  'sigmaBetaMu',
+            'sigmaBetaSigma'
+ #              , 'grIndRE'
               )
 
   outGR <- jags(data = d,
