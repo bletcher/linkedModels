@@ -12,7 +12,7 @@ getYOYCutoffs(d, dr = "west")
 \item{dr}{Which drainage, "west" or "stanley"}
 }
 \value{
-a data frame
+a data frame and an array
 }
 \description{
 Get cutoFFYoy data

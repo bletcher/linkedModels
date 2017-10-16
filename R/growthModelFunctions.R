@@ -15,10 +15,10 @@ runGrowthModel <- function(d, parallel = FALSE){
 
 #  params <- c("grBetaInt","muGrBetaInt","sigmaGrBetaInt","grBeta","muGrBeta","grSigmaBeta","sigmaGrSigmaBeta")
   params <- c('grInt','sigmaInt','grBeta',
-              'sigmaBeta',
+           #   'sigmaBeta',
               'grIntMu','grIntSigma','sigmaIntMu','sigmaIntSigma','grBetaMu','grBetaSigma'
-            ,  'sigmaBetaMu',
-            'sigmaBetaSigma'
+        #    ,  'sigmaBetaMu',
+        #    'sigmaBetaSigma'
  #              , 'grIndRE'
               )
 
@@ -38,7 +38,7 @@ runGrowthModel <- function(d, parallel = FALSE){
   return(outGR)
 }
 
-#'Add density data
+#'Add density and biomass data
 #'
 #'@param ddddGIn growth data
 #'@param ddDIn results from the detection model
@@ -84,6 +84,17 @@ addDensityData <- function( ddddGIn,ddDIn,ddddDIn,meanOrIterIn,sampleToUse ){
 
   ddddGIn <- left_join( ddddGIn,denForMerge2, by = (c("species", "year", "season", "riverOrdered")) )
 
+  # get mean masses by species
+  massForMergeSummary <- ddddGIn %>%
+    group_by( species,season,riverOrdered ) %>%
+    summarize( massMean = mean( observedWeight, na.rm = T ),
+               massSD = sd( observedWeight, na.rm = T) )
+
+  ddddGIn <- left_join( ddddGIn, massForMergeSummary ) %>%
+    mutate( massStd = ( observedWeight - massMean )/massSD,
+            biomassStd = massStd * countPStd )
+
+  ###################################################################################
   # counts across species (those in the analysis - e.g. species <- c("bkt", "bnt"))
   # sum over species
   denForMergeAllSpp <- denForMerge %>%
@@ -100,7 +111,17 @@ addDensityData <- function( ddddGIn,ddDIn,ddddDIn,meanOrIterIn,sampleToUse ){
 
   ddddGIn <- left_join( ddddGIn,denForMerge2AllSpp, by = (c("year", "season", "riverOrdered")) )
 
+  # get mean masses across species
+  massForMergeSummaryAllSpp <- ddddGIn %>%
+    group_by( season,riverOrdered ) %>%
+    summarize( massAllSppMean = mean( observedWeight, na.rm = T ),
+               massAllSppSD = sd( observedWeight, na.rm = T) )
+
+  ddddGIn <- left_join( ddddGIn, massForMergeSummaryAllSpp ) %>%
+    mutate( massAllSppStd = ( observedWeight - massAllSppMean )/massAllSppSD,
+            biomassAllSppStd = massAllSppStd * countPAllSppStd )
 
   return(ddddGIn)
 
 }
+

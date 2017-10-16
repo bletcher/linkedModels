@@ -2,7 +2,7 @@
 % Please edit documentation in R/growthModelFunctions.R
 \name{addDensityData}
 \alias{addDensityData}
-\title{Add density data}
+\title{Add density and biomass data}
 \usage{
 addDensityData(ddddGIn, ddDIn, ddddDIn, meanOrIterIn, sampleToUse)
 }
@@ -21,5 +21,5 @@ addDensityData(ddddGIn, ddDIn, ddddDIn, meanOrIterIn, sampleToUse)
 a data frame with standardized counts, countPStd is standardized by species counts, countPAllSppStd is standardized by the sum of counts of all species in the analysis
 }
 \description{
-Add density data
+Add density and biomass data
 }

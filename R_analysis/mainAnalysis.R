@@ -1,5 +1,6 @@
 # next -
 
+# compare countPStd (by species) with countPAllSppStd (all spp in analysis)
 
 # species-, age, location-specific rates of size-dep growth
 # estimate spp-sp abundances for each river for each sample
@@ -158,6 +159,7 @@ for (iter in itersToUse) {
   # saving into a list for now, could also map()
 
   dddG[[ii]] <- addDensityData( ddddG,ddD,ddddD,meanOrIter,iter )
+  dddG[[ii]] <- addBiomassDeltas( dddG[[ii]] )
 
   ddG[[ii]] <- dddG[[ii]] %>% prepareDataForJags("growth")
 
@@ -178,10 +180,11 @@ nPoints <- 5
 nItersForPred <- 100
 itersForPred <- sample( 1:dG[[1]]$mcmc.info$n.samples,nItersForPred )
 preds <- getPrediction( dG[[1]], limits, nPoints, itersForPred )
+#predsSigma <- getPredictionSigma( dG[[1]], limits, nPoints, itersForPred )
 
 #######################
 # length graph
-p <- preds %>% filter(flow == 0,temp==0,isYOY==0,count==0,species=="bkt")
+p <- preds %>% filter(flow == 0,temp==0,isYOY==1,count==0,species=="bkt")
 
 ggplot(p, aes(len,predGr,group = iter)) +
 #  geom_point() +
@@ -191,9 +194,9 @@ ggplot(p, aes(len,predGr,group = iter)) +
   theme(panel.grid.minor = element_blank(), panel.grid.major = element_blank()) +
   facet_grid(river~season)
 
-#plotPreds <- function( preds, x, y, len = 0, count = 0, flow = 0, temp = 0, isYOY = 1 ){
-
+# flow graph
 p <- preds %>% filter(len == 0,temp==0,isYOY==1,count==0,species=="bkt")
+#p <- predsSigma %>% filter(temp==0,isYOY==1,count==0,species=="bkt")
 
 ggplot(p, aes(flow,predGr,group=iter)) +
   #  geom_point() +
@@ -203,22 +206,29 @@ ggplot(p, aes(flow,predGr,group=iter)) +
   theme(panel.grid.minor = element_blank(), panel.grid.major = element_blank()) +
   facet_grid(river~season)
 
-p <- preds %>% filter(len == 0,flow==0,isYOY==1,count==0,species=="bkt")
+# temperature*flow graph
+p <- preds %>% filter(len == 0,isYOY==1,count==0,species=="bkt")
+#p <- predsSigma %>% filter(isYOY==1,count==0,species=="bkt")
+p$iterFlow <- paste0(p$iter,p$flow)
 
-ggplot(p, aes(temp,predGr,group=iter)) +
+ggplot(p, aes(temp,predGr,group=iterFlow, color=flow)) +
   #  geom_point() +
-  geom_line( color="lightgrey", alpha=0.25 ) +
+  geom_line( alpha=0.25 ) +
   # geom_smooth(method="lm") +
   theme_bw() +
   theme(panel.grid.minor = element_blank(), panel.grid.major = element_blank()) +
   facet_grid(river~season)
 
-
+# count graph
 p <- preds %>% filter(len == 0,temp==0,isYOY==1,flow==0,species=="bkt")
+p <- preds %>% filter(temp==0,isYOY==1,flow==0,species=="bkt")
+p$iterLen <- paste0(p$iter,p$len)
 
-ggplot(p, aes(count,predGr,group=iter)) +
+#p <- predsSigma %>% filter(temp==0,isYOY==1,flow==0,species=="bkt")
+
+ggplot(p, aes(count,predGr,group = iterLen,color = (len))) +
   #  geom_point() +
-  geom_line( color="lightgrey", alpha=0.25 ) +
+  geom_line(   alpha=0.25 ) +
   # geom_smooth(method="lm") +
   theme_bw() +
   theme(panel.grid.minor = element_blank(), panel.grid.major = element_blank()) +
@@ -261,6 +271,18 @@ gg <- list()
 numBetas <- 10
 for (i in 1:numBetas){
   gg[[i]] <- ggplot(filter(ggGrBeta,d2 == i), aes(iter,est)) + geom_hline(yintercept = 0) + geom_point( aes(color = factor(chain)), size = 0.1 ) + facet_grid(d3+d5~d6+d4) + ggtitle(paste("beta =", i))
+}
+
+
+ggSigmaBeta <- array2df(dG[[1]]$sims.list$sigmaBeta, label.x = "est")
+
+ggSigmaBeta$chain <- rep(1:dG[[1]]$mcmc.info$n.chains, each = dG[[1]]$mcmc.info$n.samples/dG[[1]]$mcmc.info$n.chains)
+ggSigmaBeta$iter <- 1:as.numeric(dG[[1]]$mcmc.info$n.samples/dG[[1]]$mcmc.info$n.chains)
+
+ggSigma <- list()
+numBetas <- 7
+for (i in 1:numBetas){
+  ggSigma[[i]] <- ggplot(filter(ggSigmaBeta,d2 == i), aes(iter,est)) + geom_hline(yintercept = 0) + geom_point( aes(color = factor(chain)), size = 0.1 ) + facet_grid(d3+d5~d6+d4) + ggtitle(paste("beta =", i))
 }
 
 # isYOY[ evalRows[i] ],season[ evalRows[i] ] ]
