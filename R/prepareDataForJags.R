@@ -138,7 +138,10 @@ prepareDataForJags <- function(d,modelType){
                   propSampledDATA = propSampled$propSampledDATA,
                   countPStd = d$countPStd,
                   tempStd = d$tempStd,
-                  flowStd = d$flowStd
+                  flowStd = d$flowStd,
+                  biomassDeltaAllSpp = d$meanBiomassAllSppStdDelta,
+                  biomassDelta = d$meanBiomassStdDelta,
+                  logitPhiStd = d$logitPhiStd
     )
   }
 

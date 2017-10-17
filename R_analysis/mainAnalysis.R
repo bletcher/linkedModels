@@ -160,6 +160,7 @@ for (iter in itersToUse) {
 
   dddG[[ii]] <- addDensityData( ddddG,ddD,ddddD,meanOrIter,iter )
   dddG[[ii]] <- addBiomassDeltas( dddG[[ii]] )
+  dddG[[ii]] <- addSurvivals( dddG[[ii]],ddD,meanOrIter,iter )
 
   ddG[[ii]] <- dddG[[ii]] %>% prepareDataForJags("growth")
 
@@ -193,6 +194,21 @@ ggplot(p, aes(len,predGr,group = iter)) +
   theme_bw() +
   theme(panel.grid.minor = element_blank(), panel.grid.major = element_blank()) +
   facet_grid(river~season)
+
+####################################################################################
+# len by biomass graph
+yoyIn <- 0
+speciesIn <- "bkt"
+p <- preds %>% filter(isYOY==yoyIn,species==speciesIn,biomass %in% c(-2,2))
+p$iterBiomass <- paste0(p$iter,p$biomass)
+
+ggplot(p, aes(len,predGr,group = iterBiomass)) +
+  geom_line( aes(color=biomass), alpha=0.25 ) +
+  theme_bw() +
+  theme(panel.grid.minor = element_blank(), panel.grid.major = element_blank()) +
+  ggtitle(paste0('isYOY = ',yoyIn,', species = ',speciesIn)) +
+  facet_grid(river~season)
+####################################################################################
 
 # flow graph
 p <- preds %>% filter(len == 0,temp==0,isYOY==1,count==0,species=="bkt")
@@ -254,7 +270,7 @@ ggplot(filter(ggGrInt), aes(iter,est)) + geom_point( aes(color=factor(chain)), s
 
 # isYOY[ evalRows[i] ],species[ evalRows[i]],season[ evalRows[i] ],riverDATA[ evalRows[i] ]
 # [1:675, 1, 1:2, 1:2, 1:4, 1:4]
-ggSigmaInt <-array2df(dG[[1]]$sims.list$sigmaInt, label.x = "est")
+ggSigmaInt <- array2df(dG[[1]]$sims.list$sigmaInt, label.x = "est")
 
 ggSigmaInt$chain <- rep(1:dG[[1]]$mcmc.info$n.chains, each = dG[[1]]$mcmc.info$n.samples/dG[[1]]$mcmc.info$n.chains)
 ggSigmaInt$iter <- 1:as.numeric(dG[[1]]$mcmc.info$n.samples/dG[[1]]$mcmc.info$n.chains)
@@ -268,7 +284,7 @@ ggGrBeta$chain <- rep(1:dG[[1]]$mcmc.info$n.chains, each = dG[[1]]$mcmc.info$n.s
 ggGrBeta$iter <- 1:as.numeric(dG[[1]]$mcmc.info$n.samples/dG[[1]]$mcmc.info$n.chains)
 
 gg <- list()
-numBetas <- 10
+numBetas <- 5
 for (i in 1:numBetas){
   gg[[i]] <- ggplot(filter(ggGrBeta,d2 == i), aes(iter,est)) + geom_hline(yintercept = 0) + geom_point( aes(color = factor(chain)), size = 0.1 ) + facet_grid(d3+d5~d6+d4) + ggtitle(paste("beta =", i))
 }

@@ -83,3 +83,56 @@ getDensities <- function(dddd,dd, meanOrIter = "mean", sampleToUse = sampleToUse
 
   return(p)
 }
+
+
+#'Add survival estimates from detection model by section, river, year b
+#'
+#'@param dddd the input data frame for the detection model run
+#'@param dd the output data frame for the detection model run
+#'@param meanOrIter Whether model run output is the mean ('mean') of all iterations or a single iteration ('iter'). Default is 'mean'.
+#'@param sampleToUse if meanOrIter == 'iter', which iteration to use. Assumes use of chain 1.
+#'@param chainToUse if meanOrIter == 'iter', which chain to use. Default is chain 1.
+#'@return a data frame with merged phi's
+#'@export
+
+addSurvivals <- function(dddd,dd, meanOrIter = "mean", sampleToUse = sampleToUse){
+
+  try( if (sampleToUse > dd$mcmc.info$n.samples) stop("requested iteration beyond max # of iterations") )
+
+  if ( meanOrIter == 'mean') ddIn <- dd$q50$phiBetaInt
+  if ( meanOrIter == 'iter') ddIn <- dd$sims.list$phiBetaInt[ sampleToUse,,,, ]
+
+  #print(c("in getDensities()",meanOrIter,ddIn))
+
+  #phiBetaInt[ species,season,riverDATA,year ]
+  # convert array to data frame
+  phi <- as.data.frame.table(ddIn) %>%
+    rename( speciesN = Var1,
+            seasonN = Var2,
+            riverN = Var3,
+            yearN = Var4,
+            logitPhi = Freq
+    ) %>%
+    mutate( speciesN = as.numeric(speciesN),
+            seasonN = as.numeric(seasonN),
+            riverN = as.numeric(riverN),
+            yearN = as.numeric(yearN),
+            phi = invlogit( logitPhi ),
+            logitPhiStd = ( logitPhi - mean(logitPhi,na.rm=T) ) / sd(logitPhi,na.rm=T)
+    )
+
+
+
+  # add temporary variables for merging
+  dddd <- dddd %>%
+    mutate( speciesN = as.numeric(as.factor(species)),
+            seasonN = season,
+            riverN = as.numeric(riverOrdered),
+            yearN = year - min(year) + 1
+          )
+
+  dddd <- left_join( dddd, phi ) %>%
+    dplyr::select(-speciesN,-seasonN,-riverN,-yearN)
+
+  return(dddd)
+}

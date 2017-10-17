@@ -26,6 +26,7 @@ runGrowthModel <- function(d, parallel = FALSE){
                 inits = inits,
                 parameters.to.save = params,
                 model.file = "./jags/grModel2.jags",
+             #   model.file = "./jags/grModelBiomassDelta.jags",
                 n.chains = 3,
                 n.adapt = 1000, #1000
                 n.iter = 200,
