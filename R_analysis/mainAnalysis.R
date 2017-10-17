@@ -23,6 +23,7 @@ library(arrayhelpers)
 library(linkedModels)
 library(jagsUI)
 library(getWBData)
+library(stringr)
 library(lubridate)
 library(tidyverse)
 ######################################################
@@ -180,75 +181,43 @@ nPoints <- 5
 
 nItersForPred <- 100
 itersForPred <- sample( 1:dG[[1]]$mcmc.info$n.samples,nItersForPred )
-preds <- getPrediction( dG[[1]], limits, nPoints, itersForPred )
+
+#varsToEstimate <- c("len",'phi') # possibilities: (len,count,phi,temp,flow)
+#preds <- getPrediction( dG[[1]], limits, nPoints, itersForPred, varsToEstimate )
 #predsSigma <- getPredictionSigma( dG[[1]], limits, nPoints, itersForPred )
 
 #######################
 # length graph
-p <- preds %>% filter(flow == 0,temp==0,isYOY==1,count==0,species=="bkt")
+isYoyIn <- 0
+speciesIn <- "bkt"
+varsToEstimate <- "len"
+p <- getPrediction( dG[[1]], limits, nPoints, itersForPred, varsToEstimate ) %>%
+  filter(isYOY == isYoyIn,species == speciesIn)
 
 ggplot(p, aes(len,predGr,group = iter)) +
-#  geom_point() +
   geom_line( color="lightgrey", alpha=0.25 ) +
- # geom_smooth(method="lm") +
-  theme_bw() +
-  theme(panel.grid.minor = element_blank(), panel.grid.major = element_blank()) +
-  facet_grid(river~season)
-
-####################################################################################
-# len by biomass graph
-yoyIn <- 0
-speciesIn <- "bkt"
-p <- preds %>% filter(isYOY==yoyIn,species==speciesIn,biomass %in% c(-2,2))
-p$iterBiomass <- paste0(p$iter,p$biomass)
-
-ggplot(p, aes(len,predGr,group = iterBiomass)) +
-  geom_line( aes(color=biomass), alpha=0.25 ) +
   theme_bw() +
   theme(panel.grid.minor = element_blank(), panel.grid.major = element_blank()) +
   ggtitle(paste0('isYOY = ',yoyIn,', species = ',speciesIn)) +
   facet_grid(river~season)
-####################################################################################
 
-# flow graph
-p <- preds %>% filter(len == 0,temp==0,isYOY==1,count==0,species=="bkt")
-#p <- predsSigma %>% filter(temp==0,isYOY==1,count==0,species=="bkt")
+#######################
+# length by phi graph
+isYoyIn <- 0
+speciesIn <- "bkt"
+varsToEstimate <- c("len","phi")
+p <- getPrediction( dG[[1]], limits, nPoints, itersForPred, varsToEstimate ) %>%
+  filter(isYOY == isYoyIn,species == speciesIn)
+p$iterPhi <- paste0(p$iter,p$phi)
 
-ggplot(p, aes(flow,predGr,group=iter)) +
-  #  geom_point() +
-  geom_line( color="lightgrey", alpha=0.25 ) +
-  # geom_smooth(method="lm") +
+ggplot(p, aes(len,predGr,group = iterPhi)) +
+  geom_line( aes(color=phi), alpha=0.25 ) +
   theme_bw() +
   theme(panel.grid.minor = element_blank(), panel.grid.major = element_blank()) +
+  ggtitle(paste0('isYOY = ',yoyIn,', species = ',speciesIn)) +
   facet_grid(river~season)
 
-# temperature*flow graph
-p <- preds %>% filter(len == 0,isYOY==1,count==0,species=="bkt")
-#p <- predsSigma %>% filter(isYOY==1,count==0,species=="bkt")
-p$iterFlow <- paste0(p$iter,p$flow)
 
-ggplot(p, aes(temp,predGr,group=iterFlow, color=flow)) +
-  #  geom_point() +
-  geom_line( alpha=0.25 ) +
-  # geom_smooth(method="lm") +
-  theme_bw() +
-  theme(panel.grid.minor = element_blank(), panel.grid.major = element_blank()) +
-  facet_grid(river~season)
-
-# count graph
-p <- preds %>% filter(len == 0,temp==0,isYOY==1,flow==0,species=="bkt")
-p <- preds %>% filter(temp==0,isYOY==1,flow==0,species=="bkt")
-p$iterLen <- paste0(p$iter,p$len)
-
-#p <- predsSigma %>% filter(temp==0,isYOY==1,flow==0,species=="bkt")
-
-ggplot(p, aes(count,predGr,group = iterLen,color = (len))) +
-  #  geom_point() +
-  geom_line(   alpha=0.25 ) +
-  # geom_smooth(method="lm") +
-  theme_bw() +
-  theme(panel.grid.minor = element_blank(), panel.grid.major = element_blank()) +
-  facet_grid(river~season)
 
 
 
@@ -284,7 +253,7 @@ ggGrBeta$chain <- rep(1:dG[[1]]$mcmc.info$n.chains, each = dG[[1]]$mcmc.info$n.s
 ggGrBeta$iter <- 1:as.numeric(dG[[1]]$mcmc.info$n.samples/dG[[1]]$mcmc.info$n.chains)
 
 gg <- list()
-numBetas <- 5
+numBetas <- 14
 for (i in 1:numBetas){
   gg[[i]] <- ggplot(filter(ggGrBeta,d2 == i), aes(iter,est)) + geom_hline(yintercept = 0) + geom_point( aes(color = factor(chain)), size = 0.1 ) + facet_grid(d3+d5~d6+d4) + ggtitle(paste("beta =", i))
 }

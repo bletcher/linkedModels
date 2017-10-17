@@ -4,7 +4,7 @@
 \alias{getPrediction}
 \title{Generate predictions from a set of iterations of a jags model run}
 \usage{
-getPrediction(d, limits = 2, nPoints = 5, itersForPred)
+getPrediction(d, limits = 2, nPoints = 5, itersForPred, varsToEstimate)
 }
 \arguments{
 \item{d}{a model run dataFrame}
@@ -14,6 +14,8 @@ getPrediction(d, limits = 2, nPoints = 5, itersForPred)
 \item{nPoints}{the number of points between the limits. Use an odd # to ensure a value of 0}
 
 \item{itersForPred, }{the iterations from the model for prediction}
+
+\item{varsToEstimate}{which variables to use for estimates (len,count,phi,temp,flow)}
 }
 \value{
 a data frame
