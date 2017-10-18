@@ -115,7 +115,7 @@ ddddG <- cd %>%
            sampleInterval < maxSampleInterval, # this removes the later yearly samples. Want to stick with seasonal samples
            enc == 1
   )
-
+nSeasons <- n_distinct(ddddG$season, na.rm=T)
 load(file = './data/out/ddD.RData')
 
 # merge in density data, either overall means or single iterations at a time
@@ -130,6 +130,9 @@ meanOrIter = "mean"
 ####### or ########
 #meanOrIter = "iter"
 
+runCrossValidation <- FALSE
+percentLeftOut <- 10
+
 chainToUse <- 1
 numItersToUse <- 2
 if (meanOrIter == "iter") {
@@ -143,6 +146,8 @@ if (meanOrIter == "iter") {
 ######################################
 ######################################
 ### loop over iters
+
+modelName <- "full14ParamsIndRE"
 
 dddG <- list()
 ddG <- list()
@@ -162,6 +167,7 @@ for (iter in itersToUse) {
   dddG[[ii]] <- addDensityData( ddddG,ddD,ddddD,meanOrIter,iter )
   dddG[[ii]] <- addBiomassDeltas( dddG[[ii]] )
   dddG[[ii]] <- addSurvivals( dddG[[ii]],ddD,meanOrIter,iter )
+  dddG[[ii]] <- crossValidate( dddG[[ii]] )
 
   ddG[[ii]] <- dddG[[ii]] %>% prepareDataForJags("growth")
 
@@ -170,7 +176,7 @@ for (iter in itersToUse) {
   done <- Sys.time()
   elapsed[[ii]] <- done - start
   print(paste("Elapsed =",elapsed))
-  save(dG, file = paste0('./data/out/dG_', as.integer(Sys.time()), '.RData'))
+  save(dG, file = paste0('./data/out/dG_', as.integer(Sys.time()),'_', modelName, '.RData'))
 }
 
 ######################################
@@ -198,7 +204,7 @@ ggplot(p, aes(len,predGr,group = iter)) +
   geom_line( color="lightgrey", alpha=0.25 ) +
   theme_bw() +
   theme(panel.grid.minor = element_blank(), panel.grid.major = element_blank()) +
-  ggtitle(paste0('isYOY = ',yoyIn,', species = ',speciesIn)) +
+  ggtitle(paste0('isYOY = ',isYoyIn,', species = ',speciesIn)) +
   facet_grid(river~season)
 
 #######################
@@ -214,7 +220,7 @@ ggplot(p, aes(len,predGr,group = iterPhi)) +
   geom_line( aes(color=phi), alpha=0.25 ) +
   theme_bw() +
   theme(panel.grid.minor = element_blank(), panel.grid.major = element_blank()) +
-  ggtitle(paste0('isYOY = ',yoyIn,', species = ',speciesIn)) +
+  ggtitle(paste0('isYOY = ',isYoyIn,', species = ',speciesIn)) +
   facet_grid(river~season)
 
 

@@ -12,12 +12,12 @@
 getPrediction <- function(d, limits = 2, nPoints = 5, itersForPred, varsToEstimate){
 
   # get grInt in df format
-  grInt <- array2df(d$sims.list$grInt, levels = list(iter=NA,isYOY=c(0,1),species=species,season=1:nSeasons,river=riverOrderedIn), label.x="int")
+#  grInt <- array2df(d$sims.list$grInt, levels = list(iter=NA,isYOY=c(0,1),species=species,season=1:nSeasons,river=riverOrderedIn), label.x="int")
 
   # get grBeta in df format and merge in grInt
   grBeta1 <- array2df(d$sims.list$grBeta, levels = list(iter=NA,beta=NA,isYOY=c(0,1),species=species,season=1:nSeasons,river=riverOrderedIn), label.x="est")
-  grBeta <- spread( grBeta1, key = beta, value = est, sep = "" )  %>%
-    left_join( .,grInt )
+  grBeta <- spread( grBeta1, key = beta, value = est, sep = "" )  #%>%
+ #   left_join( .,grInt )
 
   # prediction template
   x <- seq( -limits,limits,length.out = nPoints )
@@ -85,7 +85,8 @@ getPrediction <- function(d, limits = 2, nPoints = 5, itersForPred, varsToEstima
 
   # This model structure needs to match that in grModel.jags
   preds <- preds %>%
-    mutate( predGr = int +
+    mutate( predGr =
+              #int +
 
               beta1 * len +
               beta2 * count +

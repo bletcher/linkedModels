@@ -10,16 +10,20 @@ runGrowthModel <- function(d, parallel = FALSE){
 
   inits <- function(){
 #    list(grBetaInt = array(rnorm(2*d$nSpecies*d$nSeasons*d$nRivers*d$nYears,0,2.25),c(2,d$nSpecies,d$nSeasons,d$nRivers,d$nYears)))
-    list(grInt = array(rnorm(2*d$nSpecies*d$nSeasons*d$nRivers,0,2.25),c(2,d$nSpecies,d$nSeasons,d$nRivers)))
+    list(#grInt = array(rnorm(2*d$nSpecies*d$nSeasons*d$nRivers,0,2.25),c(2,d$nSpecies,d$nSeasons,d$nRivers))
+         grInt = array(rnorm(2*2*d$nSpecies*d$nSeasons*d$nRivers,0,2.25),c(2,d$nSpecies,d$nSeasons,d$nRivers))
+         )
      }
 
 #  params <- c("grBetaInt","muGrBetaInt","sigmaGrBetaInt","grBeta","muGrBeta","grSigmaBeta","sigmaGrSigmaBeta")
-  params <- c('grInt','sigmaInt','grBeta',
+  params <- c('grInt',
+              'sigmaInt','grBeta',
            #   'sigmaBeta',
               'grIntMu','grIntSigma','sigmaIntMu','sigmaIntSigma','grBetaMu','grBetaSigma'
+              , 'length', 'gr'
         #    ,  'sigmaBetaMu',
         #    'sigmaBetaSigma'
- #              , 'grIndRE'
+  #             , 'grIndRE','grIndREMean','grIndRETau'
               )
 
   outGR <- jags(data = d,
@@ -126,3 +130,17 @@ addDensityData <- function( ddddGIn,ddDIn,ddddDIn,meanOrIterIn,sampleToUse ){
 
 }
 
+#'Turn observedLength values to NA for a percentage of the observations
+#'
+#'@param d a dataframe
+#'@param runCrossValidation boolean for running cross validation or not
+#'@return a data frame with observedLength set to NA for percentLeftOut observations
+#'@export
+#'
+crossValidate <- function(d, runCrossValidation){
+  if ( runCrossValidation ) {
+    d$leftOut <- ifelse( runif(nrow(d)) < percentLeftOut/100, 1,0 )
+    d$observedLength <- ifelse( d$leftOut == 1, NA, d$observedLength )
+  }
+  return(d)
+}
