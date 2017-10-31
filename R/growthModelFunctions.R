@@ -137,8 +137,8 @@ addDensityData <- function( ddddGIn,ddDIn,ddddDIn,meanOrIterIn,sampleToUse ){
 #'@return a data frame with observedLength set to NA for percentLeftOut observations
 #'@export
 #'
-crossValidate <- function(d, runCrossValidation){
-  if ( runCrossValidation ) {
+crossValidate <- function(d, runCrossValidationTF){
+  if ( runCrossValidationTF ) {
     d$leftOut <- ifelse( runif(nrow(d)) < percentLeftOut/100, 1,0 )
     d$observedLength <- ifelse( d$leftOut == 1, NA, d$observedLength )
   }

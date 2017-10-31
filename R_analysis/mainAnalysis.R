@@ -1,4 +1,6 @@
 # next -
+# lit review on soze-dep growth
+# take out phi
 
 # compare countPStd (by species) with countPAllSppStd (all spp in analysis)
 
@@ -74,19 +76,20 @@ if ( file.exists(cdFile) ) {
 ##################
 #
 #
+dModelName <- "nPasses"
 
 (start <- Sys.time())
 ddddD <- cd %>%
   filter(  species %in% speciesIn,
            cohort >= minCohort,
            sampleInterval < maxSampleInterval # this removes the later yearly samples. Want to stick with seasonal samples
-  )
+        )
 
 dddD <- ddddD %>% prepareDataForJags('detection')
 
 if (runDetectionModelTF) {
   ddD <- dddD %>% runDetectionModel(parallel = TRUE)
-  save(ddD, file = './data/out/ddD.RData')
+  save(ddD, file = paste0('./data/out/ddD_",dModelName,".RData'))
 }
 done <- Sys.time()
 (elapsed <- done - start)
@@ -113,7 +116,7 @@ ddddG <- cd %>%
   filter(  species %in% speciesIn,
            cohort >= minCohort,
            sampleInterval < maxSampleInterval, # this removes the later yearly samples. Want to stick with seasonal samples
-           enc == 1
+           enc == 1 #cahnge to btw first and last so we can impute missing obs?
   )
 nSeasons <- n_distinct(ddddG$season, na.rm=T)
 load(file = './data/out/ddD.RData')
@@ -130,7 +133,7 @@ meanOrIter = "mean"
 ####### or ########
 #meanOrIter = "iter"
 
-runCrossValidation <- FALSE
+runCrossValidationTF <- F
 percentLeftOut <- 10
 
 chainToUse <- 1
@@ -147,7 +150,7 @@ if (meanOrIter == "iter") {
 ######################################
 ### loop over iters
 
-modelName <- "full14ParamsIndRE"
+modelName <- "full14ParamsCV10"
 
 dddG <- list()
 ddG <- list()
@@ -167,7 +170,7 @@ for (iter in itersToUse) {
   dddG[[ii]] <- addDensityData( ddddG,ddD,ddddD,meanOrIter,iter )
   dddG[[ii]] <- addBiomassDeltas( dddG[[ii]] )
   dddG[[ii]] <- addSurvivals( dddG[[ii]],ddD,meanOrIter,iter )
-  dddG[[ii]] <- crossValidate( dddG[[ii]] )
+  dddG[[ii]] <- crossValidate( dddG[[ii]],runCrossValidationTF ) # might need to do this earlier, may be fish with no obs
 
   ddG[[ii]] <- dddG[[ii]] %>% prepareDataForJags("growth")
 
@@ -194,7 +197,7 @@ itersForPred <- sample( 1:dG[[1]]$mcmc.info$n.samples,nItersForPred )
 
 #######################
 # length graph
-isYoyIn <- 0
+isYoyIn <- 1
 speciesIn <- "bkt"
 varsToEstimate <- "len"
 p <- getPrediction( dG[[1]], limits, nPoints, itersForPred, varsToEstimate ) %>%
@@ -209,22 +212,76 @@ ggplot(p, aes(len,predGr,group = iter)) +
 
 #######################
 # length by phi graph
-isYoyIn <- 0
-speciesIn <- "bkt"
+
 varsToEstimate <- c("len","phi")
 p <- getPrediction( dG[[1]], limits, nPoints, itersForPred, varsToEstimate ) %>%
-  filter(isYOY == isYoyIn,species == speciesIn)
-p$iterPhi <- paste0(p$iter,p$phi)
 
-ggplot(p, aes(len,predGr,group = iterPhi)) +
+isYoyIn <- 0
+speciesIn <- "bkt"
+pGG <- p %>%filter(isYOY == isYoyIn,species == speciesIn)
+pGG$iterPhi <- paste0(pGG$iter,pGG$phi)
+
+ggplot(pGG, aes(len,predGr,group = iterPhi)) +
   geom_line( aes(color=phi), alpha=0.25 ) +
   theme_bw() +
   theme(panel.grid.minor = element_blank(), panel.grid.major = element_blank()) +
   ggtitle(paste0('isYOY = ',isYoyIn,', species = ',speciesIn)) +
   facet_grid(river~season)
 
+#######################
+# length by count graph
+
+varsToEstimate <- c("len","count")
+p <- getPrediction( dG[[1]], limits, nPoints, itersForPred, varsToEstimate )
+
+isYoyIn <- 0
+speciesIn <- "bkt"
+pGG <- p %>%filter(isYOY == isYoyIn,species == speciesIn)
+pGG$iterCount <- paste0(pGG$iter,pGG$count)
+
+ggplot(pGG, aes(len,predGr,group = iterCount)) +
+  geom_line( aes(color=count), alpha=0.25 ) +
+  theme_bw() +
+  theme(panel.grid.minor = element_blank(), panel.grid.major = element_blank()) +
+  ggtitle(paste0('isYOY = ',isYoyIn,', species = ',speciesIn)) +
+  facet_grid(river~season)
 
 
+#######################
+# length by flow graph
+
+varsToEstimate <- c("len","flow")
+p <- getPrediction( dG[[1]], limits, nPoints, itersForPred, varsToEstimate )
+
+isYoyIn <- 1
+speciesIn <- "bkt"
+pGG <- p %>%filter(isYOY == isYoyIn,species == speciesIn)
+pGG$iterflow <- paste0(pGG$iter,pGG$flow)
+
+ggplot(pGG, aes(len,predGr,group = iterflow)) +
+  geom_line( aes(color=flow), alpha=0.25 ) +
+  theme_bw() +
+  theme(panel.grid.minor = element_blank(), panel.grid.major = element_blank()) +
+  ggtitle(paste0('isYOY = ',isYoyIn,', species = ',speciesIn)) +
+  facet_grid(river~season)
+
+#######################
+# length by temp graph
+
+varsToEstimate <- c("len","temp")
+p <- getPrediction( dG[[1]], limits, nPoints, itersForPred, varsToEstimate )
+
+isYoyIn <- 0
+speciesIn <- "bkt"
+pGG <- p %>%filter(isYOY == isYoyIn,species == speciesIn)
+pGG$itertemp <- paste0(pGG$iter,pGG$temp)
+
+ggplot(pGG, aes(len,predGr,group = itertemp)) +
+  geom_line( aes(color=temp), alpha=0.25 ) +
+  theme_bw() +
+  theme(panel.grid.minor = element_blank(), panel.grid.major = element_blank()) +
+  ggtitle(paste0('isYOY = ',isYoyIn,', species = ',speciesIn)) +
+  facet_grid(river~season)
 
 
   meanGRs <- ddddG %>%

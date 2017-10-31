@@ -13,7 +13,7 @@ runDetectionModel <- function(d, parallel = FALSE){   #iterToUse, firstNonBurnIt
          )
   }
 
-  params <- c("pBetaInt","phiBetaInt")
+  params <- c("pBetaInt","pBeta","phiBetaInt")
 
   outDet <- jags(data = d,
                  inits = inits,

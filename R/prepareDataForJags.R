@@ -106,7 +106,8 @@ prepareDataForJags <- function(d,modelType){
                 zForInit = d$zForInit, # z for firstObs gets set to zero in jags. Can't set values in inits for values assigned in jags
                 propSampledDATA = propSampled$propSampledDATA,
                 tempStd = d$tempStd,
-                flowStd = d$flowStd
+                flowStd = d$flowStd,
+                nPasses = d$nPasses
     )
   }
   if ( modelType == "growth" ){
