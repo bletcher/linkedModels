@@ -35,7 +35,7 @@ drainage <- "west" # ==
 species <- c("bkt", "bnt") #"bkt" # ==
 minCohort <- 2002 # >=
 maxSampleInterval <- 200 # <
-runDetectionModelTF <- FALSE
+runDetectionModelTF <- F
 
 #make sure species are always in order and indexed correctly for arrays
 speciesIn <- factor(species, levels = c('bkt','bnt','ats'), ordered = T)
@@ -65,8 +65,6 @@ if ( file.exists(cdFile) ) {
     mutate(drainage = drainage,
            countP = NA) # placeholder so prepareDataForJags() works for detection model
 
-  cd <- addNPasses(cd,drainage)
-
   save(cd, file = cdFile)
 }
 
@@ -89,13 +87,14 @@ dddD <- ddddD %>% prepareDataForJags('detection')
 
 if (runDetectionModelTF) {
   ddD <- dddD %>% runDetectionModel(parallel = TRUE)
-  save(ddD, file = paste0('./data/out/ddD_",dModelName,".RData'))
+  save(ddD, file = paste0('./data/out/ddD_',dModelName,'.RData'))
 }
 done <- Sys.time()
 (elapsed <- done - start)
 
-
+# with full intercepts, effect of nPasses is insignificant (massive overlap). Leaving, nPasses out. Just going with pBetaInt.
 #whiskerplot(ddD, parameters = "pBetaInt")
+#whiskerplot(ddD, parameters = "pBeta")
 
 #################################
 # Movement model
@@ -116,7 +115,8 @@ ddddG <- cd %>%
   filter(  species %in% speciesIn,
            cohort >= minCohort,
            sampleInterval < maxSampleInterval, # this removes the later yearly samples. Want to stick with seasonal samples
-           enc == 1 #cahnge to btw first and last so we can impute missing obs?
+           #enc == 1 #change to btw first and last so we can impute missing obs?
+           knownZ == 1
   )
 nSeasons <- n_distinct(ddddG$season, na.rm=T)
 load(file = './data/out/ddD.RData')
@@ -150,7 +150,7 @@ if (meanOrIter == "iter") {
 ######################################
 ### loop over iters
 
-modelName <- "full14ParamsCV10"
+modelName <- "knownZ_filter"#"full14ParamsCV10"
 
 dddG <- list()
 ddG <- list()
@@ -170,7 +170,7 @@ for (iter in itersToUse) {
   dddG[[ii]] <- addDensityData( ddddG,ddD,ddddD,meanOrIter,iter )
   dddG[[ii]] <- addBiomassDeltas( dddG[[ii]] )
   dddG[[ii]] <- addSurvivals( dddG[[ii]],ddD,meanOrIter,iter )
-  dddG[[ii]] <- crossValidate( dddG[[ii]],runCrossValidationTF ) # might need to do this earlier, may be fish with no obs
+  dddG[[ii]] <- crossValidate( dddG[[ii]],runCrossValidationTF ) # might need to do this earlier, may be fish with no obs. may be better to not NA obs with single obs.
 
   ddG[[ii]] <- dddG[[ii]] %>% prepareDataForJags("growth")
 

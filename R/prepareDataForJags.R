@@ -1,4 +1,4 @@
-#'Get data ready to run the growth model
+#'Get data ready to run the detection or growth model
 #'
 #'@param d a data frame created using getCoreData()
 #'@param modelType a character variable specifying the model type, ("detection', "growth"). This specifies the data that go into 'data'
@@ -60,6 +60,9 @@ prepareDataForJags <- function(d,modelType){
              )
 
   propSampled <- getPropSampled(nSeasons,nRivers,nYears)
+
+  d <- addNPasses(d,drainage)
+  d$nPasses <- ifelse( is.na(d$nPasses), 1, d$nPasses ) #nPasses gets NA when propSampled==0. Just set these to 1 so there are no NAs in the data. propSampled==0 takes care of thes in the jages code
 
   ## standardize env variables
   meansEnv <- d %>%

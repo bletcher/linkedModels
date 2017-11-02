@@ -4,7 +4,7 @@
 \alias{crossValidate}
 \title{Turn observedLength values to NA for a percentage of the observations}
 \usage{
-crossValidate(d, runCrossValidation)
+crossValidate(d, runCrossValidationTF)
 }
 \arguments{
 \item{d}{a dataframe}

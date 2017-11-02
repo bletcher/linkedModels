@@ -2,7 +2,7 @@
 % Please edit documentation in R/prepareDataForJags.R
 \name{prepareDataForJags}
 \alias{prepareDataForJags}
-\title{Get data ready to run the growth model}
+\title{Get data ready to run the detection or growth model}
 \usage{
 prepareDataForJags(d, modelType)
 }
@@ -15,5 +15,5 @@ prepareDataForJags(d, modelType)
 A list for importing into the jags run. Run with run"modelType"Model()
 }
 \description{
-Get data ready to run the growth model
+Get data ready to run the detection or growth model
 }

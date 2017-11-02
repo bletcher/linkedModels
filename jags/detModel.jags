@@ -9,7 +9,7 @@ model{
   for(i in 1:nEvalRows){
 
     logit( p[ evalRows[i] + 1 ] ) <- pBetaInt[ species[ evalRows[i] + 1 ],season[ evalRows[i] + 1 ],riverDATA[ evalRows[i] + 1 ],year[ evalRows[i] + 1 ] ]
-                                   +    pBeta[ species[ evalRows[i] + 1 ],season[ evalRows[i] + 1 ],riverDATA[ evalRows[i] + 1 ] ] * ( nPasses[ evalRows[ i ] + 1 ] - 1 )
+#                                   +    pBeta[ species[ evalRows[i] + 1 ],riverDATA[ evalRows[i] + 1 ] ] * ( nPasses[ evalRows[ i ] + 1 ] - 1 )
 
   }
   ############## Recapture priors ##################
@@ -25,16 +25,16 @@ model{
     }
   }
 
-  for( spp in 1:nSpecies ){
-
-    pBeta[ spp,1 ] ~ dnorm( 0,0.667 )
-
-    for( r in 2:nRivers ){
-
-       pBeta[ spp,r ] <- 0
-
-    }
-  }
+  # for( spp in 1:nSpecies ){
+  #
+  #   pBeta[ spp,1 ] ~ dnorm( 0,0.667 )
+  #
+  #   for( r in 2:nRivers ){
+  #
+  #      pBeta[ spp,r ] <- 0
+  #
+  #   }
+  # }
 
   ############################
   ##### Survival model########
