@@ -89,6 +89,10 @@ addDensityData <- function( ddddGIn,ddDIn,ddddDIn,meanOrIterIn,sampleToUse ){
 
   ddddGIn <- left_join( ddddGIn,denForMerge2, by = (c("species", "year", "season", "riverOrdered")) )
 
+  # counts are missing for samples with propSampled == 0. For now, fill in mean (0). Need this for when enc==0 and propSampled==0 in the gr model
+  ddddGIn$countPStd <- ifelse( is.na(ddddGIn$countPStd), 0, ddddGIn$countPStd )
+
+
   # get mean masses by species
   massForMergeSummary <- ddddGIn %>%
     group_by( species,season,riverOrdered ) %>%
@@ -98,6 +102,9 @@ addDensityData <- function( ddddGIn,ddDIn,ddddDIn,meanOrIterIn,sampleToUse ){
   ddddGIn <- left_join( ddddGIn, massForMergeSummary ) %>%
     mutate( massStd = ( observedWeight - massMean )/massSD,
             biomassStd = massStd * countPStd )
+
+  # biomasses are missing for samples with propSampled == 0. For now, fill in mean (0).
+  ddddGIn$biomassStd <- ifelse( is.na(ddddGIn$biomassStd), 0, ddddGIn$biomassStd )
 
   ###################################################################################
   # counts across species (those in the analysis - e.g. species <- c("bkt", "bnt"))
@@ -116,6 +123,9 @@ addDensityData <- function( ddddGIn,ddDIn,ddddDIn,meanOrIterIn,sampleToUse ){
 
   ddddGIn <- left_join( ddddGIn,denForMerge2AllSpp, by = (c("year", "season", "riverOrdered")) )
 
+  # counts are missing for samples with propSampled == 0. For now, fill in mean (0).
+  ddddGIn$countPAllSppStd <- ifelse( is.na(ddddGIn$countPAllSppStd), 0, ddddGIn$countPAllSppStd )
+
   # get mean masses across species
   massForMergeSummaryAllSpp <- ddddGIn %>%
     group_by( season,riverOrdered ) %>%
@@ -125,6 +135,9 @@ addDensityData <- function( ddddGIn,ddDIn,ddddDIn,meanOrIterIn,sampleToUse ){
   ddddGIn <- left_join( ddddGIn, massForMergeSummaryAllSpp ) %>%
     mutate( massAllSppStd = ( observedWeight - massAllSppMean )/massAllSppSD,
             biomassAllSppStd = massAllSppStd * countPAllSppStd )
+
+  # biomasses are missing for samples with propSampled == 0. For now, fill in mean (0).
+  ddddGIn$biomassAllSppStd <- ifelse( is.na(ddddGIn$biomassAllSppStd), 0, ddddGIn$biomassAllSppStd )
 
   return(ddddGIn)
 
