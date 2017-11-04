@@ -21,6 +21,7 @@
 #install.packages("devtools")
 #devtools::install_github('Conte-Ecology/getWBData')
 library(arm)
+library(zoo)
 library(arrayhelpers)
 library(linkedModels)
 library(jagsUI)
@@ -87,7 +88,7 @@ dddD <- ddddD %>% prepareDataForJags('detection')
 
 if (runDetectionModelTF) {
   ddD <- dddD %>% runDetectionModel(parallel = TRUE)
-  save(ddD, file = paste0('./data/out/ddD_',dModelName,'.RData'))
+  save(ddD,dddD,ddddD, file = paste0('./data/out/ddD_', dModelName,'.RData'))
 }
 done <- Sys.time()
 (elapsed <- done - start)
@@ -119,7 +120,7 @@ ddddG <- cd %>%
            knownZ == 1
   )
 nSeasons <- n_distinct(ddddG$season, na.rm=T)
-load(file = './data/out/ddD.RData')
+load(file = paste0('./data/out/ddD_', dModelName,'.RData'))
 
 # merge in density data, either overall means or single iterations at a time
 # meanOrIter ="mean" uses means of all iterations
@@ -150,7 +151,7 @@ if (meanOrIter == "iter") {
 ######################################
 ### loop over iters
 
-modelName <- "knownZ_filter"#"full14ParamsCV10"
+modelName <- "knownZ_filter_lInterpInit_11"#"full14ParamsCV10"
 
 dddG <- list()
 ddG <- list()
@@ -179,13 +180,18 @@ for (iter in itersToUse) {
   done <- Sys.time()
   elapsed[[ii]] <- done - start
   print(paste("Elapsed =",elapsed))
-  save(dG, file = paste0('./data/out/dG_', as.integer(Sys.time()),'_', modelName, '.RData'))
+  save(dG,ddG,dddG, file = paste0('./data/out/dG_', as.integer(Sys.time()),'_', modelName, '.RData'))
 }
 
+whiskerplot(dG[[1]], parameters = "length[1:20]")
+whiskerplot(dG[[1]], parameters = "expectedGR[1:20]")
+whiskerplot(dG[[1]], parameters = "isYOY[1:20]")
+traceplot(dG[[1]], parameters = "length[1:10]")
+head(data.frame(i=ddG[[1]]$ind,s=ddG[[1]]$season,y=ddG[[1]]$year,r=ddG[[1]]$riverDATA,e=ddG[[1]]$encDATA,l=ddG[[1]]$lengthDATA,c=ddG[[1]]$countPStd,si=ddG[[1]]$sampleInterval),20)
 ######################################
 
 # Explore predictions
-limits <- 2 # -/+ limits on standatrdized range of input variable
+limits <- 2 # -/+ limits on standardized range of input variable
 nPoints <- 5
 
 nItersForPred <- 100
@@ -316,7 +322,7 @@ ggGrBeta$chain <- rep(1:dG[[1]]$mcmc.info$n.chains, each = dG[[1]]$mcmc.info$n.s
 ggGrBeta$iter <- 1:as.numeric(dG[[1]]$mcmc.info$n.samples/dG[[1]]$mcmc.info$n.chains)
 
 gg <- list()
-numBetas <- 14
+numBetas <- 11
 for (i in 1:numBetas){
   gg[[i]] <- ggplot(filter(ggGrBeta,d2 == i), aes(iter,est)) + geom_hline(yintercept = 0) + geom_point( aes(color = factor(chain)), size = 0.1 ) + facet_grid(d3+d5~d6+d4) + ggtitle(paste("beta =", i))
 }

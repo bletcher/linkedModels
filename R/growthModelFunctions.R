@@ -11,16 +11,17 @@ runGrowthModel <- function(d, parallel = FALSE){
   inits <- function(){
 #    list(grBetaInt = array(rnorm(2*d$nSpecies*d$nSeasons*d$nRivers*d$nYears,0,2.25),c(2,d$nSpecies,d$nSeasons,d$nRivers,d$nYears)))
     list(#grInt = array(rnorm(2*d$nSpecies*d$nSeasons*d$nRivers,0,2.25),c(2,d$nSpecies,d$nSeasons,d$nRivers))
-         grInt = array(rnorm(2*2*d$nSpecies*d$nSeasons*d$nRivers,0,2.25),c(2,d$nSpecies,d$nSeasons,d$nRivers))
+         grInt = array(rnorm(2*2*d$nSpecies*d$nSeasons*d$nRivers,0,2.25),c(2,d$nSpecies,d$nSeasons,d$nRivers)),
+         length = d$lInterp
          )
      }
 
 #  params <- c("grBetaInt","muGrBetaInt","sigmaGrBetaInt","grBeta","muGrBeta","grSigmaBeta","sigmaGrSigmaBeta")
   params <- c('grInt',
-              'sigmaInt','grBeta',
+              'sigmaInt','grBeta'
            #   'sigmaBeta',
-              'grIntMu','grIntSigma','sigmaIntMu','sigmaIntSigma','grBetaMu','grBetaSigma'
-              , 'length', 'gr'
+#              'grIntMu','grIntSigma','sigmaIntMu','sigmaIntSigma','grBetaMu','grBetaSigma'
+              , 'length'#,'expectedGR'
         #    ,  'sigmaBetaMu',
         #    'sigmaBetaSigma'
   #             , 'grIndRE','grIndREMean','grIndRETau'
@@ -32,9 +33,9 @@ runGrowthModel <- function(d, parallel = FALSE){
                 model.file = "./jags/grModel2.jags",
              #   model.file = "./jags/grModelBiomassDelta.jags",
                 n.chains = 3,
-                n.adapt = 1000, #1000
-                n.iter = 200,
-                n.burnin = 100,
+                n.adapt = 500, #1000
+                n.iter = 500,
+                n.burnin = 200,
                 n.thin = 2,
                 parallel = parallel
   )

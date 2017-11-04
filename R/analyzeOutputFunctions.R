@@ -57,7 +57,7 @@ getPrediction <- function(d, limits = 2, nPoints = 5, itersForPred, varsToEstima
 
   predTemplate <- data.frame( len =   lenData,
                               count = countData,
-                              phi =   phiData,
+                         #     phi =   phiData,
                               flow =  flowData,
                               temp =  tempData
                             )
@@ -90,18 +90,18 @@ getPrediction <- function(d, limits = 2, nPoints = 5, itersForPred, varsToEstima
 
               beta1 * len +
               beta2 * count +
-              beta3 * phi +
-              beta4 * temp +
-              beta5 * flow +
-              beta6 * len^2 +
-              beta7 * count^2 +
-              beta8 * phi^2 +
-              beta9 * temp^2 +
-              beta10 * flow^2 +
-              beta11 * len * count +
-              beta12 * len * phi +
-              beta13 * temp * flow +
-              beta14 * temp * flow * len
+           #   beta3 * phi +
+              beta3 * temp +
+              beta4 * flow +
+              beta5 * len^2 +
+              beta6 * count^2 +
+          #    beta8 * phi^2 +
+              beta7 * temp^2 +
+              beta8 * flow^2 +
+              beta9 * len * count +
+           #   beta12 * len * phi +
+              beta10 * temp * flow +
+              beta11 * temp * flow * len
 
     )
 

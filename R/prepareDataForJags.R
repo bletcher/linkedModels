@@ -47,7 +47,7 @@ prepareDataForJags <- function(d,modelType){
   d$zForInit <- ifelse( (d$sampleNumber > d$minObsOcc) & (d$sampleNumber <= d$maxObsOcc), 1, NA )
 
   load(file = paste0("./data/cutoffYOYInclSpring1DATA_",drainage,".RData"))
-  cutoffYOYDATA <- cutoffYOYInclSpring1DATA # update as needed using getYOYCutoffs(cd,drainage)
+  cutoffYOYDATA <- cutoffYOYInclSpring1DATA # update as needed using getYOYCutoffs(cd,drainage) in getAndPrepareDataWB.R
 
   d$riverN <- as.numeric(d$riverOrdered)
   d$speciesN <- as.numeric(as.factor(d$species))
@@ -81,6 +81,8 @@ prepareDataForJags <- function(d,modelType){
 
   d$tagIndexJags <- as.numeric(as.factor(d$tagIndex)) #make sure have right tagIndices for subset of fish for Jags
 
+  d$rowNumber <- 1:nrow(d)
+
   if ( modelType == "detection" ){
   data <- list( encDATA = d$enc,
                 lengthDATA = d$observedLength,
@@ -113,9 +115,20 @@ prepareDataForJags <- function(d,modelType){
                 nPasses = d$nPasses
     )
   }
+
+
+  #fill NAs for testing
+  d$lInterp =  na.approx(d$observedLength)
+  # div <- 10
+  # sep <- round(nrow(d)/div)
+  # keep <- 1:sep
+  # interp <- (sep + 1):nrow(d)
+  # d$lInterp = c( d$lInterp[keep], na.approx(d$lInterp[interp]) )
+
+
   if ( modelType == "growth" ){
     data <- list( encDATA = d$enc,
-                  lengthDATA = d$observedLength,
+                  lengthDATA = d$lInterp,#d$observedLength,
                   riverDATA = d$riverN,
                   ind = d$tagIndexJags,
                   nRivers = nRivers,
@@ -145,7 +158,8 @@ prepareDataForJags <- function(d,modelType){
                   flowStd = d$flowStd,
                   biomassDeltaAllSpp = d$meanBiomassAllSppStdDelta,
                   biomassDelta = d$meanBiomassStdDelta,
-                  logitPhiStd = d$logitPhiStd
+                  logitPhiStd = d$logitPhiStd,
+                  lForInit = d$lInterp
     )
   }
 
