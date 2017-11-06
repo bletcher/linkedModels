@@ -186,7 +186,7 @@ for (iter in itersToUse) {
 whiskerplot(dG[[1]], parameters = "length[1:20]")
 whiskerplot(dG[[1]], parameters = "expectedGR[1:20]")
 whiskerplot(dG[[1]], parameters = "isYOY[1:20]")
-traceplot(dG[[1]], parameters = "length[1:10]")
+traceplot(dG[[1]], parameters = "length[6:10]")
 
 whiskerplot(dG[[1]], parameters = "grInt")
 whiskerplot(dG[[1]], parameters = "grIntMu")

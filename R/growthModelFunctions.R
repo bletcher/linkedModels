@@ -12,7 +12,7 @@ runGrowthModel <- function(d, parallel = FALSE){
 #    list(grBetaInt = array(rnorm(2*d$nSpecies*d$nSeasons*d$nRivers*d$nYears,0,2.25),c(2,d$nSpecies,d$nSeasons,d$nRivers,d$nYears)))
     list(#grInt = array(rnorm(2*d$nSpecies*d$nSeasons*d$nRivers,0,2.25),c(2,d$nSpecies,d$nSeasons,d$nRivers))
          grInt = array(rnorm(2*2*d$nSpecies*d$nSeasons*d$nRivers,0,2.25),c(2,d$nSpecies,d$nSeasons,d$nRivers)),
-         lengthDATA = d$lForInit
+         length = d$lForInit
          )
      }
 
