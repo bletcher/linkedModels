@@ -12,18 +12,16 @@ runGrowthModel <- function(d, parallel = FALSE){
 #    list(grBetaInt = array(rnorm(2*d$nSpecies*d$nSeasons*d$nRivers*d$nYears,0,2.25),c(2,d$nSpecies,d$nSeasons,d$nRivers,d$nYears)))
     list(#grInt = array(rnorm(2*d$nSpecies*d$nSeasons*d$nRivers,0,2.25),c(2,d$nSpecies,d$nSeasons,d$nRivers))
          grInt = array(rnorm(2*2*d$nSpecies*d$nSeasons*d$nRivers,0,2.25),c(2,d$nSpecies,d$nSeasons,d$nRivers)),
-         length = d$lInterp
+         lengthDATA = d$lForInit
          )
      }
 
 #  params <- c("grBetaInt","muGrBetaInt","sigmaGrBetaInt","grBeta","muGrBeta","grSigmaBeta","sigmaGrSigmaBeta")
-  params <- c('grInt',
-              'sigmaInt','grBeta'
-           #   'sigmaBeta',
-#              'grIntMu','grIntSigma','sigmaIntMu','sigmaIntSigma','grBetaMu','grBetaSigma'
+  params <- c('grInt','grIntMu','grIntSigma'
+              ,'sigmaInt','sigmaIntMu','sigmaIntSigma'
+              ,'grBeta','grBetaMu','grBetaSigma'
               , 'length'#,'expectedGR'
-        #    ,  'sigmaBetaMu',
-        #    'sigmaBetaSigma'
+
   #             , 'grIndRE','grIndREMean','grIndRETau'
               )
 
@@ -36,7 +34,7 @@ runGrowthModel <- function(d, parallel = FALSE){
                 n.adapt = 500, #1000
                 n.iter = 500,
                 n.burnin = 200,
-                n.thin = 2,
+                n.thin = 4,
                 parallel = parallel
   )
 

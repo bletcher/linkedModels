@@ -119,6 +119,7 @@ prepareDataForJags <- function(d,modelType){
 
   #fill NAs for testing
   d$lInterp =  na.approx(d$observedLength)
+  d$lenInit <- ifelse( is.na(d$observedLength), d$lInterp, NA )
   # div <- 10
   # sep <- round(nrow(d)/div)
   # keep <- 1:sep
@@ -128,7 +129,7 @@ prepareDataForJags <- function(d,modelType){
 
   if ( modelType == "growth" ){
     data <- list( encDATA = d$enc,
-                  lengthDATA = d$lInterp,#d$observedLength,
+                  lengthDATA = d$observedLength,
                   riverDATA = d$riverN,
                   ind = d$tagIndexJags,
                   nRivers = nRivers,
@@ -159,7 +160,7 @@ prepareDataForJags <- function(d,modelType){
                   biomassDeltaAllSpp = d$meanBiomassAllSppStdDelta,
                   biomassDelta = d$meanBiomassStdDelta,
                   logitPhiStd = d$logitPhiStd,
-                  lForInit = d$lInterp
+                  lForInit = d$lenInit
     )
   }
 
