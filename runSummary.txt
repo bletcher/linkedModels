@@ -1,0 +1,47 @@
+Having trouble with convergence with the full model.
+Strip back to intercept only models and build up to find the problem
+
+grInt = int, grSigma = int, converge = yes, estimate NA = yes
+grInt = yoy, grSigma = int, converge = no, estimate = no
+
+add isYOY initials for observed lengths
+grInt = yoy, grSigma = int, converge = no, estimate NA = no
+
+add isYOY initials for all lengths - get error
+grInt = yoy, grSigma = int, converge = no, estimate NA = no
+
+grInt = river, grSigma = int, converge = yes, estimate NA = yes
+!!! so the problem is with isYOY
+
+add isYOY as a beta, rather than an index
+grInt = river+river*isYOY1, grSigma = int, converge = no, estimate NA = no
+== isYOY problem is not with the indexing
+
+Thinking the squared term on stdLength beta could acct for isYOY
+Leaving isYOY out of estimation
+grInt = river*season*species*11 betas, grSigma = int, converge = no, estimate NA = no
+
+removed isYOY from the model completely, it's not doing anything, but could it screw the rest up?
+grInt = river*season*species*11 betas, grSigma = int, converge = no, estimate NA = no
+
+removed betas to see if r*s*s int works
+grInt = river*season*species, grSigma = int, converge = yes, estimate NA = yes
+
+added stdLength beta
+grInt = river*season*species + len beta, grSigma = int, converge = no, estimate NA = no
+
+replaced length with lengthDATA in the stdLength calculations
+grInt = river*season*species + len beta, grSigma = int, converge =no , estimate NA =no
+
+removed stdLength betas, kept flowTemp betas
+grInt = river*season*species + flow*Temp beta, grSigma = int, converge =yes , estimate NA =yes
+
+try 10000 adaptation with 11 betas
+
+
+
+try not betas, but full grInt
+
+?? remove isYOY, add a cubic stdLength beta
+?? add ind RE back, develop sigma model
+

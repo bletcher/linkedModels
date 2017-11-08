@@ -1,0 +1,198 @@
+
+model {
+
+  ############################
+  # Variable standardization #
+  ############################
+
+  ############ standardized length for sizeBetas
+  for( i in 1:(nEvalRows) ){
+    stdLength[evalRows[i]] <-  ( length[evalRows[i]] - lengthMean[ season[evalRows[i]],riverDATA[evalRows[i]],species[evalRows[i]] ] ) /
+      lengthSD[ season[evalRows[i]],riverDATA[evalRows[i]],species[evalRows[i]] ]
+  }
+
+  for( i in 1:( nLastObsRows ) ){
+    stdLength[ lastObsRows[ i ] ] <-  ( length[ lastObsRows[i] ] - lengthMean[ season[ lastObsRows[i]],riverDATA[ lastObsRows[i] ],species[ lastObsRows[i]] ] ) /
+      lengthSD[ season[ lastObsRows[i]],riverDATA[ lastObsRows[i] ],species[ lastObsRows[i]] ]
+  }
+
+  ############################
+  ###### YOY variable ########
+  ############################
+  # 1 for YOY, 2 for not YOY
+
+  # for( i in 1:nEvalRows ){
+  #   isYOY1[evalRows[i]] ~ dinterval( length[evalRows[i]],
+  #                                        cutoffYOYDATA[ season[evalRows[i]],riverDATA[evalRows[i]], yearForCutoff[evalRows[i]], species[ evalRows[i] ] ]
+  #   )
+  #   isYOY[evalRows[i]] <- isYOY1[evalRows[i]] + 1
+  #
+  # }
+  #
+  # # isYOY for last observation for each individual
+  # for( i in 1:( nLastObsRows ) ){
+  #
+  #   isYOY1[ lastObsRows[ i ] ] ~ dinterval( length[ lastObsRows[ i ] ],
+  #                                           cutoffYOYDATA[ season[ lastObsRows[i] ],riverDATA[ lastObsRows[ i ] ], yearForCutoff[ lastObsRows[ i ] ], species[ lastObsRows[i] ]  ]
+  #   )
+  #   isYOY[ lastObsRows[ i ] ] <- isYOY1[ lastObsRows[ i ] ] + 1
+  # }
+  #
+
+  ############################
+  ###### growth model ########
+  ############################
+
+  for( i in 1:nFirstObsRows ){
+    length[ firstObsRows[i] ] ~ dnorm( 80,0.001 )
+    lengthDATA[ firstObsRows[i] ] ~ dnorm( length[ firstObsRows[i] ],9 ) # length measurement error
+  }
+
+  for( i in 1:nEvalRows ){
+
+    length[ evalRows[i] + 1 ] <- length[ evalRows[i] ] + gr[ evalRows[i] ]
+
+    lengthDATA[ evalRows[i] + 1 ] ~ dnorm( length[ evalRows[i] + 1 ], 9 ) # length measurement error
+
+    gr[evalRows[i]] ~ dnorm( expectedGR[ evalRows[i] ] * sampleInterval[ evalRows[i] ]
+                             #*
+                              #   sampleIntervalMean[ season[evalRows[i]],riverDATA[evalRows[i]],species[evalRows[i]] ]
+                             #, 1/expectedGRSigma[evalRows[i]]^2
+                             , expectedGRTau[ evalRows[i] ]
+                           )
+    expectedGRTau[ evalRows[i] ] <- 1 / ( expectedGRSigma[ evalRows[i] ] * expectedGRSigma[ evalRows[i] ] )
+
+    expectedGR[ evalRows[i] ]  <-
+         grInt[       species[evalRows[i]], season[evalRows[i]], riverDATA[evalRows[i]] ]
+         +    grBeta[ 1, species[evalRows[i]], season[evalRows[i]], riverDATA[evalRows[i]] ] * stdLength[evalRows[i]]
+         +    grBeta[ 2, species[evalRows[i]], season[evalRows[i]], riverDATA[evalRows[i]] ] * countPStd[evalRows[i]]
+    #   #  +    grBeta[ 3, species[evalRows[i]], season[evalRows[i]], riverDATA[evalRows[i]] ] * logitPhiStd[evalRows[i]]
+         +    grBeta[ 3, species[evalRows[i]], season[evalRows[i]], riverDATA[evalRows[i]] ] * tempStd[evalRows[i]]
+         +    grBeta[ 4, species[evalRows[i]], season[evalRows[i]], riverDATA[evalRows[i]] ] * flowStd[evalRows[i]]
+         +    grBeta[ 5, species[evalRows[i]], season[evalRows[i]], riverDATA[evalRows[i]] ] * stdLength[evalRows[i]]^2
+         +    grBeta[ 6, species[evalRows[i]], season[evalRows[i]], riverDATA[evalRows[i]] ] * countPStd[evalRows[i]]^2
+    # # #   +    grBeta[ 8, species[evalRows[i]], season[evalRows[i]], riverDATA[evalRows[i]] ] * logitPhiStd[evalRows[i]]^2
+         +    grBeta[ 7, species[evalRows[i]], season[evalRows[i]], riverDATA[evalRows[i]] ] * tempStd[evalRows[i]]^2
+         +    grBeta[ 8, species[evalRows[i]], season[evalRows[i]], riverDATA[evalRows[i]] ] * flowStd[evalRows[i]]^2
+         +    grBeta[ 9, species[evalRows[i]], season[evalRows[i]], riverDATA[evalRows[i]] ] * stdLength[evalRows[i]] * countPStd[evalRows[i]] #species-specific counts
+    # #  #  +    grBeta[12, species[evalRows[i]], season[evalRows[i]], riverDATA[evalRows[i]] ] * stdLength[evalRows[i]] * logitPhiStd[evalRows[i]]
+         +    grBeta[10, species[evalRows[i]], season[evalRows[i]], riverDATA[evalRows[i]] ] * tempStd[evalRows[i]] * flowStd[evalRows[i]]
+         +    grBeta[11, species[evalRows[i]], season[evalRows[i]], riverDATA[evalRows[i]] ] * stdLength[evalRows[i]] * tempStd[evalRows[i]] * flowStd[evalRows[i]]
+
+
+
+      #      grInt[       isYOY[evalRows[i]], species[evalRows[i]], season[evalRows[i]], riverDATA[evalRows[i]] ]
+  #     +    grBeta[ 1, isYOY[evalRows[i]], species[evalRows[i]], season[evalRows[i]], riverDATA[evalRows[i]] ] * stdLength[evalRows[i]]
+  #     +    grBeta[ 2, isYOY[evalRows[i]], species[evalRows[i]], season[evalRows[i]], riverDATA[evalRows[i]] ] * countPStd[evalRows[i]]
+  #   #  +    grBeta[ 3, isYOY[evalRows[i]], species[evalRows[i]], season[evalRows[i]], riverDATA[evalRows[i]] ] * logitPhiStd[evalRows[i]]
+  #     +    grBeta[ 3, isYOY[evalRows[i]], species[evalRows[i]], season[evalRows[i]], riverDATA[evalRows[i]] ] * tempStd[evalRows[i]]
+  #     +    grBeta[ 4, isYOY[evalRows[i]], species[evalRows[i]], season[evalRows[i]], riverDATA[evalRows[i]] ] * flowStd[evalRows[i]]
+  #     +    grBeta[ 5, isYOY[evalRows[i]], species[evalRows[i]], season[evalRows[i]], riverDATA[evalRows[i]] ] * stdLength[evalRows[i]]^2
+  #     +    grBeta[ 6, isYOY[evalRows[i]], species[evalRows[i]], season[evalRows[i]], riverDATA[evalRows[i]] ] * countPStd[evalRows[i]]^2
+  # # #   +    grBeta[ 8, isYOY[evalRows[i]], species[evalRows[i]], season[evalRows[i]], riverDATA[evalRows[i]] ] * logitPhiStd[evalRows[i]]^2
+  #     +    grBeta[ 7, isYOY[evalRows[i]], species[evalRows[i]], season[evalRows[i]], riverDATA[evalRows[i]] ] * tempStd[evalRows[i]]^2
+  #     +    grBeta[ 8, isYOY[evalRows[i]], species[evalRows[i]], season[evalRows[i]], riverDATA[evalRows[i]] ] * flowStd[evalRows[i]]^2
+  #     +    grBeta[ 9, isYOY[evalRows[i]], species[evalRows[i]], season[evalRows[i]], riverDATA[evalRows[i]] ] * stdLength[evalRows[i]] * countPStd[evalRows[i]] #species-specific counts
+  # #  #  +    grBeta[12, isYOY[evalRows[i]], species[evalRows[i]], season[evalRows[i]], riverDATA[evalRows[i]] ] * stdLength[evalRows[i]] * logitPhiStd[evalRows[i]]
+  #     +    grBeta[ 10, isYOY[evalRows[i]], species[evalRows[i]], season[evalRows[i]], riverDATA[evalRows[i]] ] * tempStd[evalRows[i]] * flowStd[evalRows[i]]
+  #     +    grBeta[11, isYOY[evalRows[i]], species[evalRows[i]], season[evalRows[i]], riverDATA[evalRows[i]] ] * stdLength[evalRows[i]] * tempStd[evalRows[i]] * flowStd[evalRows[i]]
+
+#   +    grIndRE[ ind[evalRows[i]] ]
+
+    expectedGRSigma[evalRows[i]] <-
+      sigmaInt
+
+    #      sigmaInt[        isYOY[evalRows[i]], species[evalRows[i]], season[evalRows[i]], riverDATA[evalRows[i]] ]
+ # #    +    sigmaBeta[ 1, isYOY[evalRows[i]], species[evalRows[i]], season[evalRows[i]], riverDATA[evalRows[i]] ] * stdLength[evalRows[i]]
+ #     +    sigmaBeta[ 1, isYOY[evalRows[i]], species[evalRows[i]], season[evalRows[i]], riverDATA[evalRows[i]] ] * countPStd[evalRows[i]]
+ # #    +    sigmaBeta[ 3, isYOY[evalRows[i]], species[evalRows[i]], season[evalRows[i]], riverDATA[evalRows[i]] ] * stdLength[evalRows[i]]^2
+ #     +    sigmaBeta[ 2, isYOY[evalRows[i]], species[evalRows[i]], season[evalRows[i]], riverDATA[evalRows[i]] ] * countPStd[evalRows[i]]^2
+ # #    +    sigmaBeta[ 5, isYOY[evalRows[i]], species[evalRows[i]], season[evalRows[i]], riverDATA[evalRows[i]] ] * stdLength[evalRows[i]] * countPStd[evalRows[i]] #species-specific counts
+ #     +    sigmaBeta[ 3, isYOY[evalRows[i]], species[evalRows[i]], season[evalRows[i]], riverDATA[evalRows[i]] ] * tempStd[evalRows[i]]
+ #     +    sigmaBeta[ 4, isYOY[evalRows[i]], species[evalRows[i]], season[evalRows[i]], riverDATA[evalRows[i]] ] * flowStd[evalRows[i]]
+ #     +    sigmaBeta[ 5, isYOY[evalRows[i]], species[evalRows[i]], season[evalRows[i]], riverDATA[evalRows[i]] ] * tempStd[evalRows[i]]^2
+ #     +    sigmaBeta[ 6, isYOY[evalRows[i]], species[evalRows[i]], season[evalRows[i]], riverDATA[evalRows[i]] ] * flowStd[evalRows[i]]^2
+ #     +    sigmaBeta[ 7, isYOY[evalRows[i]], species[evalRows[i]], season[evalRows[i]], riverDATA[evalRows[i]] ] * tempStd[evalRows[i]] * flowStd[evalRows[i]]
+
+  }
+
+  #   ############## Growth Priors
+  sigmaInt ~ dunif(0,1000)
+
+  # for( r in 1:4 ){
+  #   grInt[ r ] ~ dnorm(0,0.0001)
+  #   grBeta[ 1,r ] ~ dnorm(0,0.0001)
+  # }
+
+#  for( yoy in 1:2 ){
+    for( spp in 1:nSpecies ) {
+      for( s in 1:nSeasons ){
+        for( r in 1:nRivers ){
+
+             grInt[ spp,s,r ] ~ dnorm(0,0.0001)  #(    grIntMu[ yoy,s ], 1 /    grIntSigma[ yoy,s ] ^ 2 )
+         # sigmaInt[ yoy,spp,s,r ] ~ dunif(0,100) #dnorm( sigmaIntMu[ yoy,s ], 1 / sigmaIntSigma[ yoy,s ] ^ 2 )T(0,)
+
+            for (i in 1:11){  # CHANGE range to match number of betas
+
+                  grBeta[ i,spp,s,r ] ~ dnorm(0,0.0001)#dnorm(    grBetaMu[ i,yoy ],   grBetaSigma[ i,yoy ] )
+             }
+
+          # for (i in 1:7){  # change range to match number of betas
+          #
+          #   sigmaBeta[ i,yoy,spp,s,r ] ~ dnorm( sigmaBetaMu[ i,yoy,s ],sigmaBetaSigma[ i,yoy,s ] )T(0,)
+          # }
+
+        }
+      }
+    }
+
+
+#   for ( yoy in 1:2 ){
+#
+#     grIntMu[ yoy,1 ] ~ dnorm( 25/80, 0.01 )
+#     grIntMu[ yoy,2 ] ~ dnorm( 10/80, 0.01 )
+#     grIntMu[ yoy,3 ] ~ dnorm( 8/80, 0.01 )
+#     grIntMu[ yoy,4 ] ~ dnorm( 4/80, 0.01 )
+#
+#     for ( s in 1:nSeasons ){
+#       grIntSigma[ yoy,s ] ~ dunif( 0,10 )
+#
+#          sigmaIntMu[ yoy,s ] ~ dnorm( 0,0.001 )T(0,) #dgamma
+#       sigmaIntSigma[ yoy,s ] ~ dunif( 0,100 )
+#     }
+#   }
+# #
+#    for ( i in 1:11 ){ # CHANGE range to match number of betas
+#      for ( yoy in 1:2 ){
+#       # for ( s in 1:nSeasons ){
+#
+#             grBetaMu[ i,yoy ] ~ dnorm( 0,0.001 ) # dgamma
+#          grBetaSigma[ i,yoy ] ~ dunif( 0,100 )
+#
+#        #  muGrBeta[ i,yoy ] ~ dnorm( 0,0.001 )
+#       #   sigmaGrBeta[ i,yoy ] ~ dunif( 0,100 )
+#
+#       # }
+#      }
+#    }
+
+ #  for ( i in 1:7 ){ # change range to match number of betas
+ #    for ( yoy in 1:2 ){
+ #      for ( s in 1:nSeasons ){
+ #
+ #        sigmaBetaMu[ i,yoy,s ] ~ dnorm( 0,0.001 )
+ #        sigmaBetaSigma[ i,yoy,s ] ~ dunif( 0,1000 )
+ #
+ #      }
+ #    }
+ # }
+  # for ( ind in 1:nInd ){
+  #   grIndRE[ ind ] ~ dnorm( grIndREMean,grIndRETau ) # structure by spp?
+  # }
+  #
+  # grIndREMean ~ dnorm( 0,100 )
+  # grIndRETau <- 1/pow( grIndSigma,2 )
+  # grIndSigma ~ dunif( 0,1 )
+
+} # model
+

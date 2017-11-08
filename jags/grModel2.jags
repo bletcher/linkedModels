@@ -126,10 +126,10 @@ model {
     grIntMu[ yoy,4 ] ~ dnorm( 4/80, 0.01 )
 
     for ( s in 1:nSeasons ){
-      grIntSigma[ yoy,s ] ~ dunif( 0,10 )
+      grIntSigma[ yoy,s ] ~ dunif( 0,100000 )
 
-         sigmaIntMu[ yoy,s ] ~ dnorm( 0,0.001 )T(0,) #dgamma
-      sigmaIntSigma[ yoy,s ] ~ dunif( 0,100 )
+         sigmaIntMu[ yoy,s ] ~ dunif( 0,100000 ) #dnorm( 0,0.001 )T(0,) #dgamma
+      sigmaIntSigma[ yoy,s ] ~ dunif( 0,100000 )
     }
   }
 #
@@ -138,7 +138,7 @@ model {
       # for ( s in 1:nSeasons ){
 
             grBetaMu[ i,yoy ] ~ dnorm( 0,0.001 ) # dgamma
-         grBetaSigma[ i,yoy ] ~ dunif( 0,100 )
+         grBetaSigma[ i,yoy ] ~ dunif( 0,100000 )
 
        #  muGrBeta[ i,yoy ] ~ dnorm( 0,0.001 )
       #   sigmaGrBeta[ i,yoy ] ~ dunif( 0,100 )

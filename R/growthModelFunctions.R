@@ -8,33 +8,41 @@
 
 runGrowthModel <- function(d, parallel = FALSE){
 
+  #grBetaOutside = array( runif( 11 *2*d$nSpecies*d$nSeasons*d$nRivers,-2,2),c( 11 ,2,d$nSpecies,d$nSeasons,d$nRivers))
+  #grBetaOutside[ ,1,,2, ] <- 0
+
   inits <- function(){
 #    list(grBetaInt = array(rnorm(2*d$nSpecies*d$nSeasons*d$nRivers*d$nYears,0,2.25),c(2,d$nSpecies,d$nSeasons,d$nRivers,d$nYears)))
-    list(#grInt = array(rnorm(2*d$nSpecies*d$nSeasons*d$nRivers,0,2.25),c(2,d$nSpecies,d$nSeasons,d$nRivers))
-         grInt = array(rnorm(2*2*d$nSpecies*d$nSeasons*d$nRivers,0,2.25),c(2,d$nSpecies,d$nSeasons,d$nRivers)),
-         length = d$lForInit
+    list(
+         grInt = array(rnorm(d$nSpecies*d$nSeasons*d$nRivers,0,2.25),c(d$nSpecies,d$nSeasons,d$nRivers))
+
+         , sigmaInt = 100
+       #  , isYOY1 = d$initialIsYOY#(d$observedLength > 90) + 1
+         #grBeta = grBetaOutside
+           #array(rnorm(11*2*4*5),c(11,2,4,5))
+
+  #       ,length = d$lForInit
          )
      }
 
-#  params <- c("grBetaInt","muGrBetaInt","sigmaGrBetaInt","grBeta","muGrBeta","grSigmaBeta","sigmaGrSigmaBeta")
-  params <- c('grInt','grIntMu','grIntSigma'
-              ,'sigmaInt','sigmaIntMu','sigmaIntSigma'
-              ,'grBeta','grBetaMu','grBetaSigma'
+  params <- c('grInt'# ,'grIntMu','grIntSigma'
+              ,'sigmaInt'#,'sigmaIntMu','sigmaIntSigma'
+              ,'grBeta'#,'grBetaMu','grBetaSigma'
               , 'length'#,'expectedGR'
-
+          #    ,'isYOY'
   #             , 'grIndRE','grIndREMean','grIndRETau'
               )
 
   outGR <- jags(data = d,
                 inits = inits,
                 parameters.to.save = params,
-                model.file = "./jags/grModel2.jags",
+                model.file = "./jags/grModelBuild2.jags",
              #   model.file = "./jags/grModelBiomassDelta.jags",
                 n.chains = 3,
-                n.adapt = 500, #1000
+                n.adapt = 10000, #1000
                 n.iter = 500,
-                n.burnin = 200,
-                n.thin = 4,
+                n.burnin = 100,
+                n.thin = 5,
                 parallel = parallel
   )
 
