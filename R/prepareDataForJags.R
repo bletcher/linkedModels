@@ -83,6 +83,8 @@ prepareDataForJags <- function(d,modelType){
 
   d$rowNumber <- 1:nrow(d)
 
+  d$isYOYDATA <- ifelse( d$ageInSamples <= 3, 1, 2 )
+
   if ( modelType == "detection" ){
   data <- list( encDATA = d$enc,
                 lengthDATA = d$observedLength,
@@ -163,7 +165,7 @@ prepareDataForJags <- function(d,modelType){
                   biomassDelta = d$meanBiomassStdDelta,
                   logitPhiStd = d$logitPhiStd,
                   lForInit = d$lenInit,
-                  initialIsYOY = d$initialIsYOY
+                  isYOYDATA = d$isYOYDATA
     )
   }
 

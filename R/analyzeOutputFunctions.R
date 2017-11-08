@@ -12,12 +12,12 @@
 getPrediction <- function(d, limits = 2, nPoints = 5, itersForPred, varsToEstimate){
 
   # get grInt in df format
-#  grInt <- array2df(d$sims.list$grInt, levels = list(iter=NA,isYOY=c(0,1),species=species,season=1:nSeasons,river=riverOrderedIn), label.x="int")
+  grInt <- array2df(d$sims.list$grInt, levels = list(iter=NA,isYOY=c(0,1),species=species,season=1:nSeasons,river=riverOrderedIn), label.x="int")
 
   # get grBeta in df format and merge in grInt
   grBeta1 <- array2df(d$sims.list$grBeta, levels = list(iter=NA,beta=NA,isYOY=c(0,1),species=species,season=1:nSeasons,river=riverOrderedIn), label.x="est")
-  grBeta <- spread( grBeta1, key = beta, value = est, sep = "" )  #%>%
- #   left_join( .,grInt )
+  grBeta <- spread( grBeta1, key = beta, value = est, sep = "" ) %>%
+    left_join( .,grInt )
 
   # prediction template
   x <- seq( -limits,limits,length.out = nPoints )
@@ -55,22 +55,10 @@ getPrediction <- function(d, limits = 2, nPoints = 5, itersForPred, varsToEstima
    }  else
    lenData <- 0
 
-  predTemplate <- data.frame( len =   lenData,
-                              count = countData,
-                         #     phi =   phiData,
+  predTemplate <- data.frame( count = countData,
                               flow =  flowData,
                               temp =  tempData
                             )
-
-  # predTemplate <- data.frame( len =   rep(x, each = nPoints ^ 4),
-  #                             count = rep(x, each = nPoints ^ 3),
-  #                             phi =  rep(x, each = nPoints ^ 2),
-  #                             flow =  rep(x, each = nPoints ^ 1),
-  #                             temp =      x
-  #
-  #                             #len =  rep(x, each = nPoints ^ 1),
-  #                             #biomass =      x
-  #)
 
 
     # expand predTemplate across grBeta rows for a given set of iterations
@@ -86,22 +74,17 @@ getPrediction <- function(d, limits = 2, nPoints = 5, itersForPred, varsToEstima
   # This model structure needs to match that in grModel.jags
   preds <- preds %>%
     mutate( predGr =
-              #int +
-
-              beta1 * len +
-              beta2 * count +
-           #   beta3 * phi +
-              beta3 * temp +
-              beta4 * flow +
-              beta5 * len^2 +
-              beta6 * count^2 +
-          #    beta8 * phi^2 +
-              beta7 * temp^2 +
-              beta8 * flow^2 +
-              beta9 * len * count +
-           #   beta12 * len * phi +
-              beta10 * temp * flow +
-              beta11 * temp * flow * len
+              int +
+              beta1 * count +
+              beta2 * temp +
+              beta3 * flow +
+              beta4 * count^2 +
+              beta5 * temp^2 +
+              beta6 * flow^2 +
+              beta7 * temp * flow +
+              beta8 * temp * count +
+              beta9 * count * flow +
+              beta10 * temp * flow * count
 
     )
 

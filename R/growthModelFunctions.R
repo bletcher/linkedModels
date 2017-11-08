@@ -14,9 +14,9 @@ runGrowthModel <- function(d, parallel = FALSE){
   inits <- function(){
 #    list(grBetaInt = array(rnorm(2*d$nSpecies*d$nSeasons*d$nRivers*d$nYears,0,2.25),c(2,d$nSpecies,d$nSeasons,d$nRivers,d$nYears)))
     list(
-         grInt = array(rnorm(d$nSpecies*d$nSeasons*d$nRivers,0,2.25),c(d$nSpecies,d$nSeasons,d$nRivers))
+         grInt = array(rnorm(2*d$nSpecies*d$nSeasons*d$nRivers,0,2.25),c(2,d$nSpecies,d$nSeasons,d$nRivers))
 
-         , sigmaInt = 100
+
        #  , isYOY1 = d$initialIsYOY#(d$observedLength > 90) + 1
          #grBeta = grBetaOutside
            #array(rnorm(11*2*4*5),c(11,2,4,5))
@@ -25,24 +25,22 @@ runGrowthModel <- function(d, parallel = FALSE){
          )
      }
 
-  params <- c('grInt'# ,'grIntMu','grIntSigma'
-              ,'sigmaInt'#,'sigmaIntMu','sigmaIntSigma'
-              ,'grBeta'#,'grBetaMu','grBetaSigma'
+  params <- c('grInt' ,'grIntMu','grIntSigma'
+              ,'sigmaInt','sigmaIntMu','sigmaIntSigma'
+              ,'grBeta','grBetaMu','grBetaSigma'
               , 'length'#,'expectedGR'
-          #    ,'isYOY'
-  #             , 'grIndRE','grIndREMean','grIndRETau'
+     #          , 'grIndRE','grIndREMean','grIndRETau'
               )
 
   outGR <- jags(data = d,
                 inits = inits,
                 parameters.to.save = params,
-                model.file = "./jags/grModelBuild2.jags",
-             #   model.file = "./jags/grModelBiomassDelta.jags",
+                model.file = "./jags/grModel3.jags",
                 n.chains = 3,
-                n.adapt = 10000, #1000
-                n.iter = 500,
-                n.burnin = 100,
-                n.thin = 5,
+                n.adapt = 250, #1000
+                n.iter = 100,
+                n.burnin = 10,
+                n.thin = 3,
                 parallel = parallel
   )
 

@@ -33,7 +33,7 @@ library(tidyverse)
 # selection criteria
 
 drainage <- "west" # ==
-species <- c("bkt", "bnt") #"bkt" # ==
+species <- "bkt" # == c("bkt", "bnt") #
 minCohort <- 2002 # >=
 maxSampleInterval <- 200 # <
 runDetectionModelTF <- F
@@ -151,7 +151,7 @@ if (meanOrIter == "iter") {
 ######################################
 ### loop over iters
 
-modelName <- "knownZ_filter_lInterpInit_11"#"full14ParamsCV10"
+modelName <- "grModel3_sigma_model_noSigmaBeta2"
 
 dddG <- list()
 ddG <- list()
@@ -183,14 +183,13 @@ for (iter in itersToUse) {
   save(dG,ddG,dddG, file = paste0('./data/out/dG_', as.integer(Sys.time()),'_', modelName, '.RData'))
 }
 
-whiskerplot(dG[[1]], parameters = "length[1:20]")
-whiskerplot(dG[[1]], parameters = "expectedGR[1:20]")
-whiskerplot(dG[[1]], parameters = "isYOY[1:20]")
-traceplot(dG[[1]], parameters = "length[6:10]")
+whiskerplot(dG[[1]], parameters = "length[22:34]")
+traceplot(dG[[1]], parameters = "length[22:34]")
 
 whiskerplot(dG[[1]], parameters = "grInt")
 whiskerplot(dG[[1]], parameters = "grIntMu")
 whiskerplot(dG[[1]], parameters = "grIntSigma")
+traceplot(dG[[1]], parameters = "grInt")
 traceplot(dG[[1]], parameters = "grIntSigma")
 
 whiskerplot(dG[[1]], parameters = "sigmaInt")
@@ -199,11 +198,14 @@ whiskerplot(dG[[1]], parameters = "sigmaIntSigma")
 traceplot(dG[[1]], parameters = "sigmaIntSigma")
 
 whiskerplot(dG[[1]], parameters = "grBeta")
+whiskerplot(dG[[1]], parameters = "grBeta[4,,,,]")
 whiskerplot(dG[[1]], parameters = "grBetaMu")
 whiskerplot(dG[[1]], parameters = "grBetaSigma")
 traceplot(dG[[1]], parameters = "grBetaSigma")
 
-head(data.frame(i=ddG[[1]]$ind,s=ddG[[1]]$season,y=ddG[[1]]$year,r=ddG[[1]]$riverDATA,e=ddG[[1]]$encDATA,l=ddG[[1]]$lengthDATA,c=ddG[[1]]$countPStd,si=ddG[[1]]$sampleInterval,il=ddG[[1]]$lForInit),20)
+whiskerplot(dG[[1]], parameters = "grIndRE[1:10]")
+
+head(data.frame(i=ddG[[1]]$ind,s=ddG[[1]]$season,y=ddG[[1]]$year,r=ddG[[1]]$riverDATA,e=ddG[[1]]$encDATA,l=ddG[[1]]$lengthDATA,c=ddG[[1]]$countPStd,si=ddG[[1]]$sampleInterval,il=ddG[[1]]$lForInit),40)
 ######################################
 
 # Explore predictions
@@ -213,98 +215,58 @@ nPoints <- 5
 nItersForPred <- 100
 itersForPred <- sample( 1:dG[[1]]$mcmc.info$n.samples,nItersForPred )
 
-#varsToEstimate <- c("len",'phi') # possibilities: (len,count,phi,temp,flow)
-#preds <- getPrediction( dG[[1]], limits, nPoints, itersForPred, varsToEstimate )
-#predsSigma <- getPredictionSigma( dG[[1]], limits, nPoints, itersForPred )
-
 #######################
-# length graph
-isYoyIn <- 0
-speciesGG <- "bkt"
-varsToEstimate <- "len"
-p <- getPrediction( dG[[1]], limits, nPoints, itersForPred, varsToEstimate ) %>%
-  filter(isYOY == isYoyIn,species == speciesGG)
+# temp graph
 
-ggplot(p, aes(len,predGr,group = iter)) +
-  geom_line( color="lightgrey", alpha=0.25 ) +
-  theme_bw() +
-  theme(panel.grid.minor = element_blank(), panel.grid.major = element_blank()) +
-  ggtitle(paste0('isYOY = ',isYoyIn,', species = ',speciesGG)) +
-  facet_grid(river~season)
-
-#######################
-# length by phi graph
-
-varsToEstimate <- c("len","phi")
-p <- getPrediction( dG[[1]], limits, nPoints, itersForPred, varsToEstimate ) %>%
-
-isYoyIn <- 0
-speciesGG <- "bkt"
-pGG <- p %>%filter(isYOY == isYoyIn,species == speciesGG)
-pGG$iterPhi <- paste0(pGG$iter,pGG$phi)
-
-ggplot(pGG, aes(len,predGr,group = iterPhi)) +
-  geom_line( aes(color=phi), alpha=0.25 ) +
-  theme_bw() +
-  theme(panel.grid.minor = element_blank(), panel.grid.major = element_blank()) +
-  ggtitle(paste0('isYOY = ',isYoyIn,', species = ',speciesGG)) +
-  facet_grid(river~season)
-
-#######################
-# length by count graph
-
-varsToEstimate <- c("len","count")
+varsToEstimate <- c("temp")
 p <- getPrediction( dG[[1]], limits, nPoints, itersForPred, varsToEstimate )
 
 isYoyIn <- 0
 speciesGG <- "bkt"
-pGG <- p %>%filter(isYOY == isYoyIn,species == speciesGG)
-pGG$iterCount <- paste0(pGG$iter,pGG$count)
+pGG <- p %>% filter(isYOY == isYoyIn,species == speciesGG)
 
-ggplot(pGG, aes(len,predGr,group = iterCount)) +
-  geom_line( aes(color=count), alpha=0.25 ) +
+ggplot(pGG, aes(temp,predGr, group = iter)) +
+  geom_line( alpha=0.25 ) +
   theme_bw() +
   theme(panel.grid.minor = element_blank(), panel.grid.major = element_blank()) +
   ggtitle(paste0('isYOY = ',isYoyIn,', species = ',speciesGG)) +
+  geom_hline(yintercept = 0) +
   facet_grid(river~season)
 
 
-#######################
-# length by flow graph
 
-varsToEstimate <- c("len","flow")
-p <- getPrediction( dG[[1]], limits, nPoints, itersForPred, varsToEstimate )
 
-isYoyIn <- 1
-speciesGG <- "bkt"
-pGG <- p %>%filter(isYOY == isYoyIn,species == speciesGG)
-pGG$iterflow <- paste0(pGG$iter,pGG$flow)
 
-ggplot(pGG, aes(len,predGr,group = iterflow)) +
-  geom_line( aes(color=flow), alpha=0.25 ) +
-  theme_bw() +
-  theme(panel.grid.minor = element_blank(), panel.grid.major = element_blank()) +
-  ggtitle(paste0('isYOY = ',isYoyIn,', species = ',speciesGG)) +
-  facet_grid(river~season)
+plotPred <- function(d, varsToEstimate, isYOYgg, speciesgg) {
 
-#######################
-# length by temp graph
+  p <- getPrediction( d, limits, nPoints, itersForPred, varsToEstimate )
+  pGG <- p %>% filter(isYOY == isYOYgg, species == speciesgg)
 
-varsToEstimate <- c("len","temp")
-p <- getPrediction( dG[[1]], limits, nPoints, itersForPred, varsToEstimate )
+  if(length(varsToEstimate) == 1) {
+    ggOut <- ggplot(pGG, aes(eval(as.name(varsToEstimate[1])),predGr, group = iter)) +
+      geom_line( alpha=0.25 ) +
+      theme_bw() +
+      theme(panel.grid.minor = element_blank(), panel.grid.major = element_blank()) +
+      ggtitle(paste0('isYOY = ',isYoyIn,', species = ',speciesGG)) +
+      geom_hline(yintercept = 0) +
+      facet_grid(river~season)
+  }
 
-isYoyIn <- 0
-speciesGG <- "bkt"
-pGG <- p %>%filter(isYOY == isYoyIn,species == speciesGG)
-pGG$itertemp <- paste0(pGG$iter,pGG$temp)
+  if(length(varsToEstimate) > 1) {
+    pGG$iterGroup <- paste0(pGG$iter,pGG[[varsToEstimate[2]]])
 
-ggplot(pGG, aes(len,predGr,group = itertemp)) +
-  geom_line( aes(color=temp), alpha=0.25 ) +
-  theme_bw() +
-  theme(panel.grid.minor = element_blank(), panel.grid.major = element_blank()) +
-  ggtitle(paste0('isYOY = ',isYoyIn,', species = ',speciesGG)) +
-  facet_grid(river~season)
-
+    ggOut <- ggplot(pGG, aes(eval(as.name(varsToEstimate[1])), predGr, group = iterGroup)) +
+      geom_line(aes( color = eval(as.name(varsToEstimate[2])) ), alpha=0.25 ) +
+      theme_bw() +
+      theme(panel.grid.minor = element_blank(), panel.grid.major = element_blank()) +
+      ggtitle(paste0('isYOY = ',isYoyIn,', species = ',speciesGG)) +
+      geom_hline(yintercept = 0) +
+      facet_grid(river~season)
+  }
+  return(ggOut)
+}
+#plotPred(dG[[1]], "temp", 0, "bkt")
+plotPred(dG[[1]], c("flow","temp"), 0, "bkt")
 
 #######################
 # flow by temp graph
@@ -314,7 +276,7 @@ p <- getPrediction( dG[[1]], limits, nPoints, itersForPred, varsToEstimate )
 
 isYoyIn <- 0
 speciesGG <- "bkt"
-pGG <- p %>%filter(isYOY == isYoyIn,species == speciesGG)
+pGG <- p %>% filter(isYOY == isYoyIn,species == speciesGG)
 pGG$itertemp <- paste0(pGG$iter,pGG$temp)
 
 ggplot(pGG, aes(flow,predGr,group = itertemp)) +
@@ -322,6 +284,7 @@ ggplot(pGG, aes(flow,predGr,group = itertemp)) +
   theme_bw() +
   theme(panel.grid.minor = element_blank(), panel.grid.major = element_blank()) +
   ggtitle(paste0('isYOY = ',isYoyIn,', species = ',speciesGG)) +
+  geom_hline(yintercept = 0) +
   facet_grid(river~season)
 
 

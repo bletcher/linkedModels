@@ -37,11 +37,11 @@ removed stdLength betas, kept flowTemp betas
 grInt = river*season*species + flow*Temp beta, grSigma = int, converge =yes , estimate NA =yes
 
 try 10000 adaptation with 11 betas
+grInt = river*season*species + flow*Temp*stdLen*count beta, grSigma = int, converge = no, estimate NA = no
 
+code ISYOY as data, remove all stdLength betas, full interaction on grBetas
+grInt = river*season*species*isYOY + flow*Temp*stdLen*count beta, grSigma = int, converge = yes, estimate NA = yes
 
+Add model on expectedGRSigma
 
-try not betas, but full grInt
-
-?? remove isYOY, add a cubic stdLength beta
-?? add ind RE back, develop sigma model
 
