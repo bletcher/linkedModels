@@ -120,7 +120,9 @@ prepareDataForJags <- function(d,modelType){
   #fill NAs for testing
   d$lInterp =  na.approx(d$observedLength)
   d$lenInit <- ifelse( is.na(d$observedLength), d$lInterp, NA )
-  # div <- 10
+
+  d$initialIsYOY <- ifelse( is.na(d$lenInit), NA, ifelse( d$lInterp > 90, 2, 1 ) )
+    # div <- 10
   # sep <- round(nrow(d)/div)
   # keep <- 1:sep
   # interp <- (sep + 1):nrow(d)
@@ -160,7 +162,8 @@ prepareDataForJags <- function(d,modelType){
                   biomassDeltaAllSpp = d$meanBiomassAllSppStdDelta,
                   biomassDelta = d$meanBiomassStdDelta,
                   logitPhiStd = d$logitPhiStd,
-                  lForInit = d$lenInit
+                  lForInit = d$lenInit,
+                  initialIsYOY = d$initialIsYOY
     )
   }
 
