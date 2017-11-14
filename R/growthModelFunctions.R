@@ -37,9 +37,9 @@ runGrowthModel <- function(d, parallel = FALSE){
                 parameters.to.save = params,
                 model.file = "./jags/grModel3.jags",
                 n.chains = 3,
-                n.adapt = 250, #1000
-                n.iter = 100,
-                n.burnin = 10,
+                n.adapt = 1000, #1000
+                n.iter = 1000,
+                n.burnin = 100,
                 n.thin = 3,
                 parallel = parallel
   )

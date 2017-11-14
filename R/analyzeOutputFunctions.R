@@ -150,3 +150,59 @@ getPredictionSigma <- function(d, limits = 2, nPoints = 5, itersForPred){
 
   return(preds)
 }
+
+#'Plot predictions from a set of iterations of a jags model run
+#'
+#'@param p a model run set of predictions from getPredictions()
+#'@param varsToPlot variables for ploting. Eith singles or pairs of (flow,temp,count)
+#'@param isYOYGG, isYOY, 0 or 1
+#'@param speciesGG, bkt, bnt or ats
+#'@return a ggplot object
+#'@export
+#'
+
+plotPred <- function(p, varsToPlot, isYOYGG, speciesGG) {
+  all=c('temp','flow','count')
+
+  if(length(varsToPlot) == 1) {
+    notPlot <- NA
+    notPlot[1] <- all[!(all %in% varsToPlot)][1]
+    notPlot[2] <- all[!(all %in% varsToPlot)][2]
+
+    pGG <- p %>% filter(isYOY == isYOYGG, species == speciesGG, eval(as.name(notPlot[1])) == 0, eval(as.name(notPlot[2])) == 0 ) %>%
+                 distinct(eval(as.name(varsToPlot[1])), iter, isYOY, river, species, season, .keep_all = TRUE)
+
+    ggOut <- ggplot(pGG, aes(eval(as.name(varsToPlot[1])),predGr, group = iter)) +
+      geom_line( alpha=0.25 ) +
+      theme_bw() +
+      theme(panel.grid.minor = element_blank(), panel.grid.major = element_blank()) +
+      ggtitle(paste0('isYOY = ',isYOYGG,', species = ',speciesGG)) +
+      geom_hline(yintercept = 0) +
+      ylim(-0.25,1) +
+      scale_x_continuous(varsToPlot[1]) +
+      facet_grid(river~season)
+  }
+
+  if(length(varsToPlot) > 1) {
+    notPlot <- NA
+    notPlot[1] <- all[!(all %in% varsToPlot)][1]
+
+    pGG <- p %>% filter(isYOY == isYOYGG, species == speciesGG, eval(as.name(notPlot[1])) == 0 ) %>%
+      distinct(eval(as.name(varsToPlot[1])), eval(as.name(varsToPlot[2])), iter, isYOY, river, species, season, .keep_all = TRUE)
+
+    pGG$iterGroup <- paste0(pGG$iter,pGG[[varsToPlot[2]]])
+
+    ggOut <- ggplot(pGG, aes(eval(as.name(varsToPlot[1])), predGr, group = iterGroup, name=varsToPlot[2])) +
+      geom_line(aes( color = (eval(as.name(varsToPlot[2]))) ), alpha=0.25 ) +
+      theme_bw() +
+      theme(panel.grid.minor = element_blank(), panel.grid.major = element_blank()) +
+      ggtitle(paste0('isYOY = ',isYOYGG,', species = ',speciesGG)) +
+      geom_hline(yintercept = 0) +
+      ylim(-0.33,1) +
+      scale_x_continuous(varsToPlot[1]) +
+      #    scale_fill_continuous(name=varsToPlot[2]) +
+      facet_grid(river~season)
+  }
+  return(ggOut)
+}
+
