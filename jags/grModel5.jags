@@ -1,0 +1,65 @@
+model{
+
+  for( i in 1:nEvalRows ){
+
+    lengthDATA[ evalRows[i] + 1 ] ~ dnorm( lengthDATA[ evalRows[i] ] + gr[ evalRows[i] ], expectedGRTau[ evalRows[i] ] )
+
+    gr[ evalRows[i] ] <-
+      grBeta[1, isYOYDATA[evalRows[i]], species[evalRows[i]], season[evalRows[i]], riverDATA[evalRows[i]] ] * lengthDATA[ evalRows[i] ]
+    +     grIndRE[ ind[evalRows[i]] ]
+#    grInt[          isYOYDATA[evalRows[i]], species[evalRows[i]], season[evalRows[i]], riverDATA[evalRows[i]] ]
+
+    # +    grBeta[ 1, isYOYDATA[evalRows[i]], species[evalRows[i]], season[evalRows[i]], riverDATA[evalRows[i]] ] * countPStd[evalRows[i]]
+    # +    grBeta[ 2, isYOYDATA[evalRows[i]], species[evalRows[i]], season[evalRows[i]], riverDATA[evalRows[i]] ] * tempStd[evalRows[i]]
+    # +    grBeta[ 3, isYOYDATA[evalRows[i]], species[evalRows[i]], season[evalRows[i]], riverDATA[evalRows[i]] ] * flowStd[evalRows[i]]
+    # +    grBeta[ 4, isYOYDATA[evalRows[i]], species[evalRows[i]], season[evalRows[i]], riverDATA[evalRows[i]] ] * countPStd[evalRows[i]]^2
+    # +    grBeta[ 5, isYOYDATA[evalRows[i]], species[evalRows[i]], season[evalRows[i]], riverDATA[evalRows[i]] ] * tempStd[evalRows[i]]^2
+    # +    grBeta[ 6, isYOYDATA[evalRows[i]], species[evalRows[i]], season[evalRows[i]], riverDATA[evalRows[i]] ] * flowStd[evalRows[i]]^2
+    # +    grBeta[ 7, isYOYDATA[evalRows[i]], species[evalRows[i]], season[evalRows[i]], riverDATA[evalRows[i]] ] * tempStd[evalRows[i]] * flowStd[evalRows[i]]
+    # +    grBeta[ 8, isYOYDATA[evalRows[i]], species[evalRows[i]], season[evalRows[i]], riverDATA[evalRows[i]] ] * tempStd[evalRows[i]] * countPStd[evalRows[i]]
+    # +    grBeta[ 9, isYOYDATA[evalRows[i]], species[evalRows[i]], season[evalRows[i]], riverDATA[evalRows[i]] ] * countPStd[evalRows[i]] * flowStd[evalRows[i]]
+    # +    grBeta[10, isYOYDATA[evalRows[i]], species[evalRows[i]], season[evalRows[i]], riverDATA[evalRows[i]] ] * countPStd[evalRows[i]] * tempStd[evalRows[i]] * flowStd[evalRows[i]]
+
+    # +    grBeta[12, isYOYDATA[evalRows[i]], species[evalRows[i]], season[evalRows[i]], riverDATA[evalRows[i]] ] * lengthDATA[evalRows[i]]^2
+
+    expectedGRTau[ evalRows[i] ] <- 1 / ( expectedGRSigma[ evalRows[i] ] * expectedGRSigma[ evalRows[i] ] )
+    expectedGRSigma[ evalRows[i] ] <- grSigma
+
+  }
+
+  #   ############## Growth Priors
+
+  for( yoy7 in 1:2 ){
+    for( spp7 in 1:nSpecies ) {
+      for( s7 in 1:nSeasons ){
+        for( r7 in 1:nRivers ){
+
+   #       grInt[ yoy,spp,s,r ] ~ dnorm(0,0.001) #dnorm( grIntMu[ yoy,s,r ], 1 / grIntSigma[ yoy,s,r ] ^ 2 )
+
+          for( b7 in 1:1 ){
+            grBeta[ b7,yoy7,spp7,s7,r7 ] ~ dnorm(0,0.001)
+          }
+
+        }
+      }
+    }
+  }
+
+
+  for(ii in 1:nEvalRows){
+    lengthExp[ii + 1] <- lengthDATA[ evalRows[ii] ] + gr[ evalRows[ii] ]
+  }
+
+  grBeta ~ dnorm(0,0.001)
+  grSigma ~ dunif(0,10)
+
+  #individual random effect on grMax
+  for(iii in 1:nInd){
+    grIndRE[iii] ~ dnorm( grIntMean,tauInd )
+  }
+  grIntMean ~ dnorm(0,0.01)
+  tauInd <- 1 / pow( sigmaInd,2 )
+  sigmaInd ~ dunif(0,1)
+
+
+}
