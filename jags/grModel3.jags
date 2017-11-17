@@ -54,7 +54,7 @@ model {
 
     lengthDATA[ evalRows[i] + 1 ] ~ dnorm( length[ evalRows[i] + 1 ], 9 ) # length measurement error
 
-    gr[evalRows[i]] ~ dnorm( expectedGR[ evalRows[i] ] * sampleInterval[ evalRows[i] ]
+    gr[ evalRows[i] ] ~ dnorm( expectedGR[ evalRows[i] ] * sampleInterval[ evalRows[i] ]
                              #*
                               #   sampleIntervalMean[ season[evalRows[i]],riverDATA[evalRows[i]],species[evalRows[i]] ]
                              #, 1/expectedGRSigma[evalRows[i]]^2
@@ -63,7 +63,7 @@ model {
     expectedGRTau[ evalRows[i] ] <- 1 / ( expectedGRSigma[ evalRows[i] ] * expectedGRSigma[ evalRows[i] ] )
 
     expectedGR[ evalRows[i] ]  <-
-         grInt[       isYOYDATA[evalRows[i]], species[evalRows[i]], season[evalRows[i]], riverDATA[evalRows[i]] ]
+            grInt[       isYOYDATA[evalRows[i]], species[evalRows[i]], season[evalRows[i]], riverDATA[evalRows[i]] ]
 
          +    grBeta[ 1, isYOYDATA[evalRows[i]], species[evalRows[i]], season[evalRows[i]], riverDATA[evalRows[i]] ] * countPStd[evalRows[i]]
          +    grBeta[ 2, isYOYDATA[evalRows[i]], species[evalRows[i]], season[evalRows[i]], riverDATA[evalRows[i]] ] * tempStd[evalRows[i]]

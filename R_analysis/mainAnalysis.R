@@ -33,10 +33,10 @@ library(tidyverse)
 # selection criteria
 
 drainage <- "west" # ==
-species <- c("bkt", "bnt") #
+species <- "bkt" #c("bkt", "bnt") #
 minCohort <- 2002 # >=
 maxSampleInterval <- 200 # <
-runDetectionModelTF <- F
+runDetectionModelTF <- T
 
 #make sure species are always in order and indexed correctly for arrays
 speciesIn <- factor(species, levels = c('bkt','bnt','ats'), ordered = T)
@@ -151,7 +151,7 @@ if (meanOrIter == "iter") {
 ######################################
 ### loop over iters
 
-modelName <- "grModel3_sigma_model_noSigmaBeta2_bktBnt"
+modelName <- "grModel5"
 
 dddG <- list()
 ddG <- list()
@@ -183,8 +183,8 @@ for (iter in itersToUse) {
   save(dG,ddG,dddG, file = paste0('./data/out/dG_', as.integer(Sys.time()),'_', modelName, '.RData'))
 }
 
-whiskerplot(dG[[1]], parameters = "length[22:34]")
-traceplot(dG[[1]], parameters = "length[22:34]")
+whiskerplot(dG[[1]], parameters = "lengthExp[1:20]")
+traceplot(dG[[1]], parameters = "lengthExp[7:8]")
 
 whiskerplot(dG[[1]], parameters = "grInt")
 whiskerplot(dG[[1]], parameters = "grIntMu")
@@ -220,12 +220,45 @@ p <- getPrediction( dG[[1]], limits, nPoints, itersForPred, c("temp", "flow","co
 #######################
 # graph function, in analyzeOutputFunctions.R
 
-plotPred(p, "temp", 1, "bkt")
+plotPred(p, "temp", 0, "bkt")
 plotPred(p, "flow", 0, "bkt")
 plotPred(p, "count", 1, "bkt")
-plotPred(p, c("temp", "flow"), 0, "bkt")
+plotPred(p, c("temp", "flow"), 1, "bkt")
 plotPred(p, c("temp","count"), 0, "bkt")
 plotPred(p, c("flow","count"), 0, "bkt")
+
+
+#################################################
+# size-dependence, merge in length estimates from model
+#tail(data.frame(a=dddG[[1]]$tag[1:44165],b=dddG[[1]]$observedLength[1:44165],c=dG[[1]]$q50$expectedGR[1:44165]),20)
+#tail(data.frame(a=dddG[[1]]$tag[1:44167],b=dddG[[1]]$observedLength[1:44167]),20)
+#expectedGr is missing the last two obs, which are firstObs for two fish
+
+sDep <- dddG[[1]]
+sDep$estLength <- dG[[1]]$q50$length
+#sDep$estGR <- c(dG[[1]]$q50$expectedGR,NA,NA)
+
+sDep <- sDep %>%
+  group_by(tag) %>%
+  mutate( estLengthLead = lead(estLength),
+          estGR = (estLengthLead-estLength)/sampleInterval,
+          isYOYDATA = ifelse( ageInSamples <= 3, 1, 2 ))
+
+#ggplot(sDep,aes(observedLength,estLength)) +geom_point()
+
+ggplot( sDep, aes(estLength, estGR, group=species) ) +
+  geom_point() +
+  geom_smooth() +
+  facet_grid(river~season+isYOYDATA)
+#
+
+ggplot( sDep %>% filter(species == 'bkt'), aes(estLength, estGR, color=river) ) +
+  geom_point() +
+  geom_smooth() +
+  facet_grid(isYOYDATA~season)
+
+
+
 
 
 

@@ -1,0 +1,40 @@
+model{
+  
+  for( i in 1:nEvalRows ){
+    
+   
+    # lengthDATA[ evalRows[i] + 1 ] ~ dnorm( length[ evalRows[i] + 1 ] , obsErr ) # length measurement error
+    
+    lengthDATA[ evalRows[i] + 1 ] ~ dnorm( lengthDATA[ evalRows[i] ] + gr[ evalRows[i] ], expectedGRTau[ evalRows[i] ] )
+    
+    gr[ evalRows[i] ] <- grInt[ ind[ evalRows[i] ]] + grBeta * lengthDATA[ evalRows[i] ]
+    
+    expectedGRTau[ evalRows[i] ] <- 1 / ( expectedGRSigma[ evalRows[i] ] * expectedGRSigma[ evalRows[i] ] )
+    expectedGRSigma[evalRows[i]] <- grSigma
+    
+  }
+  
+  for(i in 1:nEvalRows){
+    lengthExp[i + 1] <- lengthDATA[ evalRows[i] ]+gr[ evalRows[i] ]
+  }
+  
+  # for( i in 1:nFirstObsRows ){
+  #   length[ firstObsRows[i] ] ~ dnorm( 0,0.0001 )
+  #   lengthDATA[ firstObsRows[i] ] ~ dnorm( length[ firstObsRows[i] ],obsErr ) # length measurement error
+  # }
+  # 
+  
+  #grInt ~ dnorm(0,0.001)
+  grBeta ~ dnorm(0,0.001)
+  grSigma ~ dunif(0,10)
+
+  #individual random effect on grMax
+  for(i in 1:nInd){
+    grInt[i] ~ dnorm( grIntMean,tauInd )
+  }
+  grIntMean ~ dnorm(0,0.01)
+  tauInd <- 1 / pow( sigmaInd,2 )
+  sigmaInd ~ dunif(0,1)
+
+  
+}

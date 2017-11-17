@@ -44,4 +44,16 @@ grInt = river*season*species*isYOY + flow*Temp*stdLen*count beta, grSigma = int,
 
 Add model on expectedGRSigma
 
+Thought I could look at size-dep growth after tracing gr, but all fish for a given sample get the same gr so can't look at size-dep growth
+adding stdLength[] back into the model. It worked in the JAE model. Adding year back to grInt and sigmaInt. Didn't work
 
+Calculate lengthDATAStd trying that as the ind variable for beta. didn't work with length[ evalRows[i] + 1 ] <- length[ evalRows[i] ] + gr[ evalRows[i] ]
+
+Moved length[ evalRows[i] ] + gr[ evalRows[i] ] into the dnorm so length doesn't get defined as a variable - didn't help
+
+made a simulation and got the same result - poor mixing with stdLength as a beta. Doing many adaptations (20000) made the model mix reasonably. 60000 adaptations for the big model didn't mix. Maybe need many more?
+
+Trying 10000 fish for 50000 obs with the sim to see if big model doens't mix because of high numFish/adaptations ratio.
+
+####
+Key was the '9' for the precision of length(). THis actually controlled the variance of each measure. Model mioxes well when we take out the observation part.

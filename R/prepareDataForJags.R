@@ -59,6 +59,9 @@ prepareDataForJags <- function(d,modelType){
                sampleIntervalMean = mean(sampleInterval, na.rm = T)
              )
 
+  d <- d %>%
+    mutate( lengthDATAStd = (observedLength - mean(observedLength,na.rm = T))/sd(observedLength,na.rm = T) )
+
   propSampled <- getPropSampled(nSeasons,nRivers,nYears)
 
   d <- addNPasses(d,drainage)
@@ -87,12 +90,12 @@ prepareDataForJags <- function(d,modelType){
 
   if ( modelType == "detection" ){
   data <- list( encDATA = d$enc,
-                lengthDATA = d$observedLength,
+                lengthDATA = d$lengthDATAStd,
                 riverDATA = d$riverN,
                 ind = d$tagIndexJags,
                 nRivers = nRivers,
                 nSpecies = nSpecies,
-                #nInd = nInd,
+                nInd = nInd,
                 #nOcc = nOcc,
                 #occ = d$sampleIndex - minOcc + 1,
                 species = as.numeric(factor(d$species, levels = c('bkt','bnt','ats'), ordered = T)), #this might screw up the indexing if a lower level is ignored in the species list   as.numeric(as.factor(d$species)),
@@ -120,10 +123,10 @@ prepareDataForJags <- function(d,modelType){
 
 
   #fill NAs for testing
-  d$lInterp =  na.approx(d$observedLength)
-  d$lenInit <- ifelse( is.na(d$observedLength), d$lInterp, NA )
+ # d$lInterp =  na.approx(d$observedLength)
+#  d$lenInit <- ifelse( is.na(d$observedLength), d$lInterp, NA )
 
-  d$initialIsYOY <- ifelse( is.na(d$lenInit), NA, ifelse( d$lInterp > 90, 2, 1 ) )
+#  d$initialIsYOY <- ifelse( is.na(d$lenInit), NA, ifelse( d$lInterp > 90, 2, 1 ) )
     # div <- 10
   # sep <- round(nrow(d)/div)
   # keep <- 1:sep
@@ -133,7 +136,7 @@ prepareDataForJags <- function(d,modelType){
 
   if ( modelType == "growth" ){
     data <- list( encDATA = d$enc,
-                  lengthDATA = d$observedLength,
+                  lengthDATA = d$lengthDATAStd,
                   riverDATA = d$riverN,
                   ind = d$tagIndexJags,
                   nRivers = nRivers,
@@ -160,12 +163,12 @@ prepareDataForJags <- function(d,modelType){
                   propSampledDATA = propSampled$propSampledDATA,
                   countPStd = d$countPStd,
                   tempStd = d$tempStd,
-                  flowStd = d$flowStd,
-                  biomassDeltaAllSpp = d$meanBiomassAllSppStdDelta,
-                  biomassDelta = d$meanBiomassStdDelta,
-                  logitPhiStd = d$logitPhiStd,
-                  lForInit = d$lenInit,
-                  isYOYDATA = d$isYOYDATA
+                  flowStd = d$flowStd
+   #               biomassDeltaAllSpp = d$meanBiomassAllSppStdDelta,
+    #              biomassDelta = d$meanBiomassStdDelta,
+           #       logitPhiStd = d$logitPhiStd,
+  #                lForInit = d$lInterp,
+   #               isYOYDATA = d$isYOYDATA
     )
   }
 

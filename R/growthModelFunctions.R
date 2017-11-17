@@ -14,32 +14,34 @@ runGrowthModel <- function(d, parallel = FALSE){
   inits <- function(){
 #    list(grBetaInt = array(rnorm(2*d$nSpecies*d$nSeasons*d$nRivers*d$nYears,0,2.25),c(2,d$nSpecies,d$nSeasons,d$nRivers,d$nYears)))
     list(
-         grInt = array(rnorm(2*d$nSpecies*d$nSeasons*d$nRivers,0,2.25),c(2,d$nSpecies,d$nSeasons,d$nRivers))
-
-
+#         grInt = array(rnorm(2*d$nSpecies*d$nSeasons*d$nRivers,0,2.25),c(2,d$nSpecies,d$nSeasons,d$nRivers))
+      #grBeta[1,1:2,1,1:4,1:4]
+      grBeta = array(rnorm(1*2*d$nSpecies*d$nSeasons*d$nRivers,0,2.25),c(1,2,d$nSpecies,d$nSeasons,d$nRivers))
        #  , isYOY1 = d$initialIsYOY#(d$observedLength > 90) + 1
          #grBeta = grBetaOutside
            #array(rnorm(11*2*4*5),c(11,2,4,5))
 
-  #       ,length = d$lForInit
+      #   ,length = d$lForInit
          )
      }
 
-  params <- c('grInt' ,'grIntMu','grIntSigma'
-              ,'sigmaInt','sigmaIntMu','sigmaIntSigma'
-              ,'grBeta','grBetaMu','grBetaSigma'
-              , 'length'#,'expectedGR'
-     #          , 'grIndRE','grIndREMean','grIndRETau'
-              )
+  # params <- c('grInt' ,'grIntMu','grIntSigma'
+  #             ,'sigmaInt','sigmaIntMu','sigmaIntSigma'
+  #             ,'grBeta','grBetaMu','grBetaSigma'
+  #             , 'length','expectedGR'#,'expectedGR'
+  #    #          , 'grIndRE','grIndREMean','grIndRETau'
+  #             )
+
+  params <- c('grBeta','grSigma','lengthExp','grInt')
 
   outGR <- jags(data = d,
                 inits = inits,
                 parameters.to.save = params,
-                model.file = "./jags/grModel3.jags",
+                model.file = "./jags/grModel5.jags",
                 n.chains = 3,
-                n.adapt = 1000, #1000
-                n.iter = 1000,
-                n.burnin = 100,
+                n.adapt = 5000, #1000
+                n.iter = 2000,
+                n.burnin = 500,
                 n.thin = 3,
                 parallel = parallel
   )

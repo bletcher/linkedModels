@@ -26,7 +26,7 @@ model{
     }
   }
 
-  for( spp in 1:nSpecies ){
+  for( s in 1:nSeasons ){
     for( r in 1:(nRivers) ){
       pBetaIntMean[ s,r ] ~ dnorm( 0,1.5 )T(-3.5,3.5)
       pBetaIntSigma[ s,r ] ~ dunif(0,10)
