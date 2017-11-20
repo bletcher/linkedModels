@@ -36,8 +36,9 @@ drainage <- "west" # ==
 species <- "bkt" #c("bkt", "bnt") #
 minCohort <- 2002 # >=
 maxSampleInterval <- 200 # <
-runDetectionModelTF <- T
+runDetectionModelTF <- F
 
+reconnect()
 #make sure species are always in order and indexed correctly for arrays
 speciesIn <- factor(species, levels = c('bkt','bnt','ats'), ordered = T)
 riverOrderedIn <- factor(c('west brook', 'wb jimmy', 'wb mitchell',"wb obear"),levels=c('west brook', 'wb jimmy', 'wb mitchell',"wb obear"),labels = c("west brook","wb jimmy","wb mitchell","wb obear"), ordered = T)

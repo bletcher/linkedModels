@@ -16,7 +16,7 @@ runGrowthModel <- function(d, parallel = FALSE){
     list(
 #         grInt = array(rnorm(2*d$nSpecies*d$nSeasons*d$nRivers,0,2.25),c(2,d$nSpecies,d$nSeasons,d$nRivers))
       #grBeta[1,1:2,1,1:4,1:4]
-      grBeta = array(rnorm(1*2*d$nSpecies*d$nSeasons*d$nRivers,0,2.25),c(1,2,d$nSpecies,d$nSeasons,d$nRivers))
+  #    grBeta = array(rnorm(1*2*d$nSpecies*d$nSeasons*d$nRivers,0,2.25),c(1,2,d$nSpecies,d$nSeasons,d$nRivers))
        #  , isYOY1 = d$initialIsYOY#(d$observedLength > 90) + 1
          #grBeta = grBetaOutside
            #array(rnorm(11*2*4*5),c(11,2,4,5))

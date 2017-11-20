@@ -88,6 +88,11 @@ prepareDataForJags <- function(d,modelType){
 
   d$isYOYDATA <- ifelse( d$ageInSamples <= 3, 1, 2 )
 
+  # Without error in lengthDATA (from Munch/sigourney), firstObs doesn't det estimated
+  # There are a few observations with fOcc=1 and NA for oberservedLength (e.g. 4 for west/bkt). Filter those fish out here
+  noLenFOcc <- d %>% dplyr::select(tagIndexJags,observedLength,fOcc,rowNumber) %>% filter((is.na(observedLength) & fOcc==1)) %>% dplyr::select(tagIndexJags)
+  d %>% filter( !(tagIndexJags %in% noLenFOcc$tagIndexJags ))
+
   if ( modelType == "detection" ){
   data <- list( encDATA = d$enc,
                 lengthDATA = d$lengthDATAStd,
@@ -163,12 +168,12 @@ prepareDataForJags <- function(d,modelType){
                   propSampledDATA = propSampled$propSampledDATA,
                   countPStd = d$countPStd,
                   tempStd = d$tempStd,
-                  flowStd = d$flowStd
+                  flowStd = d$flowStd,
    #               biomassDeltaAllSpp = d$meanBiomassAllSppStdDelta,
     #              biomassDelta = d$meanBiomassStdDelta,
            #       logitPhiStd = d$logitPhiStd,
   #                lForInit = d$lInterp,
-   #               isYOYDATA = d$isYOYDATA
+                  isYOYDATA = d$isYOYDATA
     )
   }
 
