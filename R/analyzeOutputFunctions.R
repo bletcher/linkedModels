@@ -55,7 +55,9 @@ getPrediction <- function(d, limits = 2, nPoints = 5, itersForPred, varsToEstima
    }  else
    lenData <- 0
 
-  predTemplate <- data.frame( count = countData,
+  predTemplate <- data.frame(
+                              len = lenData,
+                              count = countData,
                               flow =  flowData,
                               temp =  tempData
                             )
@@ -75,16 +77,29 @@ getPrediction <- function(d, limits = 2, nPoints = 5, itersForPred, varsToEstima
   preds <- preds %>%
     mutate( predGr =
               int +
-              beta1 * count +
-              beta2 * temp +
-              beta3 * flow +
-              beta4 * count^2 +
-              beta5 * temp^2 +
-              beta6 * flow^2 +
-              beta7 * temp * flow +
-              beta8 * temp * count +
-              beta9 * count * flow +
-              beta10 * temp * flow * count
+              beta1 * len +
+              beta2 * count +
+              beta3 * temp +
+              beta4 * flow +
+
+              beta5 * len^2 +
+              beta6 * count^2 +
+              beta7 * temp^2 +
+              beta8 * flow^2 +
+
+              beta9 * temp * flow +
+              beta10 * temp * count +
+              beta11 * count * flow +
+
+              beta12 * len * count +
+              beta13 * len * flow +
+              beta14 * len * temp #+
+              #
+              # beta15 * count * temp * flow +
+              # beta16 * len * temp * flow +
+              # beta17 * count * len * flow +
+              # beta18 * count * temp * len
+
 
     )
 
@@ -162,14 +177,15 @@ getPredictionSigma <- function(d, limits = 2, nPoints = 5, itersForPred){
 #'
 
 plotPred <- function(p, varsToPlot, isYOYGG, speciesGG) {
-  all=c('temp','flow','count')
+  all = c('len','temp','flow','count')
 
   if(length(varsToPlot) == 1) {
     notPlot <- NA
     notPlot[1] <- all[!(all %in% varsToPlot)][1]
     notPlot[2] <- all[!(all %in% varsToPlot)][2]
+    notPlot[3] <- all[!(all %in% varsToPlot)][3]
 
-    pGG <- p %>% filter(isYOY == isYOYGG, species == speciesGG, eval(as.name(notPlot[1])) == 0, eval(as.name(notPlot[2])) == 0 ) %>%
+    pGG <- p %>% filter(isYOY == isYOYGG, species == speciesGG, eval(as.name(notPlot[1])) == 0, eval(as.name(notPlot[2])) == 0, eval(as.name(notPlot[3])) == 0 ) %>%
                  distinct(eval(as.name(varsToPlot[1])), iter, isYOY, river, species, season, .keep_all = TRUE)
 
     ggOut <- ggplot(pGG, aes(eval(as.name(varsToPlot[1])),predGr, group = iter)) +
@@ -178,27 +194,28 @@ plotPred <- function(p, varsToPlot, isYOYGG, speciesGG) {
       theme(panel.grid.minor = element_blank(), panel.grid.major = element_blank()) +
       ggtitle(paste0('isYOY = ',isYOYGG,', species = ',speciesGG)) +
       geom_hline(yintercept = 0) +
-      ylim(-0.25,1) +
+      ylim(-0.25,1.33) +
       scale_x_continuous(varsToPlot[1]) +
       facet_grid(river~season)
   }
 
-  if(length(varsToPlot) > 1) {
+  if(length(varsToPlot) == 2) {
     notPlot <- NA
     notPlot[1] <- all[!(all %in% varsToPlot)][1]
+    notPlot[2] <- all[!(all %in% varsToPlot)][2]
 
-    pGG <- p %>% filter(isYOY == isYOYGG, species == speciesGG, eval(as.name(notPlot[1])) == 0 ) %>%
+    pGG <- p %>% filter(isYOY == isYOYGG, species == speciesGG, eval(as.name(notPlot[1])) == 0, eval(as.name(notPlot[2])) == 0 ) %>%
       distinct(eval(as.name(varsToPlot[1])), eval(as.name(varsToPlot[2])), iter, isYOY, river, species, season, .keep_all = TRUE)
 
     pGG$iterGroup <- paste0(pGG$iter,pGG[[varsToPlot[2]]])
 
-    ggOut <- ggplot(pGG, aes(eval(as.name(varsToPlot[1])), predGr, group = iterGroup, name=varsToPlot[2])) +
-      geom_line(aes( color = (eval(as.name(varsToPlot[2]))) ), alpha=0.25 ) +
+    ggOut <- ggplot(pGG, aes(eval(as.name(varsToPlot[1])), predGr, group = iterGroup, name = varsToPlot[2])) +
+      geom_line(aes( color = (eval(as.name(varsToPlot[2]))) ), alpha = 0.25 ) +
       theme_bw() +
       theme(panel.grid.minor = element_blank(), panel.grid.major = element_blank()) +
       ggtitle(paste0('isYOY = ',isYOYGG,', species = ',speciesGG)) +
       geom_hline(yintercept = 0) +
-      ylim(-0.33,1) +
+      ylim(-0.33,1.33) +
       scale_x_continuous(varsToPlot[1]) +
       #    scale_fill_continuous(name=varsToPlot[2]) +
       facet_grid(river~season)

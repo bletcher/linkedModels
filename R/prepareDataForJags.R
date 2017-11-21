@@ -22,6 +22,17 @@ prepareDataForJags <- function(d,modelType){
     ) %>%
     ungroup()
 
+
+  # Without error in lengthDATA (from Munch/sigourney), firstObs doesn't det estimated
+  # There are a few fish with observations with fOcc=1 and NA for oberservedLength (e.g. 4 for west/bkt). Filter those fish out here
+  noLenFOcc <- d %>% dplyr::select(tagIndex,observedLength,fOcc) %>% filter( (is.na(observedLength) & fOcc == 1) )
+  d <- d %>% filter( !(tagIndex %in% noLenFOcc$tagIndex ) )
+  print(paste("NA length for first observation", length(noLenFOcc$tagIndex)))
+  print( noLenFOcc$tagIndex )
+
+  d$leftOut <- F #placeholder
+  d <- d %>% crossValidate( runCrossValidationTF )
+
   evalRows <- which( d$lOcc == 0 )
   firstObsRows <- which( d$fOcc == 1 )
   lastObsRows <- which( d$lOcc == 1 )
@@ -52,15 +63,29 @@ prepareDataForJags <- function(d,modelType){
   d$riverN <- as.numeric(d$riverOrdered)
   d$speciesN <- as.numeric(as.factor(d$species))
 
+  d$observedLengthLn <- log(d$observedLength)
+  d$observedLengthOriginalLn <- log(d$observedLengthOriginal)
+
   means <- d %>%
     group_by( speciesN,season,riverN ) %>%
     summarize( meanLen = mean(observedLength, na.rm = T),
                sdLen = sd(observedLength, na.rm = T),
+               meanLenOriginal = mean(observedLengthOriginal, na.rm = T),
+               sdLenOriginal = sd(observedLengthOriginal, na.rm = T),
+               meanLenLn = mean(observedLengthLn, na.rm = T),
+               sdLenLn = sd(observedLengthLn, na.rm = T),
+               meanLenOriginalLn = mean(observedLengthOriginalLn, na.rm = T),
+               sdLenOriginalLn = sd(observedLengthOriginalLn, na.rm = T),
                sampleIntervalMean = mean(sampleInterval, na.rm = T)
              )
 
-  d <- d %>%
-    mutate( lengthDATAStd = (observedLength - mean(observedLength,na.rm = T))/sd(observedLength,na.rm = T) )
+  d <- d %>%     # use original means so length and lengthOriginal have same std values
+    mutate( lengthDATAStd = (observedLength -                 mean(observedLengthOriginal,na.rm = T)) / sd(observedLengthOriginal,na.rm = T),
+            lengthDATAOriginalStd = (observedLengthOriginal - mean(observedLengthOriginal,na.rm = T)) / sd(observedLengthOriginal,na.rm = T),
+
+            lengthDATALnStd = (observedLengthLn -                 mean(observedLengthOriginalLn,na.rm = T)) / sd(observedLengthOriginalLn,na.rm = T),
+            lengthDATAOriginalLnStd = (observedLengthOriginalLn - mean(observedLengthOriginalLn,na.rm = T)) / sd(observedLengthOriginalLn,na.rm = T)
+            )
 
   propSampled <- getPropSampled(nSeasons,nRivers,nYears)
 
@@ -87,11 +112,6 @@ prepareDataForJags <- function(d,modelType){
   d$rowNumber <- 1:nrow(d)
 
   d$isYOYDATA <- ifelse( d$ageInSamples <= 3, 1, 2 )
-
-  # Without error in lengthDATA (from Munch/sigourney), firstObs doesn't det estimated
-  # There are a few observations with fOcc=1 and NA for oberservedLength (e.g. 4 for west/bkt). Filter those fish out here
-  noLenFOcc <- d %>% dplyr::select(tagIndexJags,observedLength,fOcc,rowNumber) %>% filter((is.na(observedLength) & fOcc==1)) %>% dplyr::select(tagIndexJags)
-  d %>% filter( !(tagIndexJags %in% noLenFOcc$tagIndexJags ))
 
   if ( modelType == "detection" ){
   data <- list( encDATA = d$enc,
@@ -141,7 +161,7 @@ prepareDataForJags <- function(d,modelType){
 
   if ( modelType == "growth" ){
     data <- list( encDATA = d$enc,
-                  lengthDATA = d$lengthDATAStd,
+                  lengthDATA = d$lengthDATALnStd, #d$lengthDATAStd,
                   riverDATA = d$riverN,
                   ind = d$tagIndexJags,
                   nRivers = nRivers,
@@ -177,6 +197,6 @@ prepareDataForJags <- function(d,modelType){
     )
   }
 
-  return(data)
+  return(list(data,d))
 }
 

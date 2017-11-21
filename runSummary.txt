@@ -57,3 +57,25 @@ Trying 10000 fish for 50000 obs with the sim to see if big model doens't mix bec
 
 ####
 Key was the '9' for the precision of length(). THis actually controlled the variance of each measure. Model mioxes well when we take out the observation part.
+#####
+
+Model selection:
+
+int main, dic = -4485.878 , mix  = A
+int main intRE, dic = -4267.325, mix  = A-
+int main intRE betaRE, dic = -4255.394, mix  = A-
+int main main^2 intRE betaRE, dic = -5084.402, mix  = A-
+int main main^2 intRE betaRE (fix yoy=2,season=2 to 0), dic = -2232.782, mix  = B
+main main^2 intRE betaRE IndRE (fix yoy=2,season=2 to 0), dic = 6143.798  , mix  = C
+int main main^2 main-2ways intRE betaRE (fix yoy=2,season=2 to 0), dic = -3001.243, mix  = B
+int main main^2 main-2ways main-3ways intRE betaRE (fix yoy=2,season=2 to 0), dic = -2337.868 , mix = C
+int main main^2 main-2ways main-3ways intRE betaRE, grSigma[,,,] (fix yoy=2,season=2 to 0), dic =  , mix = C
+yoy1, season 2 not fixed, int main main^2 main-2ways main-3ways intRE betaRE, grSigma[,,,] , dic =  , mix = C
+yoy1, season 2 not fixed, int main main^2 main-2ways intRE betaRE, grSigma[,,,] , dic =  , mix = C
+yoy1, season 2 not fixed, int main main^2 main-2ways intRE betaRE,  , dic =  , mix =
+
+int main main^2 main-2ways, mix = C
+int main main^2 , mix = A
+int main main^2 intRE, betaRE, mix =
+
+

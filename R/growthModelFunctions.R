@@ -32,16 +32,16 @@ runGrowthModel <- function(d, parallel = FALSE){
   #    #          , 'grIndRE','grIndREMean','grIndRETau'
   #             )
 
-  params <- c('grBeta','grSigma','lengthExp','grInt')
+  params <- c('grInt', 'grBeta', 'grSigma', 'lengthExp', 'grIntMu', 'grIntSigma', 'grIndRE', 'grBetaMu', 'grBetaSigma' )
 
   outGR <- jags(data = d,
                 inits = inits,
                 parameters.to.save = params,
                 model.file = "./jags/grModel5.jags",
                 n.chains = 3,
-                n.adapt = 5000, #1000
-                n.iter = 2000,
-                n.burnin = 500,
+                n.adapt = 750, #1000
+                n.iter = 300,
+                n.burnin = 100,
                 n.thin = 3,
                 parallel = parallel
   )
@@ -158,9 +158,11 @@ addDensityData <- function( ddddGIn,ddDIn,ddddDIn,meanOrIterIn,sampleToUse ){
 #'@export
 #'
 crossValidate <- function(d, runCrossValidationTF){
+  d$observedLengthOriginal <- d$observedLength
   if ( runCrossValidationTF ) {
-    d$leftOut <- ifelse( runif(nrow(d)) < percentLeftOut/100, 1,0 )
-    d$observedLength <- ifelse( d$leftOut == 1, NA, d$observedLength )
+    propFOcc <- sum(d$fOcc) / nrow(d)
+    d$leftOut <- ifelse( (runif(nrow(d)) < percentLeftOut/propFOcc/100) & (d$fOcc == 0), T, F ) # adjust percentLeftOut higher to acct for the fOcc that can't be NA
+    d$observedLength <- ifelse( d$leftOut, NA, d$observedLength )
   }
   return(d)
 }
