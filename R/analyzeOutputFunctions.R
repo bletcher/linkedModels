@@ -64,7 +64,7 @@ getPrediction <- function(d, limits = 2, nPoints = 5, itersForPred, varsToEstima
 
 
     # expand predTemplate across grBeta rows for a given set of iterations
-    grBetaIter <- grBeta %>% filter( iter %in% itersForPred)
+    grBetaIter <- grBeta %>% filter( iter %in% itersForPred )
 
     # repeat predTemplate nrow( grBetaIter ) times
     predTemplateLong <- do.call("rbind", replicate( nrow( grBetaIter ), predTemplate, simplify = FALSE) )
@@ -73,7 +73,7 @@ getPrediction <- function(d, limits = 2, nPoints = 5, itersForPred, varsToEstima
     # Put them together
     preds <- cbind( predTemplateLong,grBetaLong )
 
-  # This model structure needs to match that in grModel.jags
+  # This model structure needs to match that in grModelx.jags
   preds <- preds %>%
     mutate( predGr =
               int +
@@ -93,13 +93,12 @@ getPrediction <- function(d, limits = 2, nPoints = 5, itersForPred, varsToEstima
 
               beta12 * len * count +
               beta13 * len * flow +
-              beta14 * len * temp #+
-              #
-              # beta15 * count * temp * flow +
-              # beta16 * len * temp * flow +
-              # beta17 * count * len * flow +
-              # beta18 * count * temp * len
+              beta14 * len * temp +
 
+              beta15 * count * temp * flow +
+              beta16 * len * temp * flow +
+              beta17 * count * len * flow +
+              beta18 * count * temp * len
 
     )
 
@@ -188,13 +187,13 @@ plotPred <- function(p, varsToPlot, isYOYGG, speciesGG) {
     pGG <- p %>% filter(isYOY == isYOYGG, species == speciesGG, eval(as.name(notPlot[1])) == 0, eval(as.name(notPlot[2])) == 0, eval(as.name(notPlot[3])) == 0 ) %>%
                  distinct(eval(as.name(varsToPlot[1])), iter, isYOY, river, species, season, .keep_all = TRUE)
 
-    ggOut <- ggplot(pGG, aes(eval(as.name(varsToPlot[1])),predGr, group = iter)) +
+    ggOut <- ggplot(pGG, aes(eval(as.name(varsToPlot[1])),predGr, group = iter,color=factor(iter))) +
       geom_line( alpha=0.25 ) +
       theme_bw() +
       theme(panel.grid.minor = element_blank(), panel.grid.major = element_blank()) +
       ggtitle(paste0('isYOY = ',isYOYGG,', species = ',speciesGG)) +
       geom_hline(yintercept = 0) +
-      ylim(-0.25,1.33) +
+  #    ylim(-0.25,1.33) +
       scale_x_continuous(varsToPlot[1]) +
       facet_grid(river~season)
   }
@@ -215,7 +214,7 @@ plotPred <- function(p, varsToPlot, isYOYGG, speciesGG) {
       theme(panel.grid.minor = element_blank(), panel.grid.major = element_blank()) +
       ggtitle(paste0('isYOY = ',isYOYGG,', species = ',speciesGG)) +
       geom_hline(yintercept = 0) +
-      ylim(-0.33,1.33) +
+  #    ylim(-0.33,1.33) +
       scale_x_continuous(varsToPlot[1]) +
       #    scale_fill_continuous(name=varsToPlot[2]) +
       facet_grid(river~season)
@@ -223,3 +222,32 @@ plotPred <- function(p, varsToPlot, isYOYGG, speciesGG) {
   return(ggOut)
 }
 
+
+
+#'Plot observed/predicted and return RMSE
+#'
+#'@param none
+#'@return Nothing, print text and plot graph
+#'@export
+#'
+#'
+getRMSE <- function(){
+  estLen <- array2df(dG[[1]]$q50$lengthExp, label.x = "estLen") %>% rename(rowNumber = d1)
+
+  ddGIn <- ddG[[ii]][[2]]
+  ddGIn$isEvalRow <- ifelse( ddGIn$lOcc == 0,TRUE, FALSE )
+
+  ddGIn <- left_join( ddGIn, estLen, by = 'rowNumber')
+
+  gg <- ggplot( ddGIn, aes( lengthDATAOriginalLnStd, estLen, color = leftOut ) ) +
+    geom_point( alpha = 0.2 ) +
+    geom_abline(intercept = 0, slope = 1) +
+    ylim(-2,4) +
+    facet_wrap(~leftOut)
+  print(gg)
+
+  ddGIn %>%
+    mutate( resid = estLen - lengthDATAOriginalLnStd ) %>%
+    group_by(leftOut) %>%
+    summarise( rmse = sqrt( sum(resid^2,na.rm=T)/length(resid) ) )
+}

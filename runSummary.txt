@@ -74,8 +74,25 @@ yoy1, season 2 not fixed, int main main^2 main-2ways main-3ways intRE betaRE, gr
 yoy1, season 2 not fixed, int main main^2 main-2ways intRE betaRE, grSigma[,,,] , dic =  , mix = C
 yoy1, season 2 not fixed, int main main^2 main-2ways intRE betaRE,  , dic =  , mix =
 
-int main main^2 main-2ways, mix = C
-int main main^2 , mix = A
-int main main^2 intRE, betaRE, mix =
 
+# trying runs with rmse as indicator
+int main, mix = A, rmse = 0.09295182
+int main sigma[,,,], mix = A, rmse = 0.09496348
+int main sigma[,,,] betaRE, mix = A, rmse = 0.09477582
+int main sigma[,,,] betaRE intRE, mix = A, rmse = 0.0950708
+int main sigma[,,,] betaRE intRE main^2, mix = A except for YOY=1, season2 , rmse = 0.08947765
+int main sigma[,,,] betaRE intRE main^2 [fix yoy1+season2], mix = C, rmse = 0.1153313
+int main sigma[,,,] betaRE intRE main^2 main-2ways, mix = A, rmse = 0.08665695
+int main sigma[,,,] betaRE intRE main^2 main-2ways main-3ways, mix = A, rmse = 0.08532076
+int main sigma[,,,] betaRE intRE main^2 main-2ways main-3ways indRE, mix = A, rmse = 0.07755313
+int main sigma[,,,] betaRE intRE main^2 main-2ways main-3ways indRE sigmaBeta, mix = F, rmse = big
 
+# mixing was actually poor for the 2nd to last model above. Chain 3 was different
+# run with initials for grInt and grBeta, bump adaptaion phase from 1000 to 5000
+int main sigma[,,,] betaRE intRE main^2 main-2ways main-3ways indRE, mix = C, rmse = 0.07932732
+int main sigma[,,,] betaRE intRE main^2 main-2ways main-3ways , mix = C, rmse =
+
+# chains not mixing. Took yoy out of hierarchical means and sds for grInt,grBeta and grSigma.
+int main sigma[,,,] betaRE intRE main^2 main-2ways main-3ways sigmaRE, mix = A, rmse = 0.08617891
+int main sigma[,,,] betaRE intRE main^2 main-2ways main-3ways sigmaRE indRE, mix = A, rmse = 0.07775984
+int main sigma[,,,] betaRE intRE main^2 main-2ways main-3ways sigmaRE indRE sigmaBeta sigmaBetaRE, mix = , rmse =
