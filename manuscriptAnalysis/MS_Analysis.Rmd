@@ -1,0 +1,79 @@
+---
+title: "Growth model analysis"
+output: html_notebook
+---
+
+Plots for the manuscript
+
+```{r}
+library(tidyverse)
+d <- dddG[[1]]
+#load(file = './data/out/ddD.RData')
+
+```
+
+```{r overview graphs - Fig 1}
+d$riverOrderedGG <- factor(d$river,
+                         levels=c('west brook', 'wb jimmy', 'wb mitchell',"wb obear"),
+                         labels = c("West Brook","Open Large","Open Small","Isolated Small"), ordered = T)
+d$seasonGG <- factor(d$season, labels = c("Spring","Summer","Autumn","Winter"), ordered = T)
+d$speciesGG <- factor(d$species, levels = c('bkt','bnt','ats'), labels = c("Brook Trout", "Brown Trout", "Atlantic Samlon"), ordered = T)
+
+
+ggplot(d, aes(year,countPAllSpp)) +
+  geom_point() +
+  geom_line() +
+  labs( x = "Year", y = "Estimated count") +
+  theme_bw() +
+  facet_grid(seasonGG ~ riverOrderedGG)
+
+ggsave('figures/count.png')
+```
+
+
+```{r overview graphs - Fig 2}
+
+pd <- position_dodge(0.75) 
+d %>% group_by(speciesGG,riverOrderedGG,seasonGG,year) %>% 
+  summarize(meanGR = mean(grLength, na.rm=T),
+            sdGR = sd(grLength, na.rm=T)) %>%
+ggplot( aes(year,meanGR, color=speciesGG, shape=speciesGG) ) +
+  geom_point( position=pd ) +
+  geom_errorbar( aes(ymin = meanGR - sdGR, ymax = meanGR + sdGR), width = 0.33, position=pd ) +
+  labs( x = "Year", y = "Estimated growth rate (mm/d)" ) +
+  theme_bw() +
+  facet_grid(seasonGG ~ riverOrderedGG)
+
+ggsave('figures/gr.png')
+
+
+```
+
+```{r figs 3,4}
+d %>% group_by(riverOrderedGG,seasonGG,year) %>% 
+  summarize(meanF = mean(meanFlow, na.rm=T),
+            sdF = sd(meanFlow, na.rm=T)) %>%
+  ggplot( aes(year,meanF) ) +
+  geom_point(  ) +
+  geom_line() +
+  geom_errorbar( aes(ymin = meanF - sdF, ymax = meanF + sdF, width = 0.33 ) ) +
+  labs( x = "Year", y = "Stream flow (x/x)" ) +
+  theme_bw() +
+  facet_grid(seasonGG ~ riverOrderedGG)
+
+ggsave('figures/flow.png')
+
+d %>% group_by(riverOrderedGG,seasonGG,year) %>% 
+  summarize(meanT = mean(meanTemperature, na.rm=T),
+            sdT = sd(meanTemperature, na.rm=T)) %>%
+  ggplot( aes(year,meanT) ) +
+  geom_point(  ) +
+  geom_line() +
+  geom_errorbar( aes(ymin = meanT - sdT, ymax = meanT + sdT, width = 0.33 ) ) +
+  labs( x = "Year", y = "Stream temperature (C)" ) +
+  theme_bw() +
+  facet_grid(seasonGG ~ riverOrderedGG)
+
+ggsave('figures/temp.png')
+```
+

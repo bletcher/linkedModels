@@ -33,10 +33,10 @@ library(tidyverse)
 # selection criteria
 
 drainage <- "west" # ==
-species <- "bkt" #c("bkt", "bnt") #
+species <- c("bkt", "bnt") #
 minCohort <- 2002 # >=
 maxSampleInterval <- 200 # <
-runDetectionModelTF <- F
+runDetectionModelTF <- T
 
 reconnect()
 
@@ -89,7 +89,7 @@ ddddD <- cd %>%
 dddD <- ddddD %>% prepareDataForJags('detection')
 
 if (runDetectionModelTF) {
-  ddD <- dddD %>% runDetectionModel(parallel = TRUE)
+  ddD <- dddD[[1]] %>% runDetectionModel(parallel = TRUE)
   save(ddD,dddD,ddddD, file = paste0('./data/out/ddD_', dModelName,'.RData'))
 }
 done <- Sys.time()
@@ -211,12 +211,13 @@ jagsUI::traceplot(dG[[1]], parameters = "grInt[2,1,1,3]")
 jagsUI::traceplot(dG[[1]], parameters = "grIntSigma")
 
 whiskerplot(dG[[1]], parameters = "sigmaInt")
-whiskerplot(dG[[1]], parameters = "sigmaIntMu")
+whiskerplot(dG[[1]], parameters = "sigmaBetaMu")
+whiskerplot(dG[[1]], parameters = "sigmaBetaSigma")
 whiskerplot(dG[[1]], parameters = "sigmaBeta[4,,,,]")
 traceplot(dG[[1]], parameters = "sigmaIntSigma")
 
 whiskerplot(dG[[1]], parameters = "grBeta")
-whiskerplot(dG[[1]], parameters = "grBeta[15,,,,]")
+whiskerplot(dG[[1]], parameters = "grBeta[2,,,,]")
 whiskerplot(dG[[1]], parameters = "grBetaMu")
 whiskerplot(dG[[1]], parameters = "grBetaSigma")
 jagsUI::traceplot(dG[[1]], parameters = "grBeta")
@@ -302,7 +303,7 @@ p <- getPrediction( dG[[1]], limits, nPoints, itersForPred, c("len", "temp", "fl
 plotPred(p, "len", 1, "bkt")
 plotPred(p, "temp", 1, "bkt")
 plotPred(p, "flow", 1, "bkt")
-plotPred(p, "count", 1, "bkt")
+plotPred(p, "count", 1, "bnt")
 plotPred(p, c("temp", "flow"), 1, "bkt")
 plotPred(p, c("temp", "flow"), 0, "bkt")
 plotPred(p, c("temp","count"), 1, "bkt")
