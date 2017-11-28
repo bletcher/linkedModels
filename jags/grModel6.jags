@@ -33,7 +33,7 @@ model{
      +    grIndRE[ ind[evalRows[i]] ]
 
     expectedGRTau[ evalRows[i] ] <- 1 / ( expectedGRSigma[ evalRows[i] ] * expectedGRSigma[ evalRows[i] ] )
-    expectedGRSigma[ evalRows[i] ]  <- #grSigma
+  log(  expectedGRSigma[ evalRows[i] ]  ) <- #grSigma
           grSigma[ isYOYDATA[evalRows[i]], species[evalRows[i]], season[evalRows[i]], riverDATA[evalRows[i]] ]
     +    sigmaBeta[ 1, isYOYDATA[evalRows[i]], species[evalRows[i]], season[evalRows[i]], riverDATA[evalRows[i]] ] * lengthDATA[evalRows[i]]
     +    sigmaBeta[ 2, isYOYDATA[evalRows[i]], species[evalRows[i]], season[evalRows[i]], riverDATA[evalRows[i]] ] * countPStd[evalRows[i]]
@@ -44,39 +44,39 @@ model{
 
   # #   ############## Growth Priors
   #
-  for( s in 1:nSeasons ){
-    grIntMu[ s ] ~ dnorm(0,0.001)
-    grIntSigma[ s ] ~ dunif(0,10)
+  for( spp in 1:nSpecies ) {
+    for( s in 1:nSeasons ){
+      grIntMu[ spp,s ] ~ dnorm(0,0.001)
+      grIntSigma[ spp,s ] ~ dunif(0,10)
 
-    grSigmaMu[ s ] ~ dnorm(0,0.001)
-    grSigmaSigma[ s ] ~ dunif(0,10)
+      grSigmaMu[ spp,s ] ~ dnorm(0,0.001)
+      grSigmaSigma[ spp,s ] ~ dunif(0,10)
 
-    for( b in 1:18 ){  ############# Beta ##############################################################################
-      grBetaMu[ b,s ] ~ dnorm(0,0.001)
-      grBetaSigma[ b,s ] ~ dunif(0,100)
-    }
+      for( b in 1:18 ){  ############# Beta ##############################################################################
+        grBetaMu[ b,spp,s ] ~ dnorm(0,0.001)
+        grBetaSigma[ b,spp,s ] ~ dunif(0,100)
+      }
 
-    for( b in 1:4 ){  ############# Beta ##############################################################################
-      sigmaBetaMu[ b,s ] ~ dnorm(0,0.001)
-      sigmaBetaSigma[ b,s ] ~ dunif(0,100)
-    }
+      for( b in 1:4 ){  ############# Beta ##############################################################################
+        sigmaBetaMu[ b,spp,s ] ~ dnorm(0,0.001)
+        sigmaBetaSigma[ b,spp,s ] ~ dunif(0,100)
+      }
 
-    for( yoy in 1:2 ){
-      for( spp in 1:nSpecies ) {
+      for( yoy in 1:2 ){
         for( r in 1:nRivers ){
 
-            grInt[ yoy,spp,s,r ] ~ dnorm( grIntMu[ s ], 1 / grIntSigma[ s ] ^ 2 )
-          grSigma[ yoy,spp,s,r ] ~ dnorm( grSigmaMu[ s ], 1 / grSigmaSigma[ s ] ^ 2 )T(0,) #dunif(0,100)
+              grInt[ yoy,spp,s,r ] ~ dnorm( grIntMu[ spp,s ], 1 / grIntSigma[ spp,s ] ^ 2 )
+            grSigma[ yoy,spp,s,r ] ~ dnorm( grSigmaMu[ spp,s ], 1 / grSigmaSigma[ spp,s ] ^ 2 )#T(0,) #dunif(0,100)
 
-          for( b in 1:18 ){  ############# Beta ##################################################################################
-            grBeta[ b,yoy,spp,s,r ] ~ dnorm( grBetaMu[ b,s ], 1 / grBetaSigma[ b,s ] ^ 2 )
+            for( b in 1:18 ){  ############# Beta ##################################################################################
+              grBeta[ b,yoy,spp,s,r ] ~ dnorm( grBetaMu[ b,spp,s ], 1 / grBetaSigma[ b,spp,s ] ^ 2 )
+            }
+             for( b in 1:4 ){  ############# Beta ##################################################################################
+               sigmaBeta[ b,yoy,spp,s,r ] ~ dnorm( sigmaBetaMu[ b,spp,s ], 1 / sigmaBetaSigma[ b,spp,s ] ^ 2 )
+            }
           }
-           for( b in 1:4 ){  ############# Beta ##################################################################################
-             sigmaBeta[ b,yoy,spp,s,r ] ~ dnorm( sigmaBetaMu[ b,s ], 1 / sigmaBetaSigma[ b,s ] ^ 2 )
-           }
         }
       }
-    }
   }
 
 

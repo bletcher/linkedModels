@@ -12,16 +12,15 @@ runGrowthModel <- function(d, parallel = FALSE){
   #grBetaOutside[ ,1,,2, ] <- 0
 
   inits <- function(){
-#    list(grBetaInt = array(rnorm(2*d$nSpecies*d$nSeasons*d$nRivers*d$nYears,0,2.25),c(2,d$nSpecies,d$nSeasons,d$nRivers,d$nYears)))
     list(
-         grInt = array(rnorm(2*d$nSpecies*d$nSeasons*d$nRivers,0.5,0.25),c(2,d$nSpecies,d$nSeasons,d$nRivers)),
-      #grBeta[1,1:2,1,1:4,1:4]
-      grBeta = array(rnorm(18*2*d$nSpecies*d$nSeasons*d$nRivers,0,0.1),c(18,2,d$nSpecies,d$nSeasons,d$nRivers))
-       #  , isYOY1 = d$initialIsYOY#(d$observedLength > 90) + 1
-         #grBeta = grBetaOutside
-           #array(rnorm(11*2*4*5),c(11,2,4,5))
-
-      #   ,length = d$lForInit
+          grInt = array(rnorm(2*d$nSpecies*d$nSeasons*d$nRivers,0.5,0.25),c(2,d$nSpecies,d$nSeasons,d$nRivers)),
+          #grBeta[x,1:2,1,1:4,1:4]
+          grBeta = array(rnorm(18*2*d$nSpecies*d$nSeasons*d$nRivers,0,0.1),c(18,2,d$nSpecies,d$nSeasons,d$nRivers)),
+          #grSigma[ yoy,spp,s,r ]
+          grSigma = array(runif(2*d$nSpecies*d$nSeasons*d$nRivers,0,0.05),c(2,d$nSpecies,d$nSeasons,d$nRivers)),
+          # sigmaBeta[ b,yoy,spp,s,r ]
+          sigmaBeta = array(rnorm(4*2*d$nSpecies*d$nSeasons*d$nRivers,0,0.05),c(4,2,d$nSpecies,d$nSeasons,d$nRivers)),
+          grIndRE = rnorm(d$nInd,0,0.1)
          )
      }
 
@@ -32,17 +31,17 @@ runGrowthModel <- function(d, parallel = FALSE){
   #    #          , 'grIndRE','grIndREMean','grIndRETau'
   #             )
 
-  params <- c('grInt', 'grBeta', 'grSigma','sigmaBeta', 'lengthExp', 'grIntMu', 'grIntSigma', 'grIndRE', 'grBetaMu', 'grBetaSigma' )
+  params <- c('grInt', 'grBeta', 'grSigma','sigmaBeta', 'lengthExp', 'grIntMu', 'grIntSigma', 'grIndRE', 'grBetaMu', 'grBetaSigma', 'sigmaBetaMu', 'sigmaBetaSigma' )
 
   outGR <- jags(data = d,
                 inits = inits,
                 parameters.to.save = params,
                 model.file = "./jags/grModel6.jags",
                 n.chains = 3,
-                n.adapt = 500, #1000
-                n.iter = 750,
-                n.burnin = 250,
-                n.thin = 4,
+                n.adapt = 1000, #1000
+                n.iter = 1000,
+                n.burnin = 400,
+                n.thin = 5,
                 parallel = parallel
   )
 

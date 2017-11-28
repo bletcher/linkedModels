@@ -153,7 +153,7 @@ if (meanOrIter == "iter") {
 ######################################
 ### loop over iters
 
-modelName <- "grModel5"
+modelName <- "grModel6"
 
 dddG <- list()
 ddG <- list()
@@ -192,6 +192,10 @@ for (iter in itersToUse) {
   plotInt()
   plotBetas(1:2)
 
+  plotSigma()
+  plotSigmaBetas(1:2)
+  plotSigmaBetas(3:4)
+
   save(dG,ddG,dddG, file = paste0('./data/out/dG_', as.integer(Sys.time()),'_', modelName, '.RData'))
 }
 
@@ -208,7 +212,7 @@ jagsUI::traceplot(dG[[1]], parameters = "grIntSigma")
 
 whiskerplot(dG[[1]], parameters = "sigmaInt")
 whiskerplot(dG[[1]], parameters = "sigmaIntMu")
-whiskerplot(dG[[1]], parameters = "sigmaIntSigma")
+whiskerplot(dG[[1]], parameters = "sigmaBeta[4,,,,]")
 traceplot(dG[[1]], parameters = "sigmaIntSigma")
 
 whiskerplot(dG[[1]], parameters = "grBeta")
@@ -237,13 +241,6 @@ plotInt <- function(){
   gg <- ggplot(filter(ggGrInt), aes(iter,est)) + geom_point( aes(color=factor(chain)), size = 0.1 ) + ylim(-1.5,1.5) + facet_grid(d2+d4~d5+d3)
   print(gg)
 }
-# isYOY[ evalRows[i] ],species[ evalRows[i]],season[ evalRows[i] ],riverDATA[ evalRows[i] ]
-# [1:675, 1, 1:2, 1:2, 1:4, 1:4]
-ggSigmaInt <- array2df(dG[[1]]$sims.list$sigmaInt, label.x = "est")
-
-ggSigmaInt$chain <- rep(1:dG[[1]]$mcmc.info$n.chains, each = dG[[1]]$mcmc.info$n.samples/dG[[1]]$mcmc.info$n.chains)
-ggSigmaInt$iter <- 1:as.numeric(dG[[1]]$mcmc.info$n.samples/dG[[1]]$mcmc.info$n.chains)
-ggplot(filter(ggSigmaInt), aes(iter,est)) + geom_point( aes(color=factor(chain)), size = 0.1 ) + facet_grid(d2+d4~d5+d3)
 
 # isYOY[ evalRows[i] ],species[ evalRows[i]],season[ evalRows[i] ],riverDATA[ evalRows[i] ]
 # [1:675, 1, 1:2, 1:2, 1:4, 1:4]
@@ -259,7 +256,33 @@ plotBetas <- function(b){
     gg[[i]] <- ggplot(filter(ggGrBeta,d2 == i), aes(iter,est)) + geom_hline(yintercept = 0) + geom_point( aes(color = factor(chain)), size = 0.1 ) + ylim(-1,1) + facet_grid(d3+d5~d6+d4) + ggtitle(paste("beta =", i))
     if(i %in% b) print(gg[[i]])
   }
+}
 
+# isYOY[ evalRows[i] ],species[ evalRows[i]],season[ evalRows[i] ],riverDATA[ evalRows[i] ]
+# [1:675, 1, 1:2, 1:2, 1:4, 1:4]
+plotSigma <- function(){
+  ggSigmaInt <- array2df(dG[[1]]$sims.list$grSigma, label.x = "est")
+
+  ggSigmaInt$chain <- rep(1:dG[[1]]$mcmc.info$n.chains, each = dG[[1]]$mcmc.info$n.samples/dG[[1]]$mcmc.info$n.chains)
+  ggSigmaInt$iter <- 1:as.numeric(dG[[1]]$mcmc.info$n.samples/dG[[1]]$mcmc.info$n.chains)
+  gg <- ggplot(filter(ggSigmaInt), aes(iter,est)) + geom_point( aes(color=factor(chain)), size = 0.1 ) + facet_grid(d2+d4~d5+d3)
+  print(gg)
+}
+
+# isYOY[ evalRows[i] ],species[ evalRows[i]],season[ evalRows[i] ],riverDATA[ evalRows[i] ]
+# [1:675, 1, 1:2, 1:2, 1:4, 1:4]
+plotSigmaBetas <- function(b){
+  ggGrBeta <- array2df(dG[[1]]$sims.list$sigmaBeta, label.x = "est")
+
+  ggGrBeta$chain <- rep(1:dG[[1]]$mcmc.info$n.chains, each = dG[[1]]$mcmc.info$n.samples/dG[[1]]$mcmc.info$n.chains)
+  ggGrBeta$iter <- 1:as.numeric(dG[[1]]$mcmc.info$n.samples/dG[[1]]$mcmc.info$n.chains)
+
+  gg <- list()
+  numBetas <- 4
+  for (i in 1:numBetas){
+    gg[[i]] <- ggplot(filter(ggGrBeta,d2 == i), aes(iter,est)) + geom_hline(yintercept = 0) + geom_point( aes(color = factor(chain)), size = 0.1 ) + ylim(-1,1) + facet_grid(d3+d5~d6+d4) + ggtitle(paste("beta =", i))
+    if(i %in% b) print(gg[[i]])
+  }
 }
 
 ######################################
@@ -271,7 +294,6 @@ nPoints <- 5
 nItersForPred <- 100
 itersForPred <- sample( 1:dG[[1]]$mcmc.info$n.samples,nItersForPred )
 
-itersForPred <- sample(round(dG[[1]]$mcmc.info$n.samples/3*2):round(dG[[1]]$mcmc.info$n.samples/3*3),nItersForPred)
 # predictions across the grid
 p <- getPrediction( dG[[1]], limits, nPoints, itersForPred, c("len", "temp", "flow","count") )
 #######################
@@ -282,41 +304,10 @@ plotPred(p, "temp", 1, "bkt")
 plotPred(p, "flow", 1, "bkt")
 plotPred(p, "count", 1, "bkt")
 plotPred(p, c("temp", "flow"), 1, "bkt")
-plotPred(p, c("temp", "flow"), 1, "bkt")
+plotPred(p, c("temp", "flow"), 0, "bkt")
 plotPred(p, c("temp","count"), 1, "bkt")
 plotPred(p, c("flow","count"), 1, "bkt")
 plotPred(p, c("len","count"), 1, "bkt")
-
-#################################################
-# size-dependence, merge in length estimates from model
-#tail(data.frame(a=dddG[[1]]$tag[1:44165],b=dddG[[1]]$observedLength[1:44165],c=dG[[1]]$q50$expectedGR[1:44165]),20)
-#tail(data.frame(a=dddG[[1]]$tag[1:44167],b=dddG[[1]]$observedLength[1:44167]),20)
-#expectedGr is missing the last two obs, which are firstObs for two fish
-
-sDep <- dddG[[1]]
-sDep$estLength <- dG[[1]]$q50$length
-#sDep$estGR <- c(dG[[1]]$q50$expectedGR,NA,NA)
-
-sDep <- sDep %>%
-  group_by(tag) %>%
-  mutate( estLengthLead = lead(estLength),
-          estGR = (estLengthLead-estLength)/sampleInterval,
-          isYOYDATA = ifelse( ageInSamples <= 3, 1, 2 ))
-
-#ggplot(sDep,aes(observedLength,estLength)) +geom_point()
-
-ggplot( sDep, aes(estLength, estGR, group=species) ) +
-  geom_point() +
-  geom_smooth() +
-  facet_grid(river~season+isYOYDATA)
-#
-
-ggplot( sDep %>% filter(species == 'bkt'), aes(estLength, estGR, color=river) ) +
-  geom_point() +
-  geom_smooth() +
-  facet_grid(isYOYDATA~season)
-
-
 
 
 
@@ -383,50 +374,6 @@ gg3$chain <- rep(1:dG[[1]]$mcmc.info$n.chains, each = dG[[1]]$mcmc.info$n.sample
 gg3$iter <- 1:as.numeric(dG[[1]]$mcmc.info$n.samples/dG[[1]]$mcmc.info$n.chains)
 ggplot(gg3, aes(iter,est)) + geom_point( aes(color=factor(chain)), size = 0.1 ) + facet_grid(d2~d4+d3)
 
-###########################################################
-# [yoy,s]
-whiskerplot(dG[[1]], parameters = "grIntMu[,]")
-traceplot(dG[[1]], parameters = "grIntMu")
-whiskerplot(dG[[1]], parameters = "grIntSigma[,]")
-
-# sigmaInt[ yoy,spp,s,r ]
-whiskerplot(dG[[1]], parameters = "sigmaInt[2,1,,1]")
-
-# sigmaIntMu[ yoy,s ]
-whiskerplot(dG[[1]], parameters = "sigmaIntMu[,]")
-whiskerplot(dG[[1]], parameters = "sigmaIntSigma[,]")
-
-#  [isYOY,species,season,riverDATA]
-whiskerplot(dG[[1]], parameters = "grInt[2,,,1]")
-
-#grBetaMu[ i,yoy,s ]
-whiskerplot(dG[[1]], parameters = "grBetaMu[,2,]")
-
-
-# 2, isYOY[ evalRows[i] ],species[ evalRows[i]],season[ evalRows[i] ],riverDATA[ evalRows[i] ]
-whiskerplot(dG[[1]], parameters = "grBeta[,2,,,]")
-whiskerplot(dG[[1]], parameters = "sigmaBeta[,2,,,]")
-
-
-#  [isYOY,species,season,riverDATA]
-whiskerplot(dG[[1]], parameters = "muGrBetaInt[2,,4,]")
-#  [1:2,isYOY,species,season,riverDATA]
-whiskerplot(dG[[1]], parameters = "grBeta[3,2,1,1,]")
-
-
-# yoy,spp,s,r,y
-whiskerplot(dG[[1]], parameters = "grSigmaBeta[2,1,2,1,]")
-
-
-
-ggplot(filter(dddG[[1]], grLength<0.95 & grLength > (-0.5)), aes(countPStd,grLength)) + geom_point() +
-#ggplot(filter(dddG[[1]], grLength<0.95 & grLength > (-0.5)), aes(countPAllSppStd,grLength)) + geom_point() +
-  geom_smooth(method='lm') +
-  facet_grid(riverOrdered~season)
-
-ggplot(filter(dddG[[1]], grLength<0.95 & grLength > (-0.5)), aes(countPAllSppStd,countPStd)) + geom_point() +
-  geom_smooth(method='lm') +
-  facet_grid(riverOrdered~season)
 
 pairs(ddG[[1]][c('countPStd','tempStd','flowStd')])
 

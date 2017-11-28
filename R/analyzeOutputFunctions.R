@@ -187,7 +187,7 @@ plotPred <- function(p, varsToPlot, isYOYGG, speciesGG) {
     pGG <- p %>% filter(isYOY == isYOYGG, species == speciesGG, eval(as.name(notPlot[1])) == 0, eval(as.name(notPlot[2])) == 0, eval(as.name(notPlot[3])) == 0 ) %>%
                  distinct(eval(as.name(varsToPlot[1])), iter, isYOY, river, species, season, .keep_all = TRUE)
 
-    ggOut <- ggplot(pGG, aes(eval(as.name(varsToPlot[1])),predGr, group = iter,color=factor(iter))) +
+    ggOut <- ggplot(pGG, aes(eval(as.name(varsToPlot[1])),predGr, group = iter,color=(iter))) +
       geom_line( alpha=0.25 ) +
       theme_bw() +
       theme(panel.grid.minor = element_blank(), panel.grid.major = element_blank()) +

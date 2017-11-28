@@ -75,7 +75,7 @@ yoy1, season 2 not fixed, int main main^2 main-2ways intRE betaRE, grSigma[,,,] 
 yoy1, season 2 not fixed, int main main^2 main-2ways intRE betaRE,  , dic =  , mix =
 
 
-# trying runs with rmse as indicator
+# trying runs with rmse as indicator, model5
 int main, mix = A, rmse = 0.09295182
 int main sigma[,,,], mix = A, rmse = 0.09496348
 int main sigma[,,,] betaRE, mix = A, rmse = 0.09477582
@@ -92,7 +92,9 @@ int main sigma[,,,] betaRE intRE main^2 main-2ways main-3ways indRE sigmaBeta, m
 int main sigma[,,,] betaRE intRE main^2 main-2ways main-3ways indRE, mix = C, rmse = 0.07932732
 int main sigma[,,,] betaRE intRE main^2 main-2ways main-3ways , mix = C, rmse =
 
-# chains not mixing. Took yoy out of hierarchical means and sds for grInt,grBeta and grSigma.
+# chains not mixing. Took yoy out of hierarchical means and sds for grInt,grBeta and grSigma. model6
 int main sigma[,,,] betaRE intRE main^2 main-2ways main-3ways sigmaRE, mix = A, rmse = 0.08617891
 int main sigma[,,,] betaRE intRE main^2 main-2ways main-3ways sigmaRE indRE, mix = A, rmse = 0.07775984
-int main sigma[,,,] betaRE intRE main^2 main-2ways main-3ways sigmaRE indRE sigmaBeta sigmaBetaRE, mix = , rmse =
+int main sigma[,,,] betaRE intRE main^2 main-2ways main-3ways sigmaRE indRE sigmaBeta sigmaBetaRE, mix = slow, rmse = 0.0790462
+# add inits for sigmaInt and sigmaBeta
+
