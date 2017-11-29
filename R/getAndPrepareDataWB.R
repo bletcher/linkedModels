@@ -420,34 +420,34 @@ getYOYCutoffs <- function(d,dr = 'west'){
 #'@return a data frame including meanBiomassAllSppStdDelta (changes in biomass with bioomass by sample standardized by all species) and meanBiomassStdDelta (changes in biomass with bioomass by sample standardized by each species)
 #'@export
 
-addBiomassDeltas <- function(d){
-
-  # first get biomass means and deltas by cohort and ageInSamples
-  meanBiomassCohort <- d %>%
-    group_by(species, cohort, ageInSamples,year,season) %>%
-    summarize( meanBiomassAllSppStd = mean(biomassAllSppStd, na.rm=T ),
-               sdBiomassAllSppStd = sd(biomassAllSppStd, na.rm=T ),
-               meanBiomassStd = mean(biomassStd, na.rm=T ),
-               sdBiomassStd = sd(biomassStd, na.rm=T ), n=n()) %>%
-    group_by(species,cohort) %>%
-    mutate( meanBiomassAllSppStdLag = lead(meanBiomassAllSppStd),
-            meanBiomassAllSppStdDelta = meanBiomassAllSppStd - meanBiomassAllSppStdLag,
-            meanBiomassStdLag = lead(meanBiomassStd),
-            meanBiomassStdDelta = meanBiomassStd - meanBiomassStdLag )
-
-  #ggplot( filter(meanBiomassCohort, species == "bkt", n>25), aes(ageInSamples,meanBiomassStdDelta, color = factor(cohort))) + geom_point() + geom_line()# + facet_wrap(~year)
-  #ggplot( filter(meanBiomassCohort, species == "bkt", n>20), aes(season,meanBiomassAllSppStdDelta, color = factor(cohort))) + geom_point() + geom_line() + facet_wrap(~year)
-
-  # get means across cohorts
-  biomassDeltaMeans <- meanBiomassCohort %>%
-    group_by(species, year,season) %>%
-    summarize( meanBiomassAllSppStdDelta = mean(meanBiomassAllSppStdDelta, na.rm=T),
-               meanBiomassStdDelta = mean(meanBiomassStdDelta, na.rm=T))
-
-  #ggplot( filter(biomassDeltaMeans), aes(season,meanBiomassAllSppStdDelta, color=species)) + geom_point() + geom_line() + facet_wrap(~year)
-  #ggplot( filter(biomassDeltaMeans), aes(season,meanBiomassStdDelta, color=species)) + geom_point() + geom_line() + facet_wrap(~year)
-
-  d <- left_join(d,biomassDeltaMeans)
-  return( d )
-}
-
+# addBiomassDeltas <- function(d){
+#
+#   # first get biomass means and deltas by cohort and ageInSamples
+#   meanBiomassCohort <- d %>%
+#     group_by(species, cohort, ageInSamples,year,season) %>%
+#     summarize( meanBiomassAllSppStd = mean(biomassAllSppStd, na.rm=T ),
+#                sdBiomassAllSppStd = sd(biomassAllSppStd, na.rm=T ),
+#                meanBiomassStd = mean(biomassStd, na.rm=T ),
+#                sdBiomassStd = sd(biomassStd, na.rm=T ), n=n()) %>%
+#     group_by(species,cohort) %>%
+#     mutate( meanBiomassAllSppStdLag = lead(meanBiomassAllSppStd),
+#             meanBiomassAllSppStdDelta = meanBiomassAllSppStd - meanBiomassAllSppStdLag,
+#             meanBiomassStdLag = lead(meanBiomassStd),
+#             meanBiomassStdDelta = meanBiomassStd - meanBiomassStdLag )
+#
+#   #ggplot( filter(meanBiomassCohort, species == "bkt", n>25), aes(ageInSamples,meanBiomassStdDelta, color = factor(cohort))) + geom_point() + geom_line()# + facet_wrap(~year)
+#   #ggplot( filter(meanBiomassCohort, species == "bkt", n>20), aes(season,meanBiomassAllSppStdDelta, color = factor(cohort))) + geom_point() + geom_line() + facet_wrap(~year)
+#
+#   # get means across cohorts
+#   biomassDeltaMeans <- meanBiomassCohort %>%
+#     group_by(species, year,season) %>%
+#     summarize( meanBiomassAllSppStdDelta = mean(meanBiomassAllSppStdDelta, na.rm=T),
+#                meanBiomassStdDelta = mean(meanBiomassStdDelta, na.rm=T))
+#
+#   #ggplot( filter(biomassDeltaMeans), aes(season,meanBiomassAllSppStdDelta, color=species)) + geom_point() + geom_line() + facet_wrap(~year)
+#   #ggplot( filter(biomassDeltaMeans), aes(season,meanBiomassStdDelta, color=species)) + geom_point() + geom_line() + facet_wrap(~year)
+#
+#   d <- left_join(d,biomassDeltaMeans)
+#   return( d )
+# }
+#

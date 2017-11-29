@@ -226,7 +226,7 @@ plotPred <- function(p, varsToPlot, isYOYGG, speciesGG) {
 
 #'Plot observed/predicted and return RMSE
 #'
-#'@param none
+#'@param empty Nothing passed to function
 #'@return Nothing, print text and plot graph
 #'@export
 #'

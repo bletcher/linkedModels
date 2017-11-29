@@ -17,9 +17,9 @@
 
 
 #install.packages("devtools")
+# library(devtools)
 #devtools::install_github('bletcher/linkedModels')
-#install.packages("devtools")
-#devtools::install_github('Conte-Ecology/getWBData')
+#devtools::install_github(repo = "Conte-Ecology/westBrookData", subdir = "getWBData")
 library(arm)
 library(zoo)
 library(arrayhelpers)
@@ -33,10 +33,12 @@ library(tidyverse)
 # selection criteria
 
 drainage <- "west" # ==
-species <- c("bkt", "bnt") #
-minCohort <- 2002 # >=
+species <- c("bkt", "bnt","ats") #
+minCohort <- 1995 # >=
 maxSampleInterval <- 200 # <
 runDetectionModelTF <- T
+runCrossValidationTF <- F
+percentLeftOut <- 10
 
 reconnect()
 
@@ -57,7 +59,7 @@ riverOrderedIn <- factor(c('west brook', 'wb jimmy', 'wb mitchell',"wb obear"),l
 # Only need to run this when data or functions have changed
 # or you want to change drainages
 
-cdFile <- paste0('./data/cd_',drainage,'.RData')
+cdFile <- paste0('./data/cd_',drainage,"_",paste0(species,collapse =''),'.RData')
 
 if ( file.exists(cdFile) ) {
   load(cdFile)
@@ -77,7 +79,7 @@ if ( file.exists(cdFile) ) {
 ##################
 #
 #
-dModelName <- "nPasses"
+dModelName <- paste0(species,collapse = '')
 
 (start <- Sys.time())
 ddddD <- cd %>%
@@ -112,8 +114,6 @@ done <- Sys.time()
 #
 #
 
-# need to check grBeta estimates
-
 ddddG <- cd %>%
   filter(  species %in% speciesIn,
            cohort >= minCohort,
@@ -132,12 +132,9 @@ load(file = paste0('./data/out/ddD_', dModelName,'.RData'))
 ######################################
 ######################################
 
-meanOrIter = "mean"
+meanOrIter <- "mean"
 ####### or ########
 #meanOrIter = "iter"
-
-runCrossValidationTF <- F
-percentLeftOut <- 10
 
 chainToUse <- 1
 numItersToUse <- 2
@@ -169,7 +166,7 @@ for (iter in itersToUse) {
   # saving into a list for now, could also map()
 
   dddG[[ii]] <- addDensityData( ddddG,ddD,ddddD,meanOrIter,iter )
-  dddG[[ii]] <- addBiomassDeltas( dddG[[ii]] )
+ # dddG[[ii]] <- addBiomassDeltas( dddG[[ii]] )
   dddG[[ii]] <- addSurvivals( dddG[[ii]],ddD,meanOrIter,iter )
   #dddG[[ii]] <- crossValidate( dddG[[ii]],runCrossValidationTF ) # Moved inside prepareDataforJags()
 

@@ -7,7 +7,6 @@
 
 prepareDataForJags <- function(d,modelType){
 
-  nInd <- n_distinct(d$tagIndex, na.rm = T)
   nOcc <- n_distinct(d$sampleIndex, na.rm = T)
   minOcc <- min(d$sampleIndex)
   nRivers <- n_distinct(d$riverOrdered, na.rm = T)
@@ -108,10 +107,13 @@ prepareDataForJags <- function(d,modelType){
           )
 
   d$tagIndexJags <- as.numeric(as.factor(d$tagIndex)) #make sure have right tagIndices for subset of fish for Jags
+  nInd <- n_distinct(d$tagIndexJags, na.rm = T)
 
   d$rowNumber <- 1:nrow(d)
 
   d$isYOYDATA <- ifelse( d$ageInSamples <= 3, 1, 2 )
+
+  speciesByInd <- d %>% distinct(tagIndexJags,speciesN) %>% arrange(tagIndexJags)
 
   if ( modelType == "detection" ){
   data <- list( encDATA = d$enc,
@@ -193,7 +195,8 @@ prepareDataForJags <- function(d,modelType){
     #              biomassDelta = d$meanBiomassStdDelta,
            #       logitPhiStd = d$logitPhiStd,
   #                lForInit = d$lInterp,
-                  isYOYDATA = d$isYOYDATA
+                  isYOYDATA = d$isYOYDATA,
+                  speciesByInd = speciesByInd$speciesN
     )
   }
 
