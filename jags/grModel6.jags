@@ -86,7 +86,7 @@ model{
 
   #grSigma ~ dunif(0,10)
 
-  #individual random effect on grMax
+  #individual random effect on gr
   for( spp in 1:nSpecies ){
      for(iii in 1:nInd){
        grIndRE[ iii ] ~ dnorm( 0,tauInd[ speciesByInd[iii] ] )

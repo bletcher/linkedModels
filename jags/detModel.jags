@@ -19,7 +19,8 @@ model{
         for(y in 1:nYears){
 
          # pBetaInt[ spp,s,r,y ] ~ dnorm( 0,0.667 )
-          pBetaInt[ spp,s,r,y ] ~ dnorm( pBetaIntMean[ s,r ], pBetaIntTau[ s,r ] )
+          pBetaInt[ spp,s,r,y ] ~ dnorm( pBetaIntMean[ spp,s ], pBetaIntTau[ spp,s ] )
+          phiBetaInt[ spp,s,r,y ] ~ dnorm( phiBetaIntMean[ spp,s ], phiBetaIntTau[ spp,s ] )
 
         }
       }
@@ -27,23 +28,17 @@ model{
   }
 
   for( s in 1:nSeasons ){
-    for( r in 1:(nRivers) ){
-      pBetaIntMean[ s,r ] ~ dnorm( 0,1.5 )T(-3.5,3.5)
-      pBetaIntSigma[ s,r ] ~ dunif(0,10)
-      pBetaIntTau[ s,r ] <- 1/(pow(pBetaIntSigma[ s,r ],2))
+    for( spp in 1:nSpecies ){
+      pBetaIntMean[ spp,s ] ~ dnorm( 0,1.5 )T(-3.5,3.5)
+      pBetaIntSigma[ spp,s ] ~ dunif(0,10)
+      pBetaIntTau[ spp,s ] <- 1/(pow(pBetaIntSigma[ spp,s ],2))
+
+      phiBetaIntMean[ spp,s ] ~ dnorm( 0,1.5 )T(-3.5,3.5)
+      phiBetaIntSigma[ spp,s ] ~ dunif(0,10)
+      phiBetaIntTau[ spp,s ] <- 1/(pow(phiBetaIntSigma[ spp,s ],2))
     }
   }
 
-  # for( spp in 1:nSpecies ){
-  #
-  #   pBeta[ spp,1 ] ~ dnorm( 0,0.667 )
-  #
-  #   for( r in 2:nRivers ){
-  #
-  #      pBeta[ spp,r ] <- 0
-  #
-  #   }
-  # }
 
   ############################
   ##### Survival model########
@@ -56,18 +51,6 @@ model{
 
   }
 
-  ############## survival priors #####################
-  for( spp in 1:nSpecies ){
-    for( s in 1:nSeasons ){
-      for( r in 1:(nRivers) ){
-        for(y in 1:nYears){
-
-          phiBetaInt[ spp,s,r,y ]  ~ dnorm( 0,1.5 )T(-3.5,3.5)
-
-        }
-      }
-    }
-  }
   ############################
   ##### Likelihoods ##########
   ############################

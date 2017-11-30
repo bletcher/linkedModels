@@ -8,8 +8,8 @@ runDetectionModel <- function(d, parallel = FALSE){   #iterToUse, firstNonBurnIt
 
   inits <- function(){
     list(#pBetaInt = array(rnorm(d$nSeasons*d$nRivers*d$nYears,0,2.25),c(d$nSeasons,d$nRivers,d$nYears)),
-         pBetaInt = array(runif(d$nSpecies*d$nSeasons*d$nRivers*d$nYears, -2.5, 2),c(d$nSpecies,d$nSeasons,d$nRivers,d$nYears)),
-         z = d$zForInit
+         pBetaInt = array(runif(d$nSpecies*d$nSeasons*d$nRivers*d$nYears, -2.5, 2),c(d$nSpecies,d$nSeasons,d$nRivers,d$nYears))
+#        z = d$zForInit
          )
   }
 
@@ -20,9 +20,9 @@ runDetectionModel <- function(d, parallel = FALSE){   #iterToUse, firstNonBurnIt
                  parameters.to.save = params,
                  model.file = "./jags/detModel.jags",
                  n.chains = 3,
-                 n.adapt = 1000, #1000
-                 n.iter = 2000,
-                 n.burnin = 1000,
+                 n.adapt = 50, #1000
+                 n.iter = 200,
+                 n.burnin = 50,
                  n.thin = 4,
                  parallel = parallel
                 )

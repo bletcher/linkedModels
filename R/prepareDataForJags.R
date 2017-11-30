@@ -56,8 +56,8 @@ prepareDataForJags <- function(d,modelType){
   d <- left_join( d,obsOcc )
   d$zForInit <- ifelse( (d$sampleNumber > d$minObsOcc) & (d$sampleNumber <= d$maxObsOcc), 1, NA )
 
-  load(file = paste0("./data/cutoffYOYInclSpring1DATA_",drainage,".RData"))
-  cutoffYOYDATA <- cutoffYOYInclSpring1DATA # update as needed using getYOYCutoffs(cd,drainage) in getAndPrepareDataWB.R
+  #load(file = paste0("./data/cutoffYOYInclSpring1DATA_",drainage,".RData"))
+  #cutoffYOYDATA <- cutoffYOYInclSpring1DATA # update as needed using getYOYCutoffs(cd,drainage) in getAndPrepareDataWB.R
 
   d$riverN <- as.numeric(d$riverOrdered)
   d$speciesN <- as.numeric(as.factor(d$species))
@@ -138,7 +138,7 @@ prepareDataForJags <- function(d,modelType){
                 lengthMean = array(means$meanLen, dim = c(nRivers,nSeasons,nSpecies)),
                 lengthSD = array(means$sdLen, dim = c(nRivers,nSeasons,nSpecies)),
                 sampleIntervalMean = array(means$sampleIntervalMean, dim = c(nRivers,nSeasons,nSpecies)),
-                cutoffYOYDATA = cutoffYOYDATA,
+              #  cutoffYOYDATA = cutoffYOYDATA,
                 sampleInterval = d$sampleInterval,
                 zForInit = d$zForInit, # z for firstObs gets set to zero in jags. Can't set values in inits for values assigned in jags
                 propSampledDATA = propSampled$propSampledDATA,
@@ -184,7 +184,7 @@ prepareDataForJags <- function(d,modelType){
                   lengthMean = array(means$meanLen, dim = c(nRivers,nSeasons,nSpecies)),
                   lengthSD = array(means$sdLen, dim = c(nRivers,nSeasons,nSpecies)),
                   sampleIntervalMean = array(means$sampleIntervalMean, dim = c(nRivers,nSeasons,nSpecies)),
-                  cutoffYOYDATA = cutoffYOYDATA,
+               #   cutoffYOYDATA = cutoffYOYDATA,
                   sampleInterval = d$sampleInterval,
                   zForInit = d$zForInit, # z for firstObs gets set to zero in jags. Can't set values in inits for values assigned in jags
                   propSampledDATA = propSampled$propSampledDATA,
