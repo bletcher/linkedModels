@@ -87,11 +87,12 @@ model{
   #grSigma ~ dunif(0,10)
 
   #individual random effect on gr
-  for( spp in 1:nSpecies ){
-     for(iii in 1:nInd){
-       grIndRE[ iii ] ~ dnorm( 0,tauInd[ speciesByInd[iii] ] )
-     }
 
+   for(iii in 1:nInd){
+     grIndRE[ iii ] ~ dnorm( 0,tauInd[ speciesByInd[iii] ] )
+   }
+
+  for( spp in 1:nSpecies ){
  # grIntMean ~ dnorm(0,0.01)
     tauInd[ spp ] <- 1 / pow( sigmaInd[ spp ],2 )
     sigmaInd[ spp ] ~ dunif(0,1)

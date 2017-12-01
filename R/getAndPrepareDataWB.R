@@ -139,13 +139,13 @@ minimalData <- function(d){
 }
 
 
-#'Get propoortion of sections sampled by river,sample
+#'Get proportion of sections sampled by river,sample
 #'
 #'@param nSeasons,nRivers,nYears counts
 #'@return a list of propSampleDATA, and zeroSectionsDATA
 #'@export
 
-getPropSampled <- function(nSeasons,nRivers,nYears){
+getPropSampled <- function(nSeasons,nRivers,nYears,minYear){
 
   #check data
 
@@ -158,15 +158,15 @@ getPropSampled <- function(nSeasons,nRivers,nYears){
   # propSamp - proportion of each season,river,year combo that got sampled (proportion of sctions sampled)
   propSampledDATA <- array( 1, c(nSeasons,nRivers,nYears) ) #season, river year
 
-  propSampledDATA[ c(1,4),1:4,1 ] <- 0     #all spring and winter samples in 2002
-  propSampledDATA[ 2,2:3,1 ] <- 0          #J and M summer samples in 2002
-  propSampledDATA[ 4,1,2 ] <- 30/47        #WB winter sample in 2003
-  propSampledDATA[ 4,1,3 ] <- 3/47         #WB winter sample in 2004
-  propSampledDATA[ 4,1,4 ] <- 0            #WB winter sample in 2005
-  propSampledDATA[ 4,1,6 ] <- 0            #WB winter sample in 2007
-  propSampledDATA[ 4,1,11 ] <- 0           #WB winter sample in 2012
-  propSampledDATA[ 1,1,14 ] <- 0           #WB spring sample in 2015
-  propSampledDATA[ c(3,4),c(1,4),14 ] <- 0 #all fall and winter samples in 2015
+  propSampledDATA[ c(1,4),1:4,2002 - minYear + 1 ] <- 0     #all spring and winter samples in 2002
+  propSampledDATA[ 2,2:3,2002 - minYear + 1 ] <- 0          #J and M summer samples in 2002
+  propSampledDATA[ 4,1,2003 - minYear + 1 ] <- 30/47        #WB winter sample in 2003
+  propSampledDATA[ 4,1,2004 - minYear + 1 ] <- 3/47         #WB winter sample in 2004
+  propSampledDATA[ 4,1,2005 - minYear + 1 ] <- 0            #WB winter sample in 2005
+  propSampledDATA[ 4,1,2007 - minYear + 1 ] <- 0            #WB winter sample in 2007
+  propSampledDATA[ 4,1,2012 - minYear + 1 ] <- 0           #WB winter sample in 2012
+  propSampledDATA[ 1,1,2015 - minYear + 1 ] <- 0           #WB spring sample in 2015
+  propSampledDATA[ c(3,4),c(1,4),2015 - minYear + 1 ] <- 0 #all fall and winter samples in 2015
 
   # zeroSectionsDATA - completely unsampled winter samples. not including samples before season 4,year 1 because we didn't want to rewrite the meanPhiS34 indexing [mostly noise ni these estimates anyway]
   zeroSectionsDATA <- array( 0, c(nSeasons,nRivers,nYears) ) #season, river year

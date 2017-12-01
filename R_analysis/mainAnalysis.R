@@ -33,8 +33,11 @@ library(tidyverse)
 # selection criteria
 
 drainage <- "west" # ==
+
 species <- c("bkt", "bnt","ats") #
-minCohort <- 1995 # >=
+speciesIn <- factor(species, levels = c('bkt','bnt','ats'), ordered = T)
+
+minCohort <- 1997#1995 # >=
 maxSampleInterval <- 200 # <
 runDetectionModelTF <- T
 runCrossValidationTF <- F
@@ -43,7 +46,6 @@ percentLeftOut <- 10
 reconnect()
 
 #make sure species are always in order and indexed correctly for arrays
-speciesIn <- factor(species, levels = c('bkt','bnt','ats'), ordered = T)
 riverOrderedIn <- factor(c('west brook', 'wb jimmy', 'wb mitchell',"wb obear"),levels=c('west brook', 'wb jimmy', 'wb mitchell',"wb obear"),labels = c("west brook","wb jimmy","wb mitchell","wb obear"), ordered = T)
 #riverOrderedIn <- factor(1:3,levels=c('mainstem', 'west', 'east'),labels = c('mainstem', 'west', 'east'), ordered=T)
 
@@ -79,9 +81,10 @@ if ( file.exists(cdFile) ) {
 ##################
 #
 #
-dModelName <- paste0(species,collapse = '')
+dModelName <- paste0(paste0(species,collapse = ''),minCohort)
 
 (start <- Sys.time())
+
 ddddD <- cd %>%
   filter(  species %in% speciesIn,
            cohort >= minCohort,
@@ -93,6 +96,7 @@ dddD <- ddddD %>% prepareDataForJags('detection')
 if (runDetectionModelTF) {
   ddD <- dddD[[1]] %>% runDetectionModel(parallel = TRUE)
   save(ddD,dddD,ddddD, file = paste0('./data/out/ddD_', dModelName,'.RData'))
+  #whiskerplot(ddD, parameters="pBetaInt")
 }
 done <- Sys.time()
 (elapsed <- done - start)
@@ -150,7 +154,7 @@ if (meanOrIter == "iter") {
 ######################################
 ### loop over iters
 
-modelName <- "grModel6"
+modelName <- paste0(paste0(species,collapse = ''),minCohort)
 
 dddG <- list()
 ddG <- list()

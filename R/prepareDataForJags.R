@@ -60,7 +60,7 @@ prepareDataForJags <- function(d,modelType){
   #cutoffYOYDATA <- cutoffYOYInclSpring1DATA # update as needed using getYOYCutoffs(cd,drainage) in getAndPrepareDataWB.R
 
   d$riverN <- as.numeric(d$riverOrdered)
-  d$speciesN <- as.numeric(as.factor(d$species))
+  d$speciesN <- as.numeric(factor(d$species, levels = c('bkt','bnt','ats'), ordered = T)) #as.numeric(as.factor(d$species))
 
   d$observedLengthLn <- log(d$observedLength)
   d$observedLengthOriginalLn <- log(d$observedLengthOriginal)
@@ -86,7 +86,7 @@ prepareDataForJags <- function(d,modelType){
             lengthDATAOriginalLnStd = (observedLengthOriginalLn - mean(observedLengthOriginalLn,na.rm = T)) / sd(observedLengthOriginalLn,na.rm = T)
             )
 
-  propSampled <- getPropSampled(nSeasons,nRivers,nYears)
+  propSampled <- getPropSampled(nSeasons,nRivers,nYears,min(d$year))
 
   d <- addNPasses(d,drainage)
   d$nPasses <- ifelse( is.na(d$nPasses), 1, d$nPasses ) #nPasses gets NA when propSampled==0. Just set these to 1 so there are no NAs in the data. propSampled==0 takes care of thes in the jages code

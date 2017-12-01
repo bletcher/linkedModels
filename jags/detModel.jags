@@ -18,7 +18,7 @@ model{
       for( s in 1:nSeasons ){
         for(y in 1:nYears){
 
-         # pBetaInt[ spp,s,r,y ] ~ dnorm( 0,0.667 )
+        #  pBetaInt[ spp,s,r,y ] ~ dnorm( 0,0.667 )
           pBetaInt[ spp,s,r,y ] ~ dnorm( pBetaIntMean[ spp,s ], pBetaIntTau[ spp,s ] )
           phiBetaInt[ spp,s,r,y ] ~ dnorm( phiBetaIntMean[ spp,s ], phiBetaIntTau[ spp,s ] )
 
@@ -66,7 +66,7 @@ model{
   for(i in 1:nEvalRows){
 
     # State of alive (z)
-    z[ evalRows[i]+1 ] ~ dbern( survProb[ evalRows[i] ] ) #Do or don't suvive to i
+    z[ evalRows[i] + 1 ] ~ dbern( survProb[ evalRows[i] ] ) #Do or don't suvive to i + 1
     survProb[evalRows[i]] <- phi[ evalRows[i] ] #^ ( sampleInterval[ evalRows[i] ] )
                              * z[ evalRows[i] ]
 
@@ -77,7 +77,7 @@ model{
       p[ evalRows[i] + 1 ]                 # Capture probability (calculated above).
     * z[ evalRows[i] + 1 ]                 # Must be alive to be capturable.
  #   * availableDATA[ evalRows[i] + 1 ]     # Must be on the study site to be capturable. Not needed - censored in createCmrData()
-    * propSampledDATA[ season[ evalRows[i] + 1 ],riverDATA[ evalRows[ i ] + 1 ], year[ evalRows[ i ] + 1 ] ]   # proportion of the stream section that was sampled for each season,river,year combination
+#    * propSampledDATA[ season[ evalRows[i] + 1 ],riverDATA[ evalRows[i] + 1 ], year[ evalRows[i] + 1 ] ]   # proportion of the stream section that was sampled for each season,river,year combination
   }
 
 } #model bracket
