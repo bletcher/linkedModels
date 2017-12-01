@@ -71,8 +71,9 @@ ggplot(d, aes(year,countPAllSpp)) +
   geom_point() +
   geom_line() +
   labs( x = "Year", y = "Estimated count") +
+#  ylim(0,2500) +
   theme_publication() +
-  facet_grid(seasonGG ~ riverOrderedGG)
+  facet_grid(seasonGG ~ riverOrderedGG, scales = "free")
 
 ggsave('figures/count.png')
 ```

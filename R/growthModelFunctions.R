@@ -98,6 +98,13 @@ addDensityData <- function( ddddGIn,ddDIn,ddddDIn,meanOrIterIn,sampleToUse ){
   # counts are missing for samples with propSampled == 0. For now, fill in mean (0). Need this for when enc==0 and propSampled==0 in the gr model
   ddddGIn$countPStd <- ifelse( is.na(ddddGIn$countPStd), 0, ddddGIn$countPStd )
 
+  #####
+  # counts by species in separate columns
+  countPStdBySpp <- denForMerge2 %>%
+    select(species, season, riverOrdered, year, countPStd) %>%
+    spread(species, countPStd, fill=0) %>%
+    rename(countPStdBKT = bkt,countPStdBNT = bnt, countPStdATS = ats)
+  ddddGIn <- left_join( ddddGIn,countPStdBySpp )
 
   # get mean masses by species
   massForMergeSummary <- ddddGIn %>%

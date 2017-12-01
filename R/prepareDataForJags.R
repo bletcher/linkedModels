@@ -189,6 +189,10 @@ prepareDataForJags <- function(d,modelType){
                   zForInit = d$zForInit, # z for firstObs gets set to zero in jags. Can't set values in inits for values assigned in jags
                   propSampledDATA = propSampled$propSampledDATA,
                   countPStd = d$countPStd,
+                  countPStdBKT = d$countPStdBKT,
+                  countPStdBNT = d$countPStdBNT,
+                  countPStdBKT = d$countPStdATS,
+                  countPAllSppStd = d$countPAllSppStd,
                   tempStd = d$tempStd,
                   flowStd = d$flowStd,
    #               biomassDeltaAllSpp = d$meanBiomassAllSppStdDelta,

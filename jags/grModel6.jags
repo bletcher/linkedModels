@@ -30,7 +30,7 @@ model{
      +    grBeta[17, isYOYDATA[evalRows[i]], species[evalRows[i]], season[evalRows[i]], riverDATA[evalRows[i]] ] * countPStd[evalRows[i]] * lengthDATA[evalRows[i]] * flowStd[evalRows[i]]
      +    grBeta[18, isYOYDATA[evalRows[i]], species[evalRows[i]], season[evalRows[i]], riverDATA[evalRows[i]] ] * countPStd[evalRows[i]] * tempStd[evalRows[i]] * lengthDATA[evalRows[i]]
 
-     +    grIndRE[ ind[evalRows[i]] ]
+  #   +    grIndRE[ ind[evalRows[i]] ]
 
     expectedGRTau[ evalRows[i] ] <- 1 / ( expectedGRSigma[ evalRows[i] ] * expectedGRSigma[ evalRows[i] ] )
   log(  expectedGRSigma[ evalRows[i] ]  ) <- #grSigma
@@ -88,14 +88,14 @@ model{
 
   #individual random effect on gr
 
-   for(iii in 1:nInd){
-     grIndRE[ iii ] ~ dnorm( 0,tauInd[ speciesByInd[iii] ] )
-   }
+  for(iii in 1:nInd){
+    grIndRE[ iii ] ~ dnorm( 0,tauInd[ speciesByInd[iii] ] )
+  }
 
   for( spp in 1:nSpecies ){
  # grIntMean ~ dnorm(0,0.01)
     tauInd[ spp ] <- 1 / pow( sigmaInd[ spp ],2 )
-    sigmaInd[ spp ] ~ dunif(0,1)
+    sigmaInd[ spp ] ~ dunif(0,100)
   }
 
 }
