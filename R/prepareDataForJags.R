@@ -191,7 +191,7 @@ prepareDataForJags <- function(d,modelType){
                   countPStd = d$countPStd,
                   countPStdBKT = d$countPStdBKT,
                   countPStdBNT = d$countPStdBNT,
-                  countPStdBKT = d$countPStdATS,
+                  countPStdATS = d$countPStdATS,
                   countPAllSppStd = d$countPAllSppStd,
                   tempStd = d$tempStd,
                   flowStd = d$flowStd,

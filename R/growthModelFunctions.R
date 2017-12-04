@@ -15,11 +15,11 @@ runGrowthModel <- function(d, parallel = FALSE){
     list(
       grInt = array(rnorm(2*d$nSpecies*d$nSeasons*d$nRivers,0.5,0.25),c(2,d$nSpecies,d$nSeasons,d$nRivers)),
       #grBeta[x,1:2,1,1:4,1:4]
-      grBeta = array(rnorm(18*2*d$nSpecies*d$nSeasons*d$nRivers,0,0.1),c(18,2,d$nSpecies,d$nSeasons,d$nRivers)),
+      grBeta = array(rnorm(2*2*d$nSpecies*d$nSeasons*d$nRivers,0,0.1),c(2,2,d$nSpecies,d$nSeasons,d$nRivers)),
       #grSigma[ yoy,spp,s,r ]
       grSigma = array(runif(2*d$nSpecies*d$nSeasons*d$nRivers,0,0.05),c(2,d$nSpecies,d$nSeasons,d$nRivers)),
       # sigmaBeta[ b,yoy,spp,s,r ]
-      sigmaBeta = array(rnorm(4*2*d$nSpecies*d$nSeasons*d$nRivers,0,0.05),c(4,2,d$nSpecies,d$nSeasons,d$nRivers)),
+      sigmaBeta = array(rnorm(2*2*d$nSpecies*d$nSeasons*d$nRivers,0,0.05),c(2,2,d$nSpecies,d$nSeasons,d$nRivers)),
       grIndRE = rnorm(d$nInd,0,0.1)
     )
   }
@@ -38,9 +38,9 @@ runGrowthModel <- function(d, parallel = FALSE){
                 parameters.to.save = params,
                 model.file = "./jags/grModel6.jags",
                 n.chains = 3,
-                n.adapt = 500, #1000
-                n.iter = 500,
-                n.burnin = 200,
+                n.adapt = 250, #1000
+                n.iter = 250,
+                n.burnin = 100,
                 n.thin = 5,
                 parallel = parallel
   )

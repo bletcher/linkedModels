@@ -98,3 +98,6 @@ int main sigma[,,,] betaRE intRE main^2 main-2ways main-3ways sigmaRE indRE, mix
 int main sigma[,,,] betaRE intRE main^2 main-2ways main-3ways sigmaRE indRE sigmaBeta sigmaBetaRE, mix = slow, rmse = 0.0790462
 # add inits for sigmaInt and sigmaBeta
 
+# added in untagged fish for counts
+# rebuilding model becuase was getting log density errors
+int main[1] sigma[,,,] sigma[1], mix = , rmse = 0.1015615
