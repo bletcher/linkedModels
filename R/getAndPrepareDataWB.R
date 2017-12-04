@@ -18,6 +18,30 @@ getCoreData <- function(drainage = "west"){
     fillSizeLocation(size = F) #assumes fish stay in same location until observed elsewhere
 }
 
+
+#'Extract all fish data from the PIT tag database, including untagged
+#'
+#'@param drainage Which drainage, "west" or "stanley"#'Extract data from the PIT tag database
+#'@return a data frame
+#'@export
+
+getCoreDataAllFish <- function(drainage = "west"){
+
+  cdWBAll <- createCoreData(sampleType = "electrofishing", #"stationaryAntenna","portableAntenna"),
+                            whichDrainage = drainage,
+                            columnsToAdd=c("sampleNumber","river","riverMeter","survey",'observedLength','observedWeight'),
+                            includeUntagged = T) %>%
+    addTagProperties( columnsToAdd = c("cohort","species","dateEmigrated","sex","species")) %>%
+    dplyr::filter( area %in% c("trib","inside","below","above") ) %>%
+    #  createCmrData( maxAgeInSamples = 20, inside = F, censorDead = F, censorEmigrated = T) %>%
+    addSampleProperties() %>%
+    addEnvironmental()
+  #   addKnownZ() %>%
+  #    fillSizeLocation(size = F) #assumes fish stay in same location until observed elsewhere
+
+}
+
+
 #'Get pass data from raw data table
 #'
 #'@param drainage Which drainage, "west" or "stanley"
@@ -59,28 +83,6 @@ getSites <- function(drainageIn = "west"){
   sites <- sitesIn %>% filter(is.na(quarter) & !is.na(quarter_length) & drainage == drainageIn) %>% dplyr::select(-quarter)
   sites$section <- as.numeric(sites$section)
   return(sites)
-}
-
-
-#'Extract all fish data from the PIT tag database, including untagged
-#'
-#'@param drainage Which drainage, "west" or "stanley"#'Extract data from the PIT tag database
-#'@return a data frame
-#'@export
-
-getCoreDataAllFish <- function(drainage = "west"){
-
-  cdWB <- createCoreData(sampleType = "electrofishing", #"stationaryAntenna","portableAntenna"),
-                         whichDrainage = drainage,
-                         columnsToAdd=c("sampleNumber","river","riverMeter","survey",'observedLength','observedWeight','species','seasonNumber'),
-                         includeUntagged = T) %>%
-    #   addTagProperties( columnsToAdd = c("cohort","species","dateEmigrated","sex","species")) %>%
-    dplyr::filter( area %in% c("trib","inside","below","above"), survey == "shock" )
-  # createCmrData( maxAgeInSamples = 20, inside = F, censorDead = F, censorEmigrated = T) %>%
-  # addSampleProperties() %>%
-  # addEnvironmental() %>%
-  # addKnownZ() %>%
-  # fillSizeLocation(size = F) #assumes fish stay in same location until observed elsewhere
 }
 
 #'Get counts of data from untagged fish

@@ -34,7 +34,7 @@ runDetectionModel <- function(d, parallel = FALSE){   #iterToUse, firstNonBurnIt
 
 #'Get (estimate) densities by section, river, year based on num sammples and p from the density model
 #'
-#'@param dddd the input data frame for the detection model run
+#'@param dddd the input data frame for the detection model run that includes tagged and untagged fish
 #'@param dd the output data frame for the detection model run
 #'@param meanOrIter Whether model run output is the mean ('mean') of all iterations or a single iteration ('iter'). Default is 'mean'.
 #'@param sampleToUse if meanOrIter == 'iter', which iteration to use. Assumes use of chain 1.
@@ -47,7 +47,8 @@ getDensities <- function(dddd,dd, meanOrIter = "mean", sampleToUse = sampleToUse
   try( if (sampleToUse > dd$mcmc.info$n.samples) stop("requested iteration beyond max # of iterations") )
 
   counts <- dddd %>%
-    filter( enc == 1 ) %>%
+ #   filter( enc == 1 ) %>%
+    filter( area %in% c("inside","trib") ) %>%
     group_by( species,season,riverOrdered,year ) %>%
     dplyr::summarise( count = n() ) %>%
     mutate( speciesN = as.numeric(as.factor(species)),

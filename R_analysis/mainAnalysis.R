@@ -61,18 +61,27 @@ riverOrderedIn <- factor(c('west brook', 'wb jimmy', 'wb mitchell',"wb obear"),l
 # Only need to run this when data or functions have changed
 # or you want to change drainages
 
-cdFile <- paste0('./data/cd_',drainage,"_",paste0(species,collapse =''),'.RData')
+cdFile <- paste0('./data/cd_',drainage,"_",paste0(paste0(species,collapse = ''),minCohort),'.RData')
 
 if ( file.exists(cdFile) ) {
   load(cdFile)
 } else {
+
+  # Tagged fish only, for estimating growth
   cd <- getCoreData(drainage) %>%
     cleanData(drainage) %>%
     mergeSites(drainage) %>%
     mutate(drainage = drainage,
            countP = NA) # placeholder so prepareDataForJags() works for detection model
 
-  save(cd, file = cdFile)
+  #Use this for estimating densities
+  cdAllFish <- getCoreDataAllFish(drainage) %>%
+    cleanData(drainage) %>%
+    #mergeSites(drainage) %>%
+    mutate(drainage = drainage,
+           countP = NA) # placeholder so prepareDataForJags() works for detection model
+
+  save(cd,cdAllFish, file = cdFile)
 }
 
 
@@ -85,13 +94,15 @@ dModelName <- paste0(paste0(species,collapse = ''),minCohort)
 
 (start <- Sys.time())
 
-ddddD <- cd %>%
+# all fish so we can get densities of tagged + untagged fish from ddddD in addDensities()
+ddddD <- cdAllFish %>%
   filter(  species %in% speciesIn,
            cohort >= minCohort,
            sampleInterval < maxSampleInterval # this removes the later yearly samples. Want to stick with seasonal samples
         )
 
-dddD <- ddddD %>% prepareDataForJags('detection')
+#just the tagged fish for detection model
+dddD <- ddddD %>% dplyr::filter( !is.na(tag) ) %>% prepareDataForJags('detection')
 
 if (runDetectionModelTF) {
   ddD <- dddD[[1]] %>% runDetectionModel(parallel = TRUE)
@@ -118,6 +129,7 @@ done <- Sys.time()
 #
 #
 
+# Just the tagged fish - cd
 ddddG <- cd %>%
   filter(  species %in% speciesIn,
            cohort >= minCohort,
