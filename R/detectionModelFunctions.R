@@ -8,9 +8,9 @@ runDetectionModel <- function(d, parallel = FALSE){   #iterToUse, firstNonBurnIt
 
   inits <- function(){
     list(#pBetaInt = array(rnorm(d$nSeasons*d$nRivers*d$nYears,0,2.25),c(d$nSeasons,d$nRivers,d$nYears)),
-         pBetaInt = array(runif(d$nSpecies*d$nSeasons*d$nRivers*d$nYears, -2.5, 2),c(d$nSpecies,d$nSeasons,d$nRivers,d$nYears)),
-        z = d$zForInit
-         )
+      pBetaInt = array(runif(d$nSpecies*d$nSeasons*d$nRivers*d$nYears, -2.5, 2),c(d$nSpecies,d$nSeasons,d$nRivers,d$nYears)),
+      z = d$zForInit
+    )
   }
 
   params <- c("pBetaInt","pBetaIntMean","pBetaIntSigma","phiBetaInt")
@@ -25,7 +25,7 @@ runDetectionModel <- function(d, parallel = FALSE){   #iterToUse, firstNonBurnIt
                  n.burnin = 100,
                  n.thin = 4,
                  parallel = parallel
-                )
+  )
 
   #outDet$movementModelIterUsed <- iter
   return(outDet)
@@ -47,7 +47,7 @@ getDensities <- function(dddd,dd, meanOrIter = "mean", sampleToUse = sampleToUse
   try( if (sampleToUse > dd$mcmc.info$n.samples) stop("requested iteration beyond max # of iterations") )
 
   counts <- dddd %>%
- #   filter( enc == 1 ) %>%
+    #   filter( enc == 1 ) %>%
     filter( area %in% c("inside","trib") ) %>%
     group_by( species,season,riverOrdered,year ) %>%
     dplyr::summarise( count = n() ) %>%
@@ -55,7 +55,7 @@ getDensities <- function(dddd,dd, meanOrIter = "mean", sampleToUse = sampleToUse
             seasonN = season,
             riverN = as.numeric(riverOrdered),
             yearN = year - min(year) + 1
-          ) %>%
+    ) %>%
     ungroup()
 
   if ( meanOrIter == 'mean') ddIn <- dd$q50$pBetaInt
@@ -71,13 +71,13 @@ getDensities <- function(dddd,dd, meanOrIter = "mean", sampleToUse = sampleToUse
             riverN = Var3,
             yearN = Var4,
             logitP = Freq
-          ) %>%
+    ) %>%
     mutate( speciesN = as.numeric(speciesN),
             seasonN = as.numeric(seasonN),
             riverN = as.numeric(riverN),
             yearN = as.numeric(yearN),
             p = invlogit( logitP )
-          )
+    )
 
   p <- left_join( p, counts ) %>%
     mutate( countP = count/p )
@@ -130,7 +130,7 @@ addSurvivals <- function(dddd,dd, meanOrIter = "mean", sampleToUse = sampleToUse
             seasonN = season,
             riverN = as.numeric(riverOrdered),
             yearN = year - min(year) + 1
-          )
+    )
 
   dddd <- left_join( dddd, phi ) %>%
     dplyr::select(-speciesN,-seasonN,-riverN,-yearN)

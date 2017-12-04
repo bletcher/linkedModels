@@ -76,7 +76,7 @@ prepareDataForJags <- function(d,modelType){
                meanLenOriginalLn = mean(observedLengthOriginalLn, na.rm = T),
                sdLenOriginalLn = sd(observedLengthOriginalLn, na.rm = T),
                sampleIntervalMean = mean(sampleInterval, na.rm = T)
-             )
+    )
 
   d <- d %>%     # use original means so length and lengthOriginal have same std values
     mutate( lengthDATAStd = (observedLength -                 mean(observedLengthOriginal,na.rm = T)) / sd(observedLengthOriginal,na.rm = T),
@@ -84,7 +84,7 @@ prepareDataForJags <- function(d,modelType){
 
             lengthDATALnStd = (observedLengthLn -                 mean(observedLengthOriginalLn,na.rm = T)) / sd(observedLengthOriginalLn,na.rm = T),
             lengthDATAOriginalLnStd = (observedLengthOriginalLn - mean(observedLengthOriginalLn,na.rm = T)) / sd(observedLengthOriginalLn,na.rm = T)
-            )
+    )
 
   propSampled <- getPropSampled(nSeasons,nRivers,nYears,min(d$year))
 
@@ -99,12 +99,12 @@ prepareDataForJags <- function(d,modelType){
                meanFlowMean = mean(meanFlow, na.rm = T),
                meanFlowSD = sd(meanFlow, na.rm = T)
 
-             )
+    )
 
   d <- left_join( d, meansEnv ) %>%
     mutate( tempStd = (meanTemperature - meanTemperatureMean)/meanTemperatureSD,
             flowStd = (meanFlow - meanFlowMean)/meanFlowSD
-          )
+    )
 
   d$tagIndexJags <- as.numeric(as.factor(d$tagIndex)) #make sure have right tagIndices for subset of fish for Jags
   nInd <- n_distinct(d$tagIndexJags, na.rm = T)
@@ -116,45 +116,45 @@ prepareDataForJags <- function(d,modelType){
   speciesByInd <- d %>% distinct(tagIndexJags,speciesN) %>% arrange(tagIndexJags)
 
   if ( modelType == "detection" ){
-  data <- list( encDATA = d$enc,
-                lengthDATA = d$lengthDATAStd,
-                riverDATA = d$riverN,
-                ind = d$tagIndexJags,
-                nRivers = nRivers,
-                nSpecies = nSpecies,
-                nInd = nInd,
-                #nOcc = nOcc,
-                #occ = d$sampleIndex - minOcc + 1,
-                species = as.numeric(factor(d$species, levels = c('bkt','bnt','ats'), ordered = T)), #this might screw up the indexing if a lower level is ignored in the species list   as.numeric(as.factor(d$species)),
-                season = d$season,
-                year = d$year - min(d$year) + 1,
-                yearForCutoff = d$year - d$minYear + 1 + (d$minYear - 1997), # minYear is watershed-specific, -1997 because min year in cutoffYOYDATA is 1997
-                nYears = nYears, #max(d$year) - min(d$year) + 1,
-                nEvalRows = nEvalRows, evalRows = evalRows,
-                nFirstObsRows = nFirstObsRows, firstObsRows = firstObsRows,
-                nLastObsRows = nLastObsRows, lastObsRows = lastObsRows,
-                nAllRows = nAllRows,
-                nSeasons = nSeasons,
-                lengthMean = array(means$meanLen, dim = c(nRivers,nSeasons,nSpecies)),
-                lengthSD = array(means$sdLen, dim = c(nRivers,nSeasons,nSpecies)),
-                sampleIntervalMean = array(means$sampleIntervalMean, dim = c(nRivers,nSeasons,nSpecies)),
-              #  cutoffYOYDATA = cutoffYOYDATA,
-                sampleInterval = d$sampleInterval,
-                zForInit = d$zForInit, # z for firstObs gets set to zero in jags. Can't set values in inits for values assigned in jags
-                propSampledDATA = propSampled$propSampledDATA,
-                tempStd = d$tempStd,
-                flowStd = d$flowStd,
-                nPasses = d$nPasses
+    data <- list( encDATA = d$enc,
+                  lengthDATA = d$lengthDATAStd,
+                  riverDATA = d$riverN,
+                  ind = d$tagIndexJags,
+                  nRivers = nRivers,
+                  nSpecies = nSpecies,
+                  nInd = nInd,
+                  #nOcc = nOcc,
+                  #occ = d$sampleIndex - minOcc + 1,
+                  species = as.numeric(factor(d$species, levels = c('bkt','bnt','ats'), ordered = T)), #this might screw up the indexing if a lower level is ignored in the species list   as.numeric(as.factor(d$species)),
+                  season = d$season,
+                  year = d$year - min(d$year) + 1,
+                  yearForCutoff = d$year - d$minYear + 1 + (d$minYear - 1997), # minYear is watershed-specific, -1997 because min year in cutoffYOYDATA is 1997
+                  nYears = nYears, #max(d$year) - min(d$year) + 1,
+                  nEvalRows = nEvalRows, evalRows = evalRows,
+                  nFirstObsRows = nFirstObsRows, firstObsRows = firstObsRows,
+                  nLastObsRows = nLastObsRows, lastObsRows = lastObsRows,
+                  nAllRows = nAllRows,
+                  nSeasons = nSeasons,
+                  lengthMean = array(means$meanLen, dim = c(nRivers,nSeasons,nSpecies)),
+                  lengthSD = array(means$sdLen, dim = c(nRivers,nSeasons,nSpecies)),
+                  sampleIntervalMean = array(means$sampleIntervalMean, dim = c(nRivers,nSeasons,nSpecies)),
+                  #  cutoffYOYDATA = cutoffYOYDATA,
+                  sampleInterval = d$sampleInterval,
+                  zForInit = d$zForInit, # z for firstObs gets set to zero in jags. Can't set values in inits for values assigned in jags
+                  propSampledDATA = propSampled$propSampledDATA,
+                  tempStd = d$tempStd,
+                  flowStd = d$flowStd,
+                  nPasses = d$nPasses
     )
   }
 
 
   #fill NAs for testing
- # d$lInterp =  na.approx(d$observedLength)
-#  d$lenInit <- ifelse( is.na(d$observedLength), d$lInterp, NA )
+  # d$lInterp =  na.approx(d$observedLength)
+  #  d$lenInit <- ifelse( is.na(d$observedLength), d$lInterp, NA )
 
-#  d$initialIsYOY <- ifelse( is.na(d$lenInit), NA, ifelse( d$lInterp > 90, 2, 1 ) )
-    # div <- 10
+  #  d$initialIsYOY <- ifelse( is.na(d$lenInit), NA, ifelse( d$lInterp > 90, 2, 1 ) )
+  # div <- 10
   # sep <- round(nrow(d)/div)
   # keep <- 1:sep
   # interp <- (sep + 1):nrow(d)
@@ -184,7 +184,7 @@ prepareDataForJags <- function(d,modelType){
                   lengthMean = array(means$meanLen, dim = c(nRivers,nSeasons,nSpecies)),
                   lengthSD = array(means$sdLen, dim = c(nRivers,nSeasons,nSpecies)),
                   sampleIntervalMean = array(means$sampleIntervalMean, dim = c(nRivers,nSeasons,nSpecies)),
-               #   cutoffYOYDATA = cutoffYOYDATA,
+                  #   cutoffYOYDATA = cutoffYOYDATA,
                   sampleInterval = d$sampleInterval,
                   zForInit = d$zForInit, # z for firstObs gets set to zero in jags. Can't set values in inits for values assigned in jags
                   propSampledDATA = propSampled$propSampledDATA,
@@ -195,10 +195,10 @@ prepareDataForJags <- function(d,modelType){
                   countPAllSppStd = d$countPAllSppStd,
                   tempStd = d$tempStd,
                   flowStd = d$flowStd,
-   #               biomassDeltaAllSpp = d$meanBiomassAllSppStdDelta,
-    #              biomassDelta = d$meanBiomassStdDelta,
-           #       logitPhiStd = d$logitPhiStd,
-  #                lForInit = d$lInterp,
+                  #               biomassDeltaAllSpp = d$meanBiomassAllSppStdDelta,
+                  #              biomassDelta = d$meanBiomassStdDelta,
+                  #       logitPhiStd = d$logitPhiStd,
+                  #                lForInit = d$lInterp,
                   isYOYDATA = d$isYOYDATA,
                   speciesByInd = speciesByInd$speciesN
     )

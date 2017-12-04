@@ -98,8 +98,8 @@ dModelName <- paste0(paste0(species,collapse = ''),minCohort)
 ddddD <- cdAllFish %>%
   filter(  species %in% speciesIn,
            cohort >= minCohort,
-           sampleInterval < maxSampleInterval # this removes the later yearly samples. Want to stick with seasonal samples
-        )
+           sampleInterval < maxSampleInterval  # this removes the later yearly samples. Want to stick with seasonal samples
+  )
 
 #just the tagged fish for detection model
 dddD <- ddddD %>% dplyr::filter( !is.na(tag) ) %>% prepareDataForJags('detection')
@@ -156,8 +156,8 @@ chainToUse <- 1
 numItersToUse <- 2
 if (meanOrIter == "iter") {
   itersToUse <- sort(sample(((dd$mcmc.info$n.samples/dd$mcmc.info$n.chains) * (chainToUse - 1)):
-                            ((dd$mcmc.info$n.samples/dd$mcmc.info$n.chains) * (chainToUse - 0)),
-                          numItersToUse))
+                              ((dd$mcmc.info$n.samples/dd$mcmc.info$n.chains) * (chainToUse - 0)),
+                            numItersToUse))
 } else {
   itersToUse <- 1 # only run one loop over iter
 }
@@ -182,7 +182,7 @@ for (iter in itersToUse) {
   # saving into a list for now, could also map()
 
   dddG[[ii]] <- addDensityData( ddddG,ddD,ddddD,meanOrIter,iter )
- # dddG[[ii]] <- addBiomassDeltas( dddG[[ii]] )
+  # dddG[[ii]] <- addBiomassDeltas( dddG[[ii]] )
   dddG[[ii]] <- addSurvivals( dddG[[ii]],ddD,meanOrIter,iter )
   #dddG[[ii]] <- crossValidate( dddG[[ii]],runCrossValidationTF ) # Moved inside prepareDataforJags()
 

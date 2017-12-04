@@ -35,10 +35,34 @@ getCoreDataAllFish <- function(drainage = "west"){
     dplyr::filter( area %in% c("trib","inside","below","above") ) %>%
     #  createCmrData( maxAgeInSamples = 20, inside = F, censorDead = F, censorEmigrated = T) %>%
     addSampleProperties() %>%
-    addEnvironmental()
-  #   addKnownZ() %>%
-  #    fillSizeLocation(size = F) #assumes fish stay in same location until observed elsewhere
+    addEnvironmental() %>%
+    #   addKnownZ() %>%
+    #    fillSizeLocation(size = F) #assumes fish stay in same location until observed elsewhere
 
+    # variables needed from createCMRData() that we don;t get when it is commented out
+    # this is in createCmrData
+    mutate(sampleIndex = sampleNumber - min(sampleNumber) + 1,
+           tagIndex = as.numeric(as.factor(tag)),
+           enc = as.numeric(!is.na(detectionDate)))
+
+  cdWBAll <- cdWBAll %>%
+    dplyr::filter(season == 2 & sampleNumber != 2.5) %>%
+    select(year, sampleNumber) %>%
+    rename(sampleBorn = sampleNumber,cohort = year) %>%
+    unique() %>%
+    right_join(cdWBAll) %>%
+    #  rename(cohort = year) %>%
+    mutate(ageInSamples = sampleNumber - sampleBorn) %>%
+    select(-sampleBorn)
+
+  # in addEnvironmental(), but doesn't seem to run
+  byTag <- cdWBAll %>%
+    dplyr::select(tag,detectionDate) %>%
+    group_by(tag) %>%
+    mutate(lagDetectionDate = lead(detectionDate)) %>%
+    ungroup()
+
+  cdWBAll <- left_join(cdWBAll,byTag)
 }
 
 
@@ -60,7 +84,7 @@ addNPasses <- function(cd,dr){
     arrange(sample_number,river) %>%
 
     group_by(river,sample_number) %>%
-      summarize( nPasses = max(pass,na.rm=T) ) %>%
+    summarize( nPasses = max(pass,na.rm=T) ) %>%
     rename( sampleNumber = sample_number )
 
 
@@ -96,7 +120,7 @@ getCountOfUntagged <- function(drainage = 'west'){
     filter(species %in% c('bkt','bnt','ats'),
            observedLength > 61,
            area %in% c('inside','trib') ) %>%
-  mutate( year = year(detectionDate) )
+    mutate( year = year(detectionDate) )
 
   # d <- d1 %>%
   #   mutate( isTagged = ifelse( is.na(tag),0,1 ),
@@ -128,7 +152,7 @@ cleanData <- function(d,drainageIn){
   if(drainageIn == "west") {
     maxSectionNum <- 47
     d$riverOrdered <- factor(d$river,levels=c('west brook', 'wb jimmy', 'wb mitchell',"wb obear"),labels = c("west brook","wb jimmy","wb mitchell","wb obear"), ordered=T)
-    minYear = 2002
+    minYear = 1997
   }
   else if(drainageIn == "stanley"){
     maxSectionNum <- 50
@@ -141,7 +165,16 @@ cleanData <- function(d,drainageIn){
   d$year <- year(d$detectionDate)
   d$yday <- yday(d$detectionDate)
 
+  dUntagged <- d %>%
+    filter( is.na(tag) ) %>%
+    mutate( minSample = min(sampleNumber),
+            maxSample = max(sampleNumber),
+            minYear = minYear,
+            moveDir = 0,
+            sampleInterval = 0)
+
   d <- d %>%
+    filter( !is.na(tag) ) %>%
     group_by(tag) %>%
     # arrange(tag,sampleNumber) %>%
     mutate( lagSection = lead(section),
@@ -157,6 +190,8 @@ cleanData <- function(d,drainageIn){
 
   d$moveDir <- ifelse( d$section == d$lagSection, 0, ifelse( d$section > d$lagSection, 1,-1 ) )
   d$sampleInterval <- as.numeric(d$lagDetectionDate - d$detectionDate)
+
+  d <- bind_rows( d,dUntagged )
 
   return(d)
 }
@@ -185,7 +220,7 @@ mergeSites <- function(d,drainageIn){
 
 minimalData <- function(d){
   d %>% dplyr::select(tag,detectionDate,sampleNumber,riverOrdered,observedLength,
-               survey,enc,knownZ,grLength,lagDetectionDate,lagObservedLength)
+                      survey,enc,knownZ,grLength,lagDetectionDate,lagObservedLength)
 }
 
 
@@ -199,11 +234,11 @@ getPropSampled <- function(nSeasons,nRivers,nYears,minYear){
 
   #check data
 
-#  tmp <- dddD %>%
-#           group_by(riverOrdered,year,season,section) %>%
-#           summarize( s = sum(enc) ) %>%
-#           filter( s == 0 )
-#  table(tmp$riverOrdered,tmp$year,tmp$season)
+  #  tmp <- dddD %>%
+  #           group_by(riverOrdered,year,season,section) %>%
+  #           summarize( s = sum(enc) ) %>%
+  #           filter( s == 0 )
+  #  table(tmp$riverOrdered,tmp$year,tmp$season)
 
   # propSamp - proportion of each season,river,year combo that got sampled (proportion of sctions sampled)
   propSampledDATA <- array( 1, c(nSeasons,nRivers,nYears) ) #season, river year
@@ -267,8 +302,8 @@ getYOYCutoffs <- function(d,dr = 'west'){
 
   # get season for each original sample
   snOrigSeason <- d %>% distinct(sampleName,sampleNumber,season) %>% arrange(sampleName) %>% mutate( sampleName = as.numeric(sampleName) ) #data.frame(unique(cbind(d$sampleName,d$sampleNumber,d$season)))
-#  snOrigSeason <- snOrigSeason %>% mutate( origSample = as.numeric(origSample),sample = as.numeric(sample),season = as.numeric(season)) %>%
-#                    arrange( origSample )
+  #  snOrigSeason <- snOrigSeason %>% mutate( origSample = as.numeric(origSample),sample = as.numeric(sample),season = as.numeric(season)) %>%
+  #                    arrange( origSample )
 
   y1 <- left_join(y2, snOrigSeason, by = 'sampleName')
 
@@ -282,7 +317,7 @@ getYOYCutoffs <- function(d,dr = 'west'){
                            year = rep(min(d$year):max(d$year), each = nRivers*nSeasons),
                            river = rep(riverList,                      each = nSeasons),
                            season =                                         1:nSeasons
-                         ) %>%
+  ) %>%
     mutate( riverOrdered = factor(river, levels = c('west brook','wb jimmy','wb mitchell','wb obear'), ordered = T) )
 
   y <- left_join( yTemplate, y1, by = c('riverOrdered','year','species','season') )
@@ -290,7 +325,7 @@ getYOYCutoffs <- function(d,dr = 'west'){
   y$maxLength <- ifelse( is.na(y$maxLength), 90, y$maxLength) # fill in missing obs with 90
   y$maxLength <- ifelse( y$season == 1, 50, y$maxLength )
 
-    # some visual fixes
+  # some visual fixes
   y$maxLength[ y$species=='bkt' & y$year == 2003 & y$season == 3 & y$river == 'wb jimmy' ] <- 85
   y$maxLength[ y$species=='bkt' & y$year == 2011 & y$season == 2 & y$river == 'wb obear' ] <- 70
   y$maxLength[ y$species=='bkt' & y$year == 2010 & y$season == 3 & y$river == 'wb obear' ] <- 72
@@ -300,7 +335,7 @@ getYOYCutoffs <- function(d,dr = 'west'){
   y <- y[ order(y$species,y$year,y$riverOrdered,y$season),]
   cutoffYOYDATA <- array( y$maxLength, c(nSeasons,nRivers,nYears,nSpecies) )
 
-#  save(cutoffYOYDATA,file = './data/cutoffYOYDATA.RData')
+  #  save(cutoffYOYDATA,file = './data/cutoffYOYDATA.RData')
   #######################################
 
   # river <- 'wb mitchell'#,
@@ -450,17 +485,17 @@ getYOYCutoffs <- function(d,dr = 'west'){
   #  yy[  yy$season==4 & yy$river == 'wb obear' ,c('year','maxLength')]
 
   # river <- 'wb mitchell'#,
- #  river <- 'west brook'#'wb obear'##'#''#'wb obear' #
-   river <- 'wb obear'##'#''#'wb obear' #
+  #  river <- 'west brook'#'wb obear'##'#''#'wb obear' #
+  river <- 'wb obear'##'#''#'wb obear' #
   # river <- 'wb jimmy'
   #
-   spp <- "bkt"
+  spp <- "bkt"
 
-#   ggplot( cd[cd$river==river & !is.na(cd$season) & cd$species == spp,], aes(observedLength) ) +
-#     geom_histogram( binwidth=3 )+
-#     geom_vline(aes(xintercept=maxLength), yy[yy$year >= 2002 & yy$river == river & yy$species == spp,])+
-#     facet_grid(season~year ) +
-#     ggtitle(paste(river,spp))
+  #   ggplot( cd[cd$river==river & !is.na(cd$season) & cd$species == spp,], aes(observedLength) ) +
+  #     geom_histogram( binwidth=3 )+
+  #     geom_vline(aes(xintercept=maxLength), yy[yy$year >= 2002 & yy$river == river & yy$species == spp,])+
+  #     facet_grid(season~year ) +
+  #     ggtitle(paste(river,spp))
 
 }
 
