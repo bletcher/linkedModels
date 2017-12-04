@@ -1,8 +1,6 @@
 #'Extract data from the PIT tag database
 #'
 #'@param drainage Which drainage, "west" or "stanley"#'Extract data from the PIT tag database
-#'
-#'@param drainage Which drainage, "west" or "stanley"
 #'@return a data frame
 #'@export
 
@@ -62,6 +60,56 @@ getSites <- function(drainageIn = "west"){
   sites$section <- as.numeric(sites$section)
   return(sites)
 }
+
+
+#'Extract all fish data from the PIT tag database, including untagged
+#'
+#'@param drainage Which drainage, "west" or "stanley"#'Extract data from the PIT tag database
+#'@return a data frame
+#'@export
+
+getCoreDataAllFish <- function(drainage = "west"){
+
+  cdWB <- createCoreData(sampleType = "electrofishing", #"stationaryAntenna","portableAntenna"),
+                         whichDrainage = drainage,
+                         columnsToAdd=c("sampleNumber","river","riverMeter","survey",'observedLength','observedWeight','species','seasonNumber'),
+                         includeUntagged = T) %>%
+    #   addTagProperties( columnsToAdd = c("cohort","species","dateEmigrated","sex","species")) %>%
+    dplyr::filter( area %in% c("trib","inside","below","above"), survey == "shock" )
+  # createCmrData( maxAgeInSamples = 20, inside = F, censorDead = F, censorEmigrated = T) %>%
+  # addSampleProperties() %>%
+  # addEnvironmental() %>%
+  # addKnownZ() %>%
+  # fillSizeLocation(size = F) #assumes fish stay in same location until observed elsewhere
+}
+
+#'Get counts of data from untagged fish
+#'
+#'@param d a dataframe
+#'@return a data frame
+#'@export
+
+getCountOfUntagged <- function(drainage = 'west'){
+  d1 <- getCoreDataAllFish(drainage) %>%
+    filter(species %in% c('bkt','bnt','ats'),
+           observedLength > 61,
+           area %in% c('inside','trib') ) %>%
+  mutate( year = year(detectionDate) )
+
+  # d <- d1 %>%
+  #   mutate( isTagged = ifelse( is.na(tag),0,1 ),
+  #           season = seasonNumber ) %>%
+  #   filter( observedLength > 61, area %in% c('inside','trib') ) %>%
+  #   group_by( species,season,river,year,isTagged ) %>%
+  #   summarise( n = n() )
+  #
+  # ggplot(d, aes(year,n,color=isTagged)) + geom_point()  + facet_grid(river~season+species)
+
+
+  return(d1)
+}
+
+
 
 #'Clean data from the PIT tag database
 #'
