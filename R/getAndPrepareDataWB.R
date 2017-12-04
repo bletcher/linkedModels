@@ -10,7 +10,7 @@ getCoreData <- function(drainage = "west"){
                          whichDrainage = drainage,
                          columnsToAdd=c("sampleNumber","river","riverMeter","survey",'observedLength','observedWeight')) %>%
     addTagProperties( columnsToAdd = c("cohort","species","dateEmigrated","sex","species")) %>%
-    dplyr::filter( !is.na(tag), area %in% c("trib","inside","below","above") ) %>%
+    dplyr::filter( !is.na(tag), area %in% c("trib","inside","below","above"), !is.na(sampleNumber) ) %>%
     createCmrData( maxAgeInSamples = 20, inside = F, censorDead = F, censorEmigrated = T) %>%
     addSampleProperties() %>%
     addEnvironmental() %>%
@@ -32,7 +32,7 @@ getCoreDataAllFish <- function(drainage = "west"){
                             columnsToAdd=c("sampleNumber","river","riverMeter","survey",'observedLength','observedWeight'),
                             includeUntagged = T) %>%
     addTagProperties( columnsToAdd = c("cohort","species","dateEmigrated","sex","species")) %>%
-    dplyr::filter( area %in% c("trib","inside","below","above") ) %>%
+    dplyr::filter( area %in% c("trib","inside","below","above"), !is.na(sampleNumber) ) %>%
     #  createCmrData( maxAgeInSamples = 20, inside = F, censorDead = F, censorEmigrated = T) %>%
     addSampleProperties() %>%
     addEnvironmental() %>%
@@ -234,11 +234,17 @@ getPropSampled <- function(nSeasons,nRivers,nYears,minYear){
 
   #check data
 
-  #  tmp <- dddD %>%
-  #           group_by(riverOrdered,year,season,section) %>%
-  #           summarize( s = sum(enc) ) %>%
-  #           filter( s == 0 )
-  #  table(tmp$riverOrdered,tmp$year,tmp$season)
+   # tmp <- dddD[[2]] %>%
+   #          group_by(riverOrdered,year,season,section) %>%
+   #          summarize( s = sum(enc) ) %>%
+   #          filter( s == 0 )
+   # table(tmp$riverOrdered,tmp$year,tmp$season)
+   #
+   #              1998 2000 2001 2002 2003 2004 2005 2006 2007 2008 2009 2010 2011 2012 2013 2014 2015
+   # west brook     0    1    0   50   22   49   52    0   53    1    0    0   12   53    6   33    0
+   # wb jimmy       0    0    0   14    0    0    0    0    0    0    2    0    0    0    0    0    0
+   # wb mitchell    0    0    0   15    2    1    1    4    4    4    0    4    4    1    2    1    0
+   # wb obear       0    0    0   15    6   10    0    0    1    0    0    0    2    0    0    0    0
 
   # propSamp - proportion of each season,river,year combo that got sampled (proportion of sctions sampled)
   propSampledDATA <- array( 1, c(nSeasons,nRivers,nYears) ) #season, river year

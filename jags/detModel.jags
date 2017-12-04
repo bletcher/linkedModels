@@ -77,7 +77,7 @@ model{
       p[ evalRows[i] + 1 ]                 # Capture probability (calculated above).
     * z[ evalRows[i] + 1 ]                 # Must be alive to be capturable.
  #   * availableDATA[ evalRows[i] + 1 ]     # Must be on the study site to be capturable. Not needed - censored in createCmrData()
-#    * propSampledDATA[ season[ evalRows[i] + 1 ],riverDATA[ evalRows[i] + 1 ], year[ evalRows[i] + 1 ] ]   # proportion of the stream section that was sampled for each season,river,year combination
+    * propSampledDATA[ season[ evalRows[i] + 1 ],riverDATA[ evalRows[i] + 1 ], year[ evalRows[i] + 1 ] ] + 0.001   # proportion of the stream section that was sampled for each season,river,year combination
   }
 
 } #model bracket

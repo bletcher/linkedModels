@@ -90,7 +90,7 @@ if ( file.exists(cdFile) ) {
 ##################
 #
 #
-dModelName <- paste0(paste0(species,collapse = ''),minCohort)
+dModelName <- paste0(paste0(species,collapse = ''),minCohort,"_wPropSampled")
 
 (start <- Sys.time())
 

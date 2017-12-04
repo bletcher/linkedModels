@@ -11,15 +11,18 @@ runGrowthModel <- function(d, parallel = FALSE){
   #grBetaOutside = array( runif( 11 *2*d$nSpecies*d$nSeasons*d$nRivers,-2,2),c( 11 ,2,d$nSpecies,d$nSeasons,d$nRivers))
   #grBetaOutside[ ,1,,2, ] <- 0
 
+  nBetas <- 18
+  nBetasSigma <- 4
+
   inits <- function(){
     list(
       grInt = array(rnorm(2*d$nSpecies*d$nSeasons*d$nRivers,0.5,0.25),c(2,d$nSpecies,d$nSeasons,d$nRivers)),
       #grBeta[x,1:2,1,1:4,1:4]
-      grBeta = array(rnorm(2*2*d$nSpecies*d$nSeasons*d$nRivers,0,0.1),c(2,2,d$nSpecies,d$nSeasons,d$nRivers)),
+      grBeta = array(rnorm(nBetas*2*d$nSpecies*d$nSeasons*d$nRivers,0,0.1),c(nBetas,2,d$nSpecies,d$nSeasons,d$nRivers)),
       #grSigma[ yoy,spp,s,r ]
       grSigma = array(runif(2*d$nSpecies*d$nSeasons*d$nRivers,0,0.05),c(2,d$nSpecies,d$nSeasons,d$nRivers)),
       # sigmaBeta[ b,yoy,spp,s,r ]
-      sigmaBeta = array(rnorm(2*2*d$nSpecies*d$nSeasons*d$nRivers,0,0.05),c(2,2,d$nSpecies,d$nSeasons,d$nRivers)),
+      sigmaBeta = array(rnorm(nBetasSigma*2*d$nSpecies*d$nSeasons*d$nRivers,0,0.05),c(nBetasSigma,2,d$nSpecies,d$nSeasons,d$nRivers)),
       grIndRE = rnorm(d$nInd,0,0.1)
     )
   }

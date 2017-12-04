@@ -58,6 +58,23 @@ scale_colour_Publication <- function(...){
 
 ```
 
+```{r p(detection)}
+  ggPInt <- array2df(ddD$sims.list$pBetaInt, label.x = "est")
+
+  ggPInt$chain <- rep(1:ddD$mcmc.info$n.chains, each = ddD$mcmc.info$n.samples/ddD$mcmc.info$n.chains)
+  ggPInt$iter <- 1:as.numeric(ddD$mcmc.info$n.samples/ddD$mcmc.info$n.chains)
+  
+  ggplot(filter(ggPInt), aes(iter,est)) + 
+    geom_point( aes(color=factor(chain)), size = 0.1 ) + 
+    ylim(-1.5,1.5) + 
+    facet_grid(d2+d4~d5+d3)
+
+  p <- array2df(ddD$q50$pBetaInt, label.x = "est") %>%
+    rename(est=est,species=d1,season=d2,river=d3,year=d4)
+  ggplot(p, aes(year,invlogit(est))) +geom_point() + facet_grid(season ~ river + species)
+
+```
+
 
 ```{r overview graphs - Fig 1}
 d$riverOrderedGG <- factor(d$river,
@@ -76,6 +93,14 @@ ggplot(d, aes(year,countPAllSpp)) +
   facet_grid(seasonGG ~ riverOrderedGG, scales = "free")
 
 ggsave('figures/count.png')
+
+ggplot(d, aes(year,countP.y,color=species)) +
+  geom_point() +
+  geom_line() +
+  labs( x = "Year", y = "Estimated count") +
+#  ylim(0,2500) +
+  theme_publication() +
+  facet_grid(seasonGG ~ riverOrderedGG, scales = "free")
 ```
 
 
