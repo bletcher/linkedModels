@@ -18,14 +18,13 @@ getCoreData <- function(drainage = "west"){
     fillSizeLocation(size = F) #assumes fish stay in same location until observed elsewhere
 }
 
-
-#'Extract all fish data from the PIT tag database, including untagged
+#'Get counts and summed mass of all fish, including untagged
 #'
 #'@param drainage Which drainage, "west" or "stanley"#'Extract data from the PIT tag database
 #'@return a data frame
 #'@export
 
-getCoreDataAllFish <- function(drainage = "west"){
+getCountsAllFish <- function(drainage = "west", filteredAreas = c("inside","trib")){
 
   cdWBAll <- createCoreData(sampleType = "electrofishing", #"stationaryAntenna","portableAntenna"),
                             whichDrainage = drainage,
@@ -33,38 +32,52 @@ getCoreDataAllFish <- function(drainage = "west"){
                             includeUntagged = T) %>%
     addTagProperties( columnsToAdd = c("cohort","species","dateEmigrated","sex","species")) %>%
     dplyr::filter( area %in% c("trib","inside","below","above"), !is.na(sampleNumber) ) %>%
-    #  createCmrData( maxAgeInSamples = 20, inside = F, censorDead = F, censorEmigrated = T) %>%
+    # createCmrData( maxAgeInSamples = 20, inside = F, censorDead = F, censorEmigrated = T) %>%
     addSampleProperties() %>%
-    addEnvironmental() %>%
-    #   addKnownZ() %>%
-    #    fillSizeLocation(size = F) #assumes fish stay in same location until observed elsewhere
+    # addEnvironmental() %>%
+    # addKnownZ() %>%
+    # fillSizeLocation(size = F) #assumes fish stay in same location until observed elsewhere
+    filter( species %in% c('bkt','bnt','ats'))
 
-    # variables needed from createCMRData() that we don;t get when it is commented out
-    # this is in createCmrData
-    mutate(sampleIndex = sampleNumber - min(sampleNumber) + 1,
-           tagIndex = as.numeric(as.factor(tag)),
-           enc = as.numeric(!is.na(detectionDate)))
+    cdWBAll$riverOrdered <- factor(cdWBAll$river,levels=c('west brook', 'wb jimmy', 'wb mitchell',"wb obear"),labels = c("west brook","wb jimmy","wb mitchell","wb obear"), ordered=T)
+    cdWBAll$riverN <- as.numeric(cdWBAll$riverOrdered)
 
-  cdWBAll <- cdWBAll %>%
-    dplyr::filter(season == 2 & sampleNumber != 2.5) %>%
-    select(year, sampleNumber) %>%
-    rename(sampleBorn = sampleNumber,cohort = year) %>%
-    unique() %>%
-    right_join(cdWBAll) %>%
-    #  rename(cohort = year) %>%
-    mutate(ageInSamples = sampleNumber - sampleBorn) %>%
-    select(-sampleBorn)
+    counts <- cdWBAll %>%
+      filter( area %in% filteredAreas ) %>%
+      group_by( species,riverN,season,year ) %>%
+      summarize( nAllFishBySpecies = n(),
+                 massAllFishBySpecies = sum(observedWeight,na.rm=T))
 
-  # in addEnvironmental(), but doesn't seem to run
-  byTag <- cdWBAll %>%
-    dplyr::select(tag,detectionDate) %>%
-    group_by(tag) %>%
-    mutate(lagDetectionDate = lead(detectionDate)) %>%
-    ungroup()
+    #ggplot(counts, aes(year,nAllFishBySpecies,color=species)) +
+    # ggplot(counts, aes(year,massAllFishBySpecies,color=species)) +
+    #   geom_point() +
+    #   geom_line() +
+    #   labs( x = "Year", y = "Estimated count") +
+    #   facet_grid(season ~ riverN, scales = "free")
 
-  cdWBAll <- left_join(cdWBAll,byTag)
+    return(counts)
 }
 
+#'Add counts for all fish to cd
+#'
+#'@param drainage Which drainage, "west" or "stanley"
+#'@return a data frame with vars nAllFishBySpecies, massAllFishBySpecies and nAllFish, massAllFish
+#'@export
+#'
+addCounts <- function(cd,drainage){
+  allFishBySpecies <- getCountsAllFish(drainage)
+  cd <- cd %>% left_join(allFishBySpecies)
+
+  allFish <- allFishBySpecies %>%
+    group_by(riverN,season,year) %>%
+    summarize( nAllFish = sum(nAllFishBySpecies, na.rm=T),
+               massAllFish = sum(massAllFishBySpecies, na.rm=T))
+  cd <- cd %>% left_join(allFish)
+
+  save(allFishBySpecies,allFish, file = './data/out/countsAndMasses.RData')
+
+  return(cd)
+}
 
 #'Get pass data from raw data table
 #'
@@ -152,12 +165,12 @@ cleanData <- function(d,drainageIn){
   if(drainageIn == "west") {
     maxSectionNum <- 47
     d$riverOrdered <- factor(d$river,levels=c('west brook', 'wb jimmy', 'wb mitchell',"wb obear"),labels = c("west brook","wb jimmy","wb mitchell","wb obear"), ordered=T)
-    minYear = 1997
+    minYear = min(d$year) #1997
   }
   else if(drainageIn == "stanley"){
     maxSectionNum <- 50
     d$riverOrdered <- factor(d$river,levels=c('mainstem', 'west', 'east'),labels = c('mainstem', 'west', 'east'), ordered=T)
-    minYear = 2006
+    minYear = min(d$year) #2006
   }
 
   d$inside <- ifelse( d$section %in% 1:maxSectionNum | d$survey == "stationaryAntenna", T, F )
@@ -249,7 +262,10 @@ getPropSampled <- function(nSeasons,nRivers,nYears,minYear){
   # propSamp - proportion of each season,river,year combo that got sampled (proportion of sctions sampled)
   propSampledDATA <- array( 1, c(nSeasons,nRivers,nYears) ) #season, river year
 
-  propSampledDATA[ c(1,4),1:4,2002 - minYear + 1 ] <- 0     #all spring and winter samples in 2002
+  #propSampledDATA[ c(1,4),1:4,2002 - minYear + 1 ] <- 0     #all spring and winter samples in 2002
+  propSampledDATA[ c(1,4),2:4,2002 - minYear + 1 ] <- 0     #all spring and winter samples in 2002
+
+
   propSampledDATA[ 2,2:3,2002 - minYear + 1 ] <- 0          #J and M summer samples in 2002
   propSampledDATA[ 4,1,2003 - minYear + 1 ] <- 30/47        #WB winter sample in 2003
   propSampledDATA[ 4,1,2004 - minYear + 1 ] <- 3/47         #WB winter sample in 2004

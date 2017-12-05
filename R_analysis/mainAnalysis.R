@@ -36,6 +36,7 @@ drainage <- "west" # ==
 
 species <- c("bkt", "bnt","ats") #
 speciesIn <- factor(species, levels = c('bkt','bnt','ats'), ordered = T)
+riverOrderedIn <- factor(c('west brook', 'wb jimmy', 'wb mitchell',"wb obear"),levels=c('west brook', 'wb jimmy', 'wb mitchell',"wb obear"),labels = c("west brook","wb jimmy","wb mitchell","wb obear"), ordered = T)
 
 minCohort <- 1997#1995 # >=
 maxSampleInterval <- 200 # <
@@ -46,7 +47,6 @@ percentLeftOut <- 10
 reconnect()
 
 #make sure species are always in order and indexed correctly for arrays
-riverOrderedIn <- factor(c('west brook', 'wb jimmy', 'wb mitchell',"wb obear"),levels=c('west brook', 'wb jimmy', 'wb mitchell',"wb obear"),labels = c("west brook","wb jimmy","wb mitchell","wb obear"), ordered = T)
 #riverOrderedIn <- factor(1:3,levels=c('mainstem', 'west', 'east'),labels = c('mainstem', 'west', 'east'), ordered=T)
 
 # update yoy cutoffs as get new data using
@@ -67,22 +67,17 @@ if ( file.exists(cdFile) ) {
   load(cdFile)
 } else {
 
-  # Tagged fish only, for estimating growth
+  # core data
   cd <- getCoreData(drainage) %>%
     cleanData(drainage) %>%
     mergeSites(drainage) %>%
     mutate(drainage = drainage,
-           countP = NA) # placeholder so prepareDataForJags() works for detection model
+           countP = NA) %>% # placeholder so prepareDataForJags() works for detection model
+    addCounts(drainage) # counts and summed masses of all fish, tagged and untagged. Not adjusted for P (happens in addDensities())
 
-  #Use this for estimating densities
-  cdAllFish <- getCoreDataAllFish(drainage) %>%
-    cleanData(drainage) %>%
-    #mergeSites(drainage) %>%
-    mutate(drainage = drainage,
-           countP = NA) # placeholder so prepareDataForJags() works for detection model
-
-  save(cd,cdAllFish, file = cdFile)
+  save(cd, file = cdFile)
 }
+
 
 
 #################################
@@ -90,19 +85,17 @@ if ( file.exists(cdFile) ) {
 ##################
 #
 #
-dModelName <- paste0(paste0(species,collapse = ''),minCohort,"_wPropSampled")
+dModelName <- paste0(paste0(species,collapse = ''),minCohort)
 
 (start <- Sys.time())
 
-# all fish so we can get densities of tagged + untagged fish from ddddD in addDensities()
-ddddD <- cdAllFish %>%
+ddddD <- cd %>%
   filter(  species %in% speciesIn,
            cohort >= minCohort,
            sampleInterval < maxSampleInterval  # this removes the later yearly samples. Want to stick with seasonal samples
   )
 
-#just the tagged fish for detection model
-dddD <- ddddD %>% dplyr::filter( !is.na(tag) ) %>% prepareDataForJags('detection')
+dddD <- ddddD %>% prepareDataForJags('detection')
 
 if (runDetectionModelTF) {
   ddD <- dddD[[1]] %>% runDetectionModel(parallel = TRUE)
@@ -129,7 +122,6 @@ done <- Sys.time()
 #
 #
 
-# Just the tagged fish - cd
 ddddG <- cd %>%
   filter(  species %in% speciesIn,
            cohort >= minCohort,
@@ -177,7 +169,6 @@ elapsed <- list()
 ii <- 0
 for (iter in itersToUse) {
   ii <- ii + 1
-
 
   # saving into a list for now, could also map()
 

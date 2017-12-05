@@ -86,7 +86,9 @@ prepareDataForJags <- function(d,modelType){
             lengthDATAOriginalLnStd = (observedLengthOriginalLn - mean(observedLengthOriginalLn,na.rm = T)) / sd(observedLengthOriginalLn,na.rm = T)
     )
 
-  propSampled <- getPropSampled(nSeasons,nRivers,nYears,min(d$year))
+
+  #done in addEnvironmental()
+  #propSampled <- getPropSampled(nSeasons,nRivers,nYears,min(d$year))
 
   d <- addNPasses(d,drainage)
   d$nPasses <- ifelse( is.na(d$nPasses), 1, d$nPasses ) #nPasses gets NA when propSampled==0. Just set these to 1 so there are no NAs in the data. propSampled==0 takes care of thes in the jages code
@@ -141,7 +143,7 @@ prepareDataForJags <- function(d,modelType){
                   #  cutoffYOYDATA = cutoffYOYDATA,
                   sampleInterval = d$sampleInterval,
                   zForInit = d$zForInit, # z for firstObs gets set to zero in jags. Can't set values in inits for values assigned in jags
-                  propSampledDATA = propSampled$propSampledDATA,
+                  propSampledDATA = d$proportionSampled, # propSampled$propSampledDATA,
                   tempStd = d$tempStd,
                   flowStd = d$flowStd,
                   nPasses = d$nPasses
@@ -187,7 +189,7 @@ prepareDataForJags <- function(d,modelType){
                   #   cutoffYOYDATA = cutoffYOYDATA,
                   sampleInterval = d$sampleInterval,
                   zForInit = d$zForInit, # z for firstObs gets set to zero in jags. Can't set values in inits for values assigned in jags
-                  propSampledDATA = propSampled$propSampledDATA,
+                  propSampledDATA = d$proportionSampled, # propSampled$propSampledDATA,
                   countPStd = d$countPStd,
                   countPStdBKT = d$countPStdBKT,
                   countPStdBNT = d$countPStdBNT,

@@ -56,8 +56,7 @@ model{
   ############################
 
   # Initial conditions:
-  # 1) individuals enter the sample with probability 1
-  # 2) individuals enter the sample alive, with probability 1
+  # Individuals enter the sample alive, with probability 1
 
   for(i in 1:nFirstObsRows){
     z[ firstObsRows[i] ] <- 1
@@ -77,7 +76,9 @@ model{
       p[ evalRows[i] + 1 ]                 # Capture probability (calculated above).
     * z[ evalRows[i] + 1 ]                 # Must be alive to be capturable.
  #   * availableDATA[ evalRows[i] + 1 ]     # Must be on the study site to be capturable. Not needed - censored in createCmrData()
-    * propSampledDATA[ season[ evalRows[i] + 1 ],riverDATA[ evalRows[i] + 1 ], year[ evalRows[i] + 1 ] ] + 0.001   # proportion of the stream section that was sampled for each season,river,year combination
+# indexed by evaleRows now  #  * propSampledDATA[ season[ evalRows[i] + 1 ],riverDATA[ evalRows[i] + 1 ], year[ evalRows[i] + 1 ] ] # proportion of the stream section that was sampled for each season,river,year combination
+     * propSampledDATA[ evalRows[i] + 1 ] # proportion of the stream section that was sampled for each season,river,year combination
+
   }
 
 } #model bracket
