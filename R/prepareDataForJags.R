@@ -117,6 +117,8 @@ prepareDataForJags <- function(d,modelType){
 
   speciesByInd <- d %>% distinct(tagIndexJags,speciesN) %>% arrange(tagIndexJags)
 
+  print(paste0("Number of input rows = ",nrow(d),", Number of encounters = ",sum(d$enc,na.rm=T)))
+
   if ( modelType == "detection" ){
     data <- list( encDATA = d$enc,
                   lengthDATA = d$lengthDATAStd,

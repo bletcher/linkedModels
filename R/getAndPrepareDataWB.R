@@ -44,7 +44,7 @@ getCountsAllFish <- function(drainage = "west", filteredAreas = c("inside","trib
 
     counts <- cdWBAll %>%
       filter( area %in% filteredAreas ) %>%
-      group_by( species,riverN,season,year ) %>%
+      group_by( species,river,season,year ) %>%
       summarize( nAllFishBySpecies = n(),
                  massAllFishBySpecies = sum(observedWeight,na.rm=T))
 
@@ -69,7 +69,7 @@ addCounts <- function(cd,drainage){
   cd <- cd %>% left_join(allFishBySpecies)
 
   allFish <- allFishBySpecies %>%
-    group_by(riverN,season,year) %>%
+    group_by(river,season,year) %>%
     summarize( nAllFish = sum(nAllFishBySpecies, na.rm=T),
                massAllFish = sum(massAllFishBySpecies, na.rm=T))
   cd <- cd %>% left_join(allFish)

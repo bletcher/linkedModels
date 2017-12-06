@@ -20,9 +20,9 @@ runDetectionModel <- function(d, parallel = FALSE){   #iterToUse, firstNonBurnIt
                  parameters.to.save = params,
                  model.file = "./jags/detModel.jags",
                  n.chains = 3,
-                 n.adapt = 1000, #1000
-                 n.iter = 1000,
-                 n.burnin = 100,
+                 n.adapt = 150, #1000
+                 n.iter = 200,
+                 n.burnin = 50,
                  n.thin = 4,
                  parallel = parallel
   )

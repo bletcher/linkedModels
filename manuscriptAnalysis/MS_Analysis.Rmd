@@ -9,11 +9,11 @@ Plots for the manuscript
 library(tidyverse)
 d <- dddG[[1]]
 #load(file = './data/out/ddD.RData')
-
+load(file = './data/out/countsAndMasses.RData')
 ```
 
 ```{r custom theme}
-theme_publication <- function(base_size=14, base_family="helvetica") {
+theme_publication <- function(base_size=14, base_family="") {
   library(grid)
   library(ggthemes)
   (theme_foundation(base_size=base_size, base_family=base_family)
@@ -58,6 +58,30 @@ scale_colour_Publication <- function(...){
 
 ```
 
+```{r raw counts}
+allFishBySpecies$riverOrderedGG <- factor(allFishBySpecies$river,
+                         levels=c('west brook', 'wb jimmy', 'wb mitchell',"wb obear"),
+                         labels = c("West Brook","Open Large","Open Small","Isolated Small"), ordered = T)
+allFishBySpecies$seasonGG <- factor(allFishBySpecies$season, labels = c("Spring","Summer","Autumn","Winter"), ordered = T)
+allFishBySpecies$speciesGG <- factor(allFishBySpecies$species, levels = c('bkt','bnt','ats'), labels = c("Brook Trout", "Brown Trout", "Atlantic Salmon"), ordered = T)
+
+allFish$riverOrderedGG <- factor(allFish$river,
+                         levels=c('west brook', 'wb jimmy', 'wb mitchell',"wb obear"),
+                         labels = c("West Brook","Open Large","Open Small","Isolated Small"), ordered = T)
+allFish$seasonGG <- factor(allFish$season, labels = c("Spring","Summer","Autumn","Winter"), ordered = T)
+
+ggplot(allFishBySpecies, aes(year,nAllFishBySpecies)) +
+  geom_point(aes(color = speciesGG)) +
+  geom_line(aes(color = speciesGG)) +
+  geom_line( data = allFish, aes(year,nAllFish) ) +
+  theme_publication() +
+  labs( x = "Year", y = "Count" ) +
+  facet_grid( seasonGG ~ riverOrderedGG)#, scales = "free_y" )
+
+ggsave('figures/rawCount.png')
+```
+
+
 ```{r p(detection)}
   ggPInt <- array2df(ddD$sims.list$pBetaInt, label.x = "est")
 
@@ -73,6 +97,17 @@ scale_colour_Publication <- function(...){
     rename(est=est,species=d1,season=d2,river=d3,year=d4)
   ggplot(p, aes(year,invlogit(est))) +geom_point() + facet_grid(season ~ river + species)
 
+  phi <- array2df(ddD$q50$phiBetaInt, label.x = "est") %>%
+    rename(est=est,species=d1,season=d2,river=d3,year=d4)
+  ggplot(phi, aes(year,invlogit(est))) +geom_point() + facet_grid(season ~ river + species)
+
+    
+  tmp <- dddD[[2]] %>%
+           group_by(riverOrdered,year,season,section) %>%
+           summarize( s = sum(enc) ) %>%
+           filter( s == 0 )
+  table(tmp$riverOrdered,tmp$year,tmp$season)
+  
 ```
 
 

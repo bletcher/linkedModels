@@ -34,7 +34,7 @@ library(tidyverse)
 
 drainage <- "west" # ==
 
-species <- c("bkt", "bnt","ats") #
+species <- "bkt" #c("bkt", "bnt","ats") #
 speciesIn <- factor(species, levels = c('bkt','bnt','ats'), ordered = T)
 riverOrderedIn <- factor(c('west brook', 'wb jimmy', 'wb mitchell',"wb obear"),levels=c('west brook', 'wb jimmy', 'wb mitchell',"wb obear"),labels = c("west brook","wb jimmy","wb mitchell","wb obear"), ordered = T)
 
@@ -61,7 +61,7 @@ reconnect()
 # Only need to run this when data or functions have changed
 # or you want to change drainages
 
-cdFile <- paste0('./data/cd_',drainage,"_",paste0(paste0(species,collapse = ''),minCohort),'.RData')
+cdFile <- paste0('./data/cd_',drainage,"_",paste0(paste0(species,collapse = ''),"_",minCohort),'.RData')
 
 if ( file.exists(cdFile) ) {
   load(cdFile)
