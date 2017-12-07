@@ -34,7 +34,7 @@ library(tidyverse)
 
 drainage <- "west" # ==
 
-species <- "bkt" #c("bkt", "bnt","ats") #
+species <- c("bkt", "bnt","ats") #
 speciesIn <- factor(species, levels = c('bkt','bnt','ats'), ordered = T)
 riverOrderedIn <- factor(c('west brook', 'wb jimmy', 'wb mitchell',"wb obear"),levels=c('west brook', 'wb jimmy', 'wb mitchell',"wb obear"),labels = c("west brook","wb jimmy","wb mitchell","wb obear"), ordered = T)
 
@@ -61,7 +61,7 @@ reconnect()
 # Only need to run this when data or functions have changed
 # or you want to change drainages
 
-cdFile <- paste0('./data/cd_',drainage,"_",paste0(paste0(species,collapse = ''),"_",minCohort),'.RData')
+cdFile <- paste0('./data/cd_',drainage,"_",minCohort,'.RData')
 
 if ( file.exists(cdFile) ) {
   load(cdFile)
@@ -78,14 +78,12 @@ if ( file.exists(cdFile) ) {
   save(cd, file = cdFile)
 }
 
-
-
 #################################
 # Detection model
 ##################
 #
 #
-dModelName <- paste0(paste0(species,collapse = ''),minCohort)
+dModelName <- paste0(paste0(species,collapse = ''),"_",minCohort)
 
 (start <- Sys.time())
 
@@ -95,7 +93,9 @@ ddddD <- cd %>%
            sampleInterval < maxSampleInterval  # this removes the later yearly samples. Want to stick with seasonal samples
   )
 
-dddD <- ddddD %>% prepareDataForJags('detection')
+dddD <- ddddD %>%
+  removeUnsampledRows(drainage,removeIncomplete = T) %>% # removes enc=0 rows for samples with no or very few() sections sampled
+  prepareDataForJags('detection')
 
 if (runDetectionModelTF) {
   ddD <- dddD[[1]] %>% runDetectionModel(parallel = TRUE)

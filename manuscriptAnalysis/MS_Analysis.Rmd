@@ -9,7 +9,7 @@ Plots for the manuscript
 library(tidyverse)
 d <- dddG[[1]]
 #load(file = './data/out/ddD.RData')
-load(file = './data/out/countsAndMasses.RData')
+load("D:/projects/linkedModels/data/out/countsAndMasses.RData")
 ```
 
 ```{r custom theme}
@@ -97,6 +97,7 @@ ggsave('figures/rawCount.png')
     rename(est=est,species=d1,season=d2,river=d3,year=d4)
   ggplot(p, aes(year,invlogit(est))) +geom_point() + facet_grid(season ~ river + species)
 
+  
   phi <- array2df(ddD$q50$phiBetaInt, label.x = "est") %>%
     rename(est=est,species=d1,season=d2,river=d3,year=d4)
   ggplot(phi, aes(year,invlogit(est))) +geom_point() + facet_grid(season ~ river + species)

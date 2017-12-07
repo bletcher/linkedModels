@@ -114,6 +114,7 @@ prepareDataForJags <- function(d,modelType){
   d$rowNumber <- 1:nrow(d)
 
   d$isYOYDATA <- ifelse( d$ageInSamples <= 3, 1, 2 )
+  d$proportionSampled <- ifelse( is.na(d$proportionSampled), 1, d$proportionSampled )
 
   speciesByInd <- d %>% distinct(tagIndexJags,speciesN) %>% arrange(tagIndexJags)
 

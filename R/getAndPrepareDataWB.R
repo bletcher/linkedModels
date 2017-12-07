@@ -252,7 +252,7 @@ getPropSampled <- function(nSeasons,nRivers,nYears,minYear){
    #          summarize( s = sum(enc) ) %>%
    #          filter( s == 0 )
    # table(tmp$riverOrdered,tmp$year,tmp$season)
-   #
+   # Season 4
    #              1998 2000 2001 2002 2003 2004 2005 2006 2007 2008 2009 2010 2011 2012 2013 2014 2015
    # west brook     0    1    0   50   22   49   52    0   53    1    0    0   12   53    6   33    0
    # wb jimmy       0    0    0   14    0    0    0    0    0    0    2    0    0    0    0    0    0
@@ -276,15 +276,83 @@ getPropSampled <- function(nSeasons,nRivers,nYears,minYear){
   propSampledDATA[ c(3,4),c(1,4),2015 - minYear + 1 ] <- 0 #all fall and winter samples in 2015
 
   # zeroSectionsDATA - completely unsampled winter samples. not including samples before season 4,year 1 because we didn't want to rewrite the meanPhiS34 indexing [mostly noise ni these estimates anyway]
+
+  # tmp2 <- dddD[[2]] %>%
+  #          group_by(riverOrdered,year,season) %>%
+  #          summarize( s = sum(enc) ) %>%
+  #          filter( s == 0 )
+  # # show unsampled river/year/season combos
+  # table(tmp2$riverOrdered,tmp2$year,tmp2$season)
+  #
   zeroSectionsDATA <- array( 0, c(nSeasons,nRivers,nYears) ) #season, river year
 
-  zeroSectionsDATA[ 3:4,1:4,1 ] <- 1          #all winter samples in 2002
-  zeroSectionsDATA[ 3:4,1,4 ] <- 1            #WB winter sample in 2005
-  zeroSectionsDATA[ 3:4,1,6 ] <- 1            #WB winter sample in 2007
+  zeroSectionsDATA[ 4,2:4,2002 - minYear + 1 ] <- 1          #trib winter samples in 2002
+  zeroSectionsDATA[ 4,1,2005 - minYear + 1 ] <- 1            #WB winter sample in 2005
+  zeroSectionsDATA[ 4,1,2007 - minYear + 1 ] <- 1            #WB winter sample in 2007
+  zeroSectionsDATA[ 4,1,2012 - minYear + 1 ] <- 1            #WB winter sample in 2007
+  zeroSectionsDATA[ 1,1,2015 - minYear + 1 ] <- 1            #WB spring sample in 2015
+  zeroSectionsDATA[ c(3,4),1:4,2015 - minYear + 1 ] <- 1  #all fall and winter samples in 2015
+
+  array2df(zeroSectionsDATA, label.x = "zero") %>%
+    rename(est=est,season=d1,river=d2,year=d3)
 
   return(list(propSampledDATA = propSampledDATA,zeroSectionsDATA = zeroSectionsDATA))
 }
 
+
+#'List of unsampled samples for filtering out enc == 0 in the det model
+#'
+#'@param d dataframe created with getCoreData()
+#'@return a data frame
+#'@export
+
+# zeroSectionsDATA - completely unsampled winter samples. not including samples before season 4,year 1 because we didn't want to rewrite the meanPhiS34 indexing [mostly noise ni these estimates anyway]
+
+# tmp2 <- dddD[[2]] %>%
+#          group_by(riverOrdered,year,season) %>%
+#          summarize( s = sum(enc) ) %>%
+#          filter( s == 0 )
+# # show unsampled river/year/season combos
+# table(tmp2$riverOrdered,tmp2$year,tmp2$season)
+#
+removeUnsampledRows <- function(d,drainage,removeIncomplete = F){
+
+  nSeasons <- n_distinct(d$season, na.rm = T)
+  nRivers <- n_distinct(d$riverOrdered, na.rm = T)
+  nYears <- n_distinct(d$year, na.rm = T)
+  minYear <- min(d$year)
+
+  zeroSectionsDATA <- array( 0, c(nSeasons,nRivers,nYears) ) #season, river year
+
+  if (drainage == 'west'){
+    zeroSectionsDATA[ 4,2:4,2002 - minYear + 1 ] <- 1          #trib winter samples in 2002
+    zeroSectionsDATA[ 4,1,2005 - minYear + 1 ] <- 1            #WB winter sample in 2005
+    zeroSectionsDATA[ 4,1,2007 - minYear + 1 ] <- 1            #WB winter sample in 2007
+    zeroSectionsDATA[ 4,1,2012 - minYear + 1 ] <- 1            #WB winter sample in 2012
+    zeroSectionsDATA[ 1,1,2015 - minYear + 1 ] <- 1            #WB spring sample in 2015
+    zeroSectionsDATA[ c(3,4),1:4,2015 - minYear + 1 ] <- 1  #all fall and winter samples in 2015
+
+    if ( removeIncomplete ){
+      # these had only a few sections done - remove for the detection model
+      zeroSectionsDATA[ 4,1,2002 - minYear + 1 ] <- 1          #WB winter sample in 2002
+      zeroSectionsDATA[ 1,1,2004 - minYear + 1 ] <- 1          #WB spring sample in 2004
+    }
+  }
+
+  if (drainage == 'stanley'){
+
+  }
+
+  unsampledSamples <- array2df(zeroSectionsDATA, label.x = "unsampled01") %>%
+    rename( season = d1, riverN = d2, yearN = d3 )
+
+  d$yearN = d$year - minYear + 1
+  d$riverN <- as.numeric(d$riverOrdered)
+
+  d <- left_join(d,unsampledSamples) %>%
+    filter( unsampled01 == 0 )
+
+}
 
 #'Get cutoFFYoy data
 #'
