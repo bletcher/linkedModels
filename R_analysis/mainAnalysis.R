@@ -73,7 +73,7 @@ if ( file.exists(cdFile) ) {
     mergeSites(drainage) %>%
     mutate(drainage = drainage,
            countP = NA) %>% # placeholder so prepareDataForJags() works for detection model
-    addCounts(drainage) # counts and summed masses of all fish, tagged and untagged. Not adjusted for P (happens in addDensities())
+    addRawCounts(drainage, filteredAreas = c("inside","trib")) # counts and summed masses of all fish, tagged and untagged. Not adjusted for P (happens in addDensities())
 
   save(cd, file = cdFile)
 }
@@ -94,7 +94,7 @@ ddddD <- cd %>%
   )
 
 dddD <- ddddD %>%
-  removeUnsampledRows(drainage,removeIncomplete = T) %>% # removes enc=0 rows for samples with no or very few() sections sampled
+  removeUnsampledRows(drainage, removeIncomplete = T) %>% # removes enc=0 rows for samples with no or very few() sections sampled (p=0 otherwise for those samples)
   prepareDataForJags('detection')
 
 if (runDetectionModelTF) {
@@ -172,7 +172,7 @@ for (iter in itersToUse) {
 
   # saving into a list for now, could also map()
 
-  dddG[[ii]] <- addDensityData( ddddG,ddD,ddddD,meanOrIter,iter )
+  dddG[[ii]] <- adjustCounts( ddddG,ddD,ddddD,meanOrIter,iter )
   # dddG[[ii]] <- addBiomassDeltas( dddG[[ii]] )
   dddG[[ii]] <- addSurvivals( dddG[[ii]],ddD,meanOrIter,iter )
   #dddG[[ii]] <- crossValidate( dddG[[ii]],runCrossValidationTF ) # Moved inside prepareDataforJags()

@@ -37,7 +37,7 @@ getCountsAllFish <- function(drainage = "west", filteredAreas = c("inside","trib
     # addEnvironmental() %>%
     # addKnownZ() %>%
     # fillSizeLocation(size = F) #assumes fish stay in same location until observed elsewhere
-    filter( species %in% c('bkt','bnt','ats'))
+    filter( species %in% c('bkt','bnt','ats'), observedLength > 60)
 
     cdWBAll$riverOrdered <- factor(cdWBAll$river,levels=c('west brook', 'wb jimmy', 'wb mitchell',"wb obear"),labels = c("west brook","wb jimmy","wb mitchell","wb obear"), ordered=T)
     cdWBAll$riverN <- as.numeric(cdWBAll$riverOrdered)
@@ -58,21 +58,39 @@ getCountsAllFish <- function(drainage = "west", filteredAreas = c("inside","trib
     return(counts)
 }
 
-#'Add counts for all fish to cd
+#'Add variables with trialing N
 #'
 #'@param drainage Which drainage, "west" or "stanley"
+#'@return a data frame with added variables
+#'@export
+#'
+addxxxxN <- function(d){
+
+  d$seasonN <- d$season
+  d$yearN <- d$year - min(d$year) + 1
+  d$riverN <- as.numeric(d$riverOrdered)
+  d$speciesN <- as.numeric(factor(d$species, levels = c('bkt','bnt','ats'), ordered = T)) #as.numeric(as.factor(d$species))
+
+  return(d)
+}
+
+
+#'Add counts for all fish to cd
+#'
+#'@param drainage Which drainage, "west" or "stanley", filtered areas (default = c('inside','trib'))
 #'@return a data frame with vars nAllFishBySpecies, massAllFishBySpecies and nAllFish, massAllFish
 #'@export
 #'
-addCounts <- function(cd,drainage){
-  allFishBySpecies <- getCountsAllFish(drainage)
-  cd <- cd %>% left_join(allFishBySpecies)
+addRawCounts <- function(cd,drainage,filteredAreas){
+
+  allFishBySpecies <- getCountsAllFish(drainage,filteredAreas)
+  cd <- left_join(cd,allFishBySpecies)
 
   allFish <- allFishBySpecies %>%
     group_by(river,season,year) %>%
     summarize( nAllFish = sum(nAllFishBySpecies, na.rm=T),
                massAllFish = sum(massAllFishBySpecies, na.rm=T))
-  cd <- cd %>% left_join(allFish)
+  cd <- left_join(cd,allFish)
 
   save(allFishBySpecies,allFish, file = './data/out/countsAndMasses.RData')
 
@@ -271,9 +289,10 @@ getPropSampled <- function(nSeasons,nRivers,nYears,minYear){
   propSampledDATA[ 4,1,2004 - minYear + 1 ] <- 3/47         #WB winter sample in 2004
   propSampledDATA[ 4,1,2005 - minYear + 1 ] <- 0            #WB winter sample in 2005
   propSampledDATA[ 4,1,2007 - minYear + 1 ] <- 0            #WB winter sample in 2007
-  propSampledDATA[ 4,1,2012 - minYear + 1 ] <- 0           #WB winter sample in 2012
-  propSampledDATA[ 1,1,2015 - minYear + 1 ] <- 0           #WB spring sample in 2015
-  propSampledDATA[ c(3,4),c(1,4),2015 - minYear + 1 ] <- 0 #all fall and winter samples in 2015
+  propSampledDATA[ 4,1,2012 - minYear + 1 ] <- 0            #WB winter sample in 2012
+  propSampledDATA[ 4,1,2014 - minYear + 1 ] <- 20/47        #WB winter sample in 2014
+  propSampledDATA[ 1,1,2015 - minYear + 1 ] <- 0            #WB spring sample in 2015
+  propSampledDATA[ c(3,4),c(1,4),2015 - minYear + 1 ] <- 0  #all fall and winter samples in 2015
 
   # zeroSectionsDATA - completely unsampled winter samples. not including samples before season 4,year 1 because we didn't want to rewrite the meanPhiS34 indexing [mostly noise ni these estimates anyway]
 
@@ -335,7 +354,7 @@ removeUnsampledRows <- function(d,drainage,removeIncomplete = F){
     if ( removeIncomplete ){
       # these had only a few sections done - remove for the detection model
       zeroSectionsDATA[ 4,1,2002 - minYear + 1 ] <- 1          #WB winter sample in 2002
-      zeroSectionsDATA[ 1,1,2004 - minYear + 1 ] <- 1          #WB spring sample in 2004
+      zeroSectionsDATA[ 4,1,2004 - minYear + 1 ] <- 1          #WB winter sample in 2004
     }
   }
 
@@ -346,12 +365,14 @@ removeUnsampledRows <- function(d,drainage,removeIncomplete = F){
   unsampledSamples <- array2df(zeroSectionsDATA, label.x = "unsampled01") %>%
     rename( season = d1, riverN = d2, yearN = d3 )
 
-  d$yearN = d$year - minYear + 1
-  d$riverN <- as.numeric(d$riverOrdered)
+  d <- d %>% addxxxxN()
+  #d$yearN = d$year - minYear + 1
+  #d$riverN <- as.numeric(d$riverOrdered)
 
   d <- left_join(d,unsampledSamples) %>%
     filter( unsampled01 == 0 )
 
+  return(d)
 }
 
 #'Get cutoFFYoy data

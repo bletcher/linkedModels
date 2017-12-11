@@ -8,7 +8,7 @@ Plots for the manuscript
 ```{r}
 library(tidyverse)
 d <- dddG[[1]]
-#load(file = './data/out/ddD.RData')
+load("D:/projects/linkedModels/data/out/ddD_bktbntats_1997.RData")
 load("D:/projects/linkedModels/data/out/countsAndMasses.RData")
 ```
 
@@ -96,18 +96,18 @@ ggsave('figures/rawCount.png')
   p <- array2df(ddD$q50$pBetaInt, label.x = "est") %>%
     rename(est=est,species=d1,season=d2,river=d3,year=d4)
   ggplot(p, aes(year,invlogit(est))) +geom_point() + facet_grid(season ~ river + species)
-
+  ggsave('figures/p.png')
   
   phi <- array2df(ddD$q50$phiBetaInt, label.x = "est") %>%
     rename(est=est,species=d1,season=d2,river=d3,year=d4)
   ggplot(phi, aes(year,invlogit(est))) +geom_point() + facet_grid(season ~ river + species)
 
     
-  tmp <- dddD[[2]] %>%
-           group_by(riverOrdered,year,season,section) %>%
-           summarize( s = sum(enc) ) %>%
-           filter( s == 0 )
-  table(tmp$riverOrdered,tmp$year,tmp$season)
+  # tmp <- dddD[[2]] %>%
+  #          group_by(riverOrdered,year,season,section) %>%
+  #          summarize( s = sum(enc) ) %>%
+  #          filter( s == 0 )
+  # table(tmp$riverOrdered,tmp$year,tmp$season)
   
 ```
 
@@ -120,7 +120,7 @@ d$seasonGG <- factor(d$season, labels = c("Spring","Summer","Autumn","Winter"), 
 d$speciesGG <- factor(d$species, levels = c('bkt','bnt','ats'), labels = c("Brook Trout", "Brown Trout", "Atlantic Salmon"), ordered = T)
 
 
-ggplot(d, aes(year,countPAllSpp)) +
+ggplot(d, aes(year,nAllFishP)) +
   geom_point() +
   geom_line() +
   labs( x = "Year", y = "Estimated count") +
@@ -130,9 +130,10 @@ ggplot(d, aes(year,countPAllSpp)) +
 
 ggsave('figures/count.png')
 
-ggplot(d, aes(year,countP.y,color=species)) +
-  geom_point() +
-  geom_line() +
+ggplot(d, aes(year,nAllFishBySpeciesP)) +
+  geom_point(aes(color=species)) +
+  geom_line(aes(color=species)) +
+   geom_line(  aes(year,nAllFishP) ) +
   labs( x = "Year", y = "Estimated count") +
 #  ylim(0,2500) +
   theme_publication() +

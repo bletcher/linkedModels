@@ -20,9 +20,9 @@ runDetectionModel <- function(d, parallel = FALSE){   #iterToUse, firstNonBurnIt
                  parameters.to.save = params,
                  model.file = "./jags/detModel.jags",
                  n.chains = 3,
-                 n.adapt = 150, #1000
-                 n.iter = 200,
-                 n.burnin = 50,
+                 n.adapt = 500, #1000
+                 n.iter = 700,
+                 n.burnin = 200,
                  n.thin = 4,
                  parallel = parallel
   )
@@ -42,30 +42,34 @@ runDetectionModel <- function(d, parallel = FALSE){   #iterToUse, firstNonBurnIt
 #'@return a data frame
 #'@export
 
-getDensities <- function(dddd,dd, meanOrIter = "mean", sampleToUse = sampleToUse){
+getDensities <- function(ddddDIn,ddDIn, meanOrIter = "mean", sampleToUse = sampleToUse){
 
-  try( if (sampleToUse > dd$mcmc.info$n.samples) stop("requested iteration beyond max # of iterations") )
+  try( if (sampleToUse > ddDIn$mcmc.info$n.samples) stop("requested iteration beyond max # of iterations") )
 
-  counts <- dddd %>%
-    #   filter( enc == 1 ) %>%
-    filter( area %in% c("inside","trib") ) %>%
-    group_by( species,season,riverOrdered,year ) %>%
-    dplyr::summarise( count = n() ) %>%
-    mutate( speciesN = as.numeric(as.factor(species)),
-            seasonN = season,
-            riverN = as.numeric(riverOrdered),
-            yearN = year - min(year) + 1
-    ) %>%
-    ungroup()
+  # counts <- ddddDIn %>%
+  #   filter( enc == 1 ) %>%
+  #   filter( area %in% c("inside","trib") ) %>%
+  #   group_by( species,season,riverOrdered,year ) %>%
+  #   dplyr::summarise( count = n() ) %>%
+  #   mutate( speciesN = as.numeric(as.factor(species)),
+  #           seasonN = season,
+  #           riverN = as.numeric(riverOrdered),
+  #           yearN = year - min(year) + 1
+  #   ) %>%
+  #   ungroup()
 
-  if ( meanOrIter == 'mean') ddIn <- dd$q50$pBetaInt
-  if ( meanOrIter == 'iter') ddIn <- dd$sims.list$pBetaInt[ sampleToUse,,,, ]
+  counts <- ddddDIn %>%
+    addxxxxN() %>%
+    distinct(species,season,riverOrdered,year,speciesN,seasonN,riverN,yearN,nAllFishBySpecies,nAllFish,massAllFishBySpecies,massAllFish)
+
+  if ( meanOrIter == 'mean') dd <- ddDIn$q50$pBetaInt
+  if ( meanOrIter == 'iter') dd <- ddDIn$sims.list$pBetaInt[ sampleToUse,,,, ]
 
   #print(c("in getDensities()",meanOrIter,ddIn))
 
   #pBetaInt[ species,season,riverDATA,year ]
   # convert array to data frame
-  p <- as.data.frame.table(ddIn) %>%
+  p <- as.data.frame.table(dd) %>%
     rename( speciesN = Var1,
             seasonN = Var2,
             riverN = Var3,
@@ -79,8 +83,15 @@ getDensities <- function(dddd,dd, meanOrIter = "mean", sampleToUse = sampleToUse
             p = invlogit( logitP )
     )
 
-  p <- left_join( p, counts ) %>%
-    mutate( countP = count/p )
+  p <- left_join( p, counts, by = c('speciesN','seasonN','riverN','yearN') ) %>%
+         mutate( nAllFishBySpeciesP = nAllFishBySpecies/p )
+
+  # get counts of all speices by summing nAllFishBySpeciesP across species
+  p2 <- p %>%
+    group_by(speciesN,seasonN,riverN,yearN) %>%
+    summarize( nAllFishP = sum(nAllFishBySpeciesP, na.rm=T))
+
+  p <- left_join(p,p2)
 
   return(p)
 }
