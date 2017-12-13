@@ -20,9 +20,9 @@ runDetectionModel <- function(d, parallel = FALSE){   #iterToUse, firstNonBurnIt
                  parameters.to.save = params,
                  model.file = "./jags/detModel.jags",
                  n.chains = 3,
-                 n.adapt = 500, #1000
-                 n.iter = 700,
-                 n.burnin = 200,
+                 n.adapt = 200, #1000
+                 n.iter = 200,
+                 n.burnin = 100,
                  n.thin = 4,
                  parallel = parallel
   )
@@ -86,9 +86,10 @@ getDensities <- function(ddddDIn,ddDIn, meanOrIter = "mean", sampleToUse = sampl
   p <- left_join( p, counts, by = c('speciesN','seasonN','riverN','yearN') ) %>%
          mutate( nAllFishBySpeciesP = nAllFishBySpecies/p )
 
-  # get counts of all speices by summing nAllFishBySpeciesP across species
+  # get counts of all species by summing nAllFishBySpeciesP across species
   p2 <- p %>%
-    group_by(speciesN,seasonN,riverN,yearN) %>%
+ #   group_by(speciesN,seasonN,riverN,yearN) %>%
+    group_by(seasonN,riverN,yearN) %>%
     summarize( nAllFishP = sum(nAllFishBySpeciesP, na.rm=T))
 
   p <- left_join(p,p2)

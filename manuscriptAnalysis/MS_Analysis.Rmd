@@ -83,31 +83,32 @@ ggsave('figures/rawCount.png')
 
 
 ```{r p(detection)}
-  ggPInt <- array2df(ddD$sims.list$pBetaInt, label.x = "est")
-
-  ggPInt$chain <- rep(1:ddD$mcmc.info$n.chains, each = ddD$mcmc.info$n.samples/ddD$mcmc.info$n.chains)
-  ggPInt$iter <- 1:as.numeric(ddD$mcmc.info$n.samples/ddD$mcmc.info$n.chains)
-  
-  ggplot(filter(ggPInt), aes(iter,est)) + 
-    geom_point( aes(color=factor(chain)), size = 0.1 ) + 
-    ylim(-1.5,1.5) + 
-    facet_grid(d2+d4~d5+d3)
+  # ggPInt <- array2df(ddD$sims.list$pBetaInt, label.x = "est")
+  # 
+  # ggPInt$chain <- rep(1:ddD$mcmc.info$n.chains, each = ddD$mcmc.info$n.samples/ddD$mcmc.info$n.chains)
+  # ggPInt$iter <- 1:as.numeric(ddD$mcmc.info$n.samples/ddD$mcmc.info$n.chains)
+  # 
+  # ggplot(filter(ggPInt), aes(iter,est)) + 
+  #   geom_point( aes(color=factor(chain)), size = 0.1 ) + 
+  #   ylim(-1.5,1.5) + 
+  #   facet_grid(d2+d4~d5+d3)
 
   p <- array2df(ddD$q50$pBetaInt, label.x = "est") %>%
     rename(est=est,species=d1,season=d2,river=d3,year=d4)
   ggplot(p, aes(year,invlogit(est))) +geom_point() + facet_grid(season ~ river + species)
-  ggsave('figures/p.png')
+ 
+   ggsave('figures/p.png')
   
   phi <- array2df(ddD$q50$phiBetaInt, label.x = "est") %>%
     rename(est=est,species=d1,season=d2,river=d3,year=d4)
   ggplot(phi, aes(year,invlogit(est))) +geom_point() + facet_grid(season ~ river + species)
 
-    
-  # tmp <- dddD[[2]] %>%
-  #          group_by(riverOrdered,year,season,section) %>%
-  #          summarize( s = sum(enc) ) %>%
-  #          filter( s == 0 )
-  # table(tmp$riverOrdered,tmp$year,tmp$season)
+# # of skunked sections    
+  tmp <- dddD[[2]] %>%
+           group_by(riverOrdered,year,season,section) %>%
+           summarize( s = sum(enc) ) %>%
+           filter( s == 0 )
+  table(tmp$riverOrdered,tmp$year,tmp$season)
   
 ```
 
@@ -120,9 +121,9 @@ d$seasonGG <- factor(d$season, labels = c("Spring","Summer","Autumn","Winter"), 
 d$speciesGG <- factor(d$species, levels = c('bkt','bnt','ats'), labels = c("Brook Trout", "Brown Trout", "Atlantic Salmon"), ordered = T)
 
 
-ggplot(d, aes(year,nAllFishP)) +
-  geom_point() +
-  geom_line() +
+ggplot(d, aes(year,nAllFishBySpeciesP)) +
+  geom_point(aes(color=speciesGG)) +
+  geom_line(aes(color=speciesGG)) +
   labs( x = "Year", y = "Estimated count") +
 #  ylim(0,2500) +
   theme_publication() +

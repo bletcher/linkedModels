@@ -325,15 +325,6 @@ getPropSampled <- function(nSeasons,nRivers,nYears,minYear){
 #'@return a data frame
 #'@export
 
-# zeroSectionsDATA - completely unsampled winter samples. not including samples before season 4,year 1 because we didn't want to rewrite the meanPhiS34 indexing [mostly noise ni these estimates anyway]
-
-# tmp2 <- dddD[[2]] %>%
-#          group_by(riverOrdered,year,season) %>%
-#          summarize( s = sum(enc) ) %>%
-#          filter( s == 0 )
-# # show unsampled river/year/season combos
-# table(tmp2$riverOrdered,tmp2$year,tmp2$season)
-#
 removeUnsampledRows <- function(d,drainage,removeIncomplete = F){
 
   nSeasons <- n_distinct(d$season, na.rm = T)
@@ -373,6 +364,15 @@ removeUnsampledRows <- function(d,drainage,removeIncomplete = F){
     filter( unsampled01 == 0 )
 
   return(d)
+  # zeroSectionsDATA - completely unsampled winter samples. not including samples before season 4,year 1 because we didn't want to rewrite the meanPhiS34 indexing [mostly noise ni these estimates anyway]
+
+  # tmp2 <- dddD[[2]] %>%
+  #          group_by(riverOrdered,year,season) %>%
+  #          summarize( s = sum(enc) ) %>%
+  #          filter( s == 0 )
+  # # show unsampled river/year/season combos
+  # table(tmp2$riverOrdered,tmp2$year,tmp2$season)
+  #
 }
 
 #'Get cutoFFYoy data

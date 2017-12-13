@@ -41,8 +41,8 @@ runGrowthModel <- function(d, parallel = FALSE){
                 parameters.to.save = params,
                 model.file = "./jags/grModel6.jags",
                 n.chains = 3,
-                n.adapt = 250, #1000
-                n.iter = 250,
+                n.adapt = 100, #1000
+                n.iter = 200,
                 n.burnin = 100,
                 n.thin = 5,
                 parallel = parallel
@@ -91,30 +91,31 @@ adjustCounts <- function( ddddGIn,ddDIn,ddddDIn,meanOrIterIn,sampleToUse ){
   denForMergeSummaryBySpecies <- denForMerge %>%
     group_by( species,season,riverOrdered ) %>%
     summarize( nAllFishBySpeciesPMean = mean( nAllFishBySpeciesP, na.rm = T ),
-               nAllFishBySpeciesPSD = sd( nAllFishBySpeciesP, na.rm = T),
+               nAllFishBySpeciesPSD =     sd( nAllFishBySpeciesP, na.rm = T),
                massAllFishBySpeciesMean = mean( massAllFishBySpecies, na.rm = T ),
-               massAllFishBySpeciesSD = sd( massAllFishBySpecies, na.rm = T))
+               massAllFishBySpeciesSD =     sd( massAllFishBySpecies, na.rm = T))
 
   # counts for all species
   denForMergeSummary <- denForMerge %>%
     group_by( season,riverOrdered ) %>%
     summarize( nAllFishPMean = mean( nAllFishP, na.rm = T ),
-               nAllFishPSD = sd( nAllFishP, na.rm = T),
+               nAllFishPSD =     sd( nAllFishP, na.rm = T),
                massAllFishMean = mean( massAllFish, na.rm = T ),
-               massAllFishSD = sd( massAllFish, na.rm = T) )
+               massAllFishSD =     sd( massAllFish, na.rm = T) )
 
 
   denForMerge2 <- left_join( denForMerge, denForMergeSummaryBySpecies ) %>%
                   left_join( denForMergeSummary ) %>%
                   mutate( nAllFishBySpeciesPStd = ( nAllFishBySpeciesP - nAllFishBySpeciesPMean )/nAllFishBySpeciesPSD,
-                          nAllFishPStd = ( nAllFishP - nAllFishPMean )/nAllFishPSD,
+                          nAllFishPStd =          ( nAllFishP -          nAllFishPMean )         /nAllFishPSD,
                           massAllFishBySpeciesStd = ( massAllFishBySpecies - massAllFishBySpeciesMean )/massAllFishBySpeciesSD,
-                          massAllFishPStd = ( massAllFish - massAllFishMean )/massAllFishSD)
+                          massAllFishPStd =         ( massAllFish -          massAllFishMean )         /massAllFishSD)
 
   ddddGIn <- left_join( ddddGIn,denForMerge2, by = (c("species", "year", "season", "riverOrdered")) )
 
   # counts are missing for samples with propSampled == 0. For now, fill in mean (0). Need this for when enc==0 and propSampled==0 in the gr model
-  ddddGIn$nAllFishBySpeciesPStd <- ifelse( is.na(ddddGIn$nAllFishBySpeciesPStd), 0, ddddGIn$nAllFishBySpeciesPStd )
+  #should this be a low # instead of 0???
+  ddddGIn$nAllFishBySpeciesPStd <-   ifelse( is.na(ddddGIn$nAllFishBySpeciesPStd),   0, ddddGIn$nAllFishBySpeciesPStd )
   ddddGIn$massAllFishBySpeciesStd <- ifelse( is.na(ddddGIn$massAllFishBySpeciesStd), 0, ddddGIn$massAllFishBySpeciesStd )
 
   #####

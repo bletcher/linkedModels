@@ -177,6 +177,8 @@ for (iter in itersToUse) {
   dddG[[ii]] <- addSurvivals( dddG[[ii]],ddD,meanOrIter,iter )
   #dddG[[ii]] <- crossValidate( dddG[[ii]],runCrossValidationTF ) # Moved inside prepareDataforJags()
 
+  dddG[[ii]] <- dddG[[ii]] %>% filter(tag != '1c2d6c51d3') # salmon with many missing obs before last one - trouble estimating
+
   ddG[[ii]] <- dddG[[ii]] %>% prepareDataForJags("growth") # returns a list, list for running model in [[1]], input df in [[2]]
 
   #####
@@ -202,6 +204,8 @@ for (iter in itersToUse) {
 
   save(dG,ddG,dddG, file = paste0('./data/out/dG_', as.integer(Sys.time()),'_', modelName, '.RData'))
 }
+
+ggplot(ddG[[1]][[2]], aes(nAllFishBySpeciesPStd,grLength)) + geom_point() + facet_grid(species+river~season)
 
 whiskerplot(dG[[1]], parameters = "lengthExp[1:20]")
 traceplot(dG[[1]], parameters = "lengthExp[7:8]")
@@ -239,11 +243,14 @@ jagsUI::traceplot(dG[[1]], parameters = "grBetaMu")
 # isYOY[ evalRows[i] ],species[ evalRows[i]],season[ evalRows[i] ],riverDATA[ evalRows[i] ]
 # [1:675, 1, 1:2, 1:2, 1:4, 1:4]
 plotInt <- function(){
-  ggGrInt <- array2df(dG[[1]]$sims.list$grInt, label.x = "est")
+  ggGrInt <- array2df(dG[[1]]$sims.list$grInt, label.x = "est") %>%
+    rename(yoy=d2,species=d3,season=d4,river=d5)
 
   ggGrInt$chain <- rep(1:dG[[1]]$mcmc.info$n.chains, each = dG[[1]]$mcmc.info$n.samples/dG[[1]]$mcmc.info$n.chains)
   ggGrInt$iter <- 1:as.numeric(dG[[1]]$mcmc.info$n.samples/dG[[1]]$mcmc.info$n.chains)
-  gg <- ggplot(filter(ggGrInt), aes(iter,est)) + geom_point( aes(color=factor(chain)), size = 0.1 ) + ylim(-1.5,1.5) + facet_grid(d2+d4~d5+d3)
+  gg <- ggplot(filter(ggGrInt), aes(iter,est)) + geom_point( aes(color=factor(chain)), size = 0.1 ) + ylim(-1.5,1.5) +
+ #   facet_grid(d2+d4~d5+d3)
+    facet_grid(yoy + river ~ season + species)
   print(gg)
 }
 
@@ -270,7 +277,7 @@ plotSigma <- function(){
 
   ggSigmaInt$chain <- rep(1:dG[[1]]$mcmc.info$n.chains, each = dG[[1]]$mcmc.info$n.samples/dG[[1]]$mcmc.info$n.chains)
   ggSigmaInt$iter <- 1:as.numeric(dG[[1]]$mcmc.info$n.samples/dG[[1]]$mcmc.info$n.chains)
-  gg <- ggplot(filter(ggSigmaInt), aes(iter,est)) + geom_point( aes(color=factor(chain)), size = 0.1 ) + facet_grid(d2+d4~d5+d3)
+  gg <- ggplot(filter(ggSigmaInt), aes(iter,est)) + geom_point( aes(color=factor(chain)), size = 0.1 ) + ylim(-5,5) + facet_grid(d2+d4~d5+d3)
   print(gg)
 }
 
