@@ -34,8 +34,12 @@ library(tidyverse)
 
 drainage <- "west" # ==
 
-species <- c("bkt", "bnt","ats") #
-speciesIn <- factor(species, levels = c('bkt','bnt','ats'), ordered = T)
+speciesDet <- c("bkt", "bnt","ats") #keep as all three spp
+speciesInDet <- factor(speciesDet, levels = c('bkt','bnt','ats'), ordered = T)
+
+speciesGr <- "ats" #c("bkt", "bnt","ats") #
+speciesInGr <- factor(speciesGr, levels = c('bkt','bnt','ats'), ordered = T)
+
 riverOrderedIn <- factor(c('west brook', 'wb jimmy', 'wb mitchell',"wb obear"),levels=c('west brook', 'wb jimmy', 'wb mitchell',"wb obear"),labels = c("west brook","wb jimmy","wb mitchell","wb obear"), ordered = T)
 
 minCohort <- 1997#1995 # >=
@@ -73,7 +77,8 @@ if ( file.exists(cdFile) ) {
     mergeSites(drainage) %>%
     mutate(drainage = drainage,
            countP = NA) %>% # placeholder so prepareDataForJags() works for detection model
-    addRawCounts(drainage, filteredAreas = c("inside","trib")) # counts and summed masses of all fish, tagged and untagged. Not adjusted for P (happens in addDensities())
+    addRawCounts(drainage, filteredAreas = c("inside","trib")) %>% # counts and summed masses of all fish, tagged and untagged. Not adjusted for P (happens in addDensities())
+    removeUnsampledRows(drainage, removeIncomplete = T) # removes enc=0 rows for samples with no or very few() sections sampled (p=0 otherwise for those samples)
 
   save(cd, file = cdFile)
 }
@@ -83,19 +88,20 @@ if ( file.exists(cdFile) ) {
 ##################
 #
 #
-dModelName <- paste0(paste0(species,collapse = ''),"_",minCohort)
+dModelName <- paste0(paste0(speciesDet,collapse = ''),"_",minCohort)
 
 (start <- Sys.time())
 
 ddddD <- cd %>%
-  filter(  species %in% speciesIn,
+  filter(  species %in% speciesInDet,
            cohort >= minCohort,
            sampleInterval < maxSampleInterval  # this removes the later yearly samples. Want to stick with seasonal samples
   )
 
 dddD <- ddddD %>%
-  removeUnsampledRows(drainage, removeIncomplete = T) %>% # removes enc=0 rows for samples with no or very few() sections sampled (p=0 otherwise for those samples)
   prepareDataForJags('detection')
+
+dddD[[1]]$nSpecies <- 3 #force three species so indexing matches speciesIn, e.g. ats = 3 even if ats-only model
 
 if (runDetectionModelTF) {
   ddD <- dddD[[1]] %>% runDetectionModel(parallel = TRUE)
@@ -104,6 +110,9 @@ if (runDetectionModelTF) {
 }
 done <- Sys.time()
 (elapsed <- done - start)
+
+# add counts derived from counts/p to cd. ddD and ddddD need to have all three spp to create spp-specific abundances
+cd <- adjustCounts( cd,ddD,ddddD,meanOrIter,iter )
 
 # with full intercepts, effect of nPasses is insignificant (massive overlap). Leaving, nPasses out. Just going with pBetaInt.
 #whiskerplot(ddD, parameters = "pBetaInt")
@@ -123,7 +132,7 @@ done <- Sys.time()
 #
 
 ddddG <- cd %>%
-  filter(  species %in% speciesIn,
+  filter(  species %in% speciesInGr,
            cohort >= minCohort,
            sampleInterval < maxSampleInterval, # this removes the later yearly samples. Want to stick with seasonal samples
            #enc == 1 #change to btw first and last so we can impute missing obs?
@@ -158,7 +167,7 @@ if (meanOrIter == "iter") {
 ######################################
 ### loop over iters
 
-modelName <- paste0(paste0(species,collapse = ''),minCohort)
+modelName <- paste0(paste0(speciesGr,collapse = ''),minCohort)
 
 dddG <- list()
 ddG <- list()
@@ -172,14 +181,18 @@ for (iter in itersToUse) {
 
   # saving into a list for now, could also map()
 
-  dddG[[ii]] <- adjustCounts( ddddG,ddD,ddddD,meanOrIter,iter )
+  #dddG[[ii]] <- adjustCounts( ddddG,ddD,ddddD,meanOrIter,iter )
+
   # dddG[[ii]] <- addBiomassDeltas( dddG[[ii]] )
-  dddG[[ii]] <- addSurvivals( dddG[[ii]],ddD,meanOrIter,iter )
+  dddG[[ii]] <- addSurvivals( ddddG,ddD,meanOrIter,iter )
   #dddG[[ii]] <- crossValidate( dddG[[ii]],runCrossValidationTF ) # Moved inside prepareDataforJags()
 
   dddG[[ii]] <- dddG[[ii]] %>% filter(tag != '1c2d6c51d3') # salmon with many missing obs before last one - trouble estimating
 
   ddG[[ii]] <- dddG[[ii]] %>% prepareDataForJags("growth") # returns a list, list for running model in [[1]], input df in [[2]]
+
+  ddG[[ii]][[1]]$nSpecies <- 3 #force three species so indexing matches speciesIn, e.g. ats = 3 even if ats-only model. Other spp will get priors
+
 
   #####
   start <- Sys.time()
@@ -194,7 +207,7 @@ for (iter in itersToUse) {
 
   getRMSE()
   #####
-
+source("./R/plotFunctions.R") #will put into functions later
   plotInt()
   plotBetas(1:2)
 
@@ -242,60 +255,6 @@ jagsUI::traceplot(dG[[1]], parameters = "grBetaMu")
 
 # isYOY[ evalRows[i] ],species[ evalRows[i]],season[ evalRows[i] ],riverDATA[ evalRows[i] ]
 # [1:675, 1, 1:2, 1:2, 1:4, 1:4]
-plotInt <- function(){
-  ggGrInt <- array2df(dG[[1]]$sims.list$grInt, label.x = "est") %>%
-    rename(yoy=d2,species=d3,season=d4,river=d5)
-
-  ggGrInt$chain <- rep(1:dG[[1]]$mcmc.info$n.chains, each = dG[[1]]$mcmc.info$n.samples/dG[[1]]$mcmc.info$n.chains)
-  ggGrInt$iter <- 1:as.numeric(dG[[1]]$mcmc.info$n.samples/dG[[1]]$mcmc.info$n.chains)
-  gg <- ggplot(filter(ggGrInt), aes(iter,est)) + geom_point( aes(color=factor(chain)), size = 0.1 ) + ylim(-1.5,1.5) +
- #   facet_grid(d2+d4~d5+d3)
-    facet_grid(yoy + river ~ season + species)
-  print(gg)
-}
-
-# isYOY[ evalRows[i] ],species[ evalRows[i]],season[ evalRows[i] ],riverDATA[ evalRows[i] ]
-# [1:675, 1, 1:2, 1:2, 1:4, 1:4]
-plotBetas <- function(b){
-  ggGrBeta <- array2df(dG[[1]]$sims.list$grBeta, label.x = "est")
-
-  ggGrBeta$chain <- rep(1:dG[[1]]$mcmc.info$n.chains, each = dG[[1]]$mcmc.info$n.samples/dG[[1]]$mcmc.info$n.chains)
-  ggGrBeta$iter <- 1:as.numeric(dG[[1]]$mcmc.info$n.samples/dG[[1]]$mcmc.info$n.chains)
-
-  gg <- list()
-  numBetas <- 18
-  for (i in 1:numBetas){
-    gg[[i]] <- ggplot(filter(ggGrBeta,d2 == i), aes(iter,est)) + geom_hline(yintercept = 0) + geom_point( aes(color = factor(chain)), size = 0.1 ) + ylim(-1,1) + facet_grid(d3+d5~d6+d4) + ggtitle(paste("beta =", i))
-    if(i %in% b) print(gg[[i]])
-  }
-}
-
-# isYOY[ evalRows[i] ],species[ evalRows[i]],season[ evalRows[i] ],riverDATA[ evalRows[i] ]
-# [1:675, 1, 1:2, 1:2, 1:4, 1:4]
-plotSigma <- function(){
-  ggSigmaInt <- array2df(dG[[1]]$sims.list$grSigma, label.x = "est")
-
-  ggSigmaInt$chain <- rep(1:dG[[1]]$mcmc.info$n.chains, each = dG[[1]]$mcmc.info$n.samples/dG[[1]]$mcmc.info$n.chains)
-  ggSigmaInt$iter <- 1:as.numeric(dG[[1]]$mcmc.info$n.samples/dG[[1]]$mcmc.info$n.chains)
-  gg <- ggplot(filter(ggSigmaInt), aes(iter,est)) + geom_point( aes(color=factor(chain)), size = 0.1 ) + ylim(-5,5) + facet_grid(d2+d4~d5+d3)
-  print(gg)
-}
-
-# isYOY[ evalRows[i] ],species[ evalRows[i]],season[ evalRows[i] ],riverDATA[ evalRows[i] ]
-# [1:675, 1, 1:2, 1:2, 1:4, 1:4]
-plotSigmaBetas <- function(b){
-  ggGrBeta <- array2df(dG[[1]]$sims.list$sigmaBeta, label.x = "est")
-
-  ggGrBeta$chain <- rep(1:dG[[1]]$mcmc.info$n.chains, each = dG[[1]]$mcmc.info$n.samples/dG[[1]]$mcmc.info$n.chains)
-  ggGrBeta$iter <- 1:as.numeric(dG[[1]]$mcmc.info$n.samples/dG[[1]]$mcmc.info$n.chains)
-
-  gg <- list()
-  numBetas <- 4
-  for (i in 1:numBetas){
-    gg[[i]] <- ggplot(filter(ggGrBeta,d2 == i), aes(iter,est)) + geom_hline(yintercept = 0) + geom_point( aes(color = factor(chain)), size = 0.1 ) + ylim(-1,1) + facet_grid(d3+d5~d6+d4) + ggtitle(paste("beta =", i))
-    if(i %in% b) print(gg[[i]])
-  }
-}
 
 ######################################
 
