@@ -37,16 +37,17 @@ drainage <- "west" # ==
 speciesDet <- c("bkt", "bnt","ats") #keep as all three spp
 speciesInDet <- factor(speciesDet, levels = c('bkt','bnt','ats'), ordered = T)
 
-speciesGr <- "ats" #c("bkt", "bnt","ats") #
-speciesInGr <- factor(speciesGr, levels = c('bkt','bnt','ats'), ordered = T)
-
 riverOrderedIn <- factor(c('west brook', 'wb jimmy', 'wb mitchell',"wb obear"),levels=c('west brook', 'wb jimmy', 'wb mitchell',"wb obear"),labels = c("west brook","wb jimmy","wb mitchell","wb obear"), ordered = T)
 
 minCohort <- 1997#1995 # >=
 maxSampleInterval <- 200 # <
-runDetectionModelTF <- T
+runDetectionModelTF <- F
 runCrossValidationTF <- F
 percentLeftOut <- 10
+
+meanOrIter <- "mean"; iter <- 1
+####### or ########
+#meanOrIter = "iter"
 
 reconnect()
 
@@ -78,14 +79,16 @@ if ( file.exists(cdFile) ) {
     mutate(drainage = drainage,
            countP = NA) %>% # placeholder so prepareDataForJags() works for detection model
     addRawCounts(drainage, filteredAreas = c("inside","trib")) %>% # counts and summed masses of all fish, tagged and untagged. Not adjusted for P (happens in addDensities())
-    removeUnsampledRows(drainage, removeIncomplete = T) # removes enc=0 rows for samples with no or very few() sections sampled (p=0 otherwise for those samples)
+    removeUnsampledRows(drainage, removeIncomplete = T) %>% # removes enc=0 rows for samples with no or very few() sections sampled (p=0 otherwise for those samples)
+    removeLowAbundanceRivers(drainage) # removes ats,jimmy fish from drainage=='west' - too few fish for estimates
 
   save(cd, file = cdFile)
 }
 
 #################################
 # Detection model
-##################
+# all species at once
+#################################
 #
 #
 dModelName <- paste0(paste0(speciesDet,collapse = ''),"_",minCohort)
@@ -101,15 +104,17 @@ ddddD <- cd %>%
 dddD <- ddddD %>%
   prepareDataForJags('detection')
 
-dddD[[1]]$nSpecies <- 3 #force three species so indexing matches speciesIn, e.g. ats = 3 even if ats-only model
-
 if (runDetectionModelTF) {
   ddD <- dddD[[1]] %>% runDetectionModel(parallel = TRUE)
   save(ddD,dddD,ddddD, file = paste0('./data/out/ddD_', dModelName,'.RData'))
   #whiskerplot(ddD, parameters="pBetaInt")
+
+  done <- Sys.time()
+  (elapsed <- done - start)
+
+} else {
+  load(file = paste0('./data/out/ddD_', dModelName,'.RData'))
 }
-done <- Sys.time()
-(elapsed <- done - start)
 
 # add counts derived from counts/p to cd. ddD and ddddD need to have all three spp to create spp-specific abundances
 cd <- adjustCounts( cd,ddD,ddddD,meanOrIter,iter )
@@ -125,21 +130,26 @@ cd <- adjustCounts( cd,ddD,ddddD,meanOrIter,iter )
 # until they are seen somewhere else.
 # Accomplished with %>% fillSizeLocation(size = F) in getCoreData()
 
-#################################
+##########################################################################################################################################
 # Growth model
+# One species at a time
 ###############
 #
 #
+speciesGr <- "bkt"
+#speciesInGr <- factor(speciesGr, levels = c('bkt','bnt','ats'), ordered = T)
+
 
 ddddG <- cd %>%
-  filter(  species %in% speciesInGr,
+  filter(  species %in% speciesGr,
            cohort >= minCohort,
            sampleInterval < maxSampleInterval, # this removes the later yearly samples. Want to stick with seasonal samples
            #enc == 1 #change to btw first and last so we can impute missing obs?
            knownZ == 1
+
+           #riverN == 1 ############
   )
 nSeasons <- n_distinct(ddddG$season, na.rm=T)
-load(file = paste0('./data/out/ddD_', dModelName,'.RData'))
 
 # merge in density data, either overall means or single iterations at a time
 # meanOrIter ="mean" uses means of all iterations
@@ -148,10 +158,6 @@ load(file = paste0('./data/out/ddD_', dModelName,'.RData'))
 
 ######################################
 ######################################
-
-meanOrIter <- "mean"
-####### or ########
-#meanOrIter = "iter"
 
 chainToUse <- 1
 numItersToUse <- 2
@@ -176,23 +182,17 @@ print(elapsed)
 elapsed <- list()
 # run the growth model for detection model iterations in itersToUse
 ii <- 0
-for (iter in itersToUse) {
+iter=1
+#######for (iter in itersToUse) {
   ii <- ii + 1
 
   # saving into a list for now, could also map()
 
-  #dddG[[ii]] <- adjustCounts( ddddG,ddD,ddddD,meanOrIter,iter )
-
   # dddG[[ii]] <- addBiomassDeltas( dddG[[ii]] )
   dddG[[ii]] <- addSurvivals( ddddG,ddD,meanOrIter,iter )
-  #dddG[[ii]] <- crossValidate( dddG[[ii]],runCrossValidationTF ) # Moved inside prepareDataforJags()
-
   dddG[[ii]] <- dddG[[ii]] %>% filter(tag != '1c2d6c51d3') # salmon with many missing obs before last one - trouble estimating
 
   ddG[[ii]] <- dddG[[ii]] %>% prepareDataForJags("growth") # returns a list, list for running model in [[1]], input df in [[2]]
-
-  ddG[[ii]][[1]]$nSpecies <- 3 #force three species so indexing matches speciesIn, e.g. ats = 3 even if ats-only model. Other spp will get priors
-
 
   #####
   start <- Sys.time()
@@ -200,6 +200,8 @@ for (iter in itersToUse) {
   print(c("in loop",meanOrIter,ii,iter))
 
   dG[[ii]] <- ddG[[ii]][[1]] %>% runGrowthModel( parallel = TRUE )
+
+  save(dG,ddG,dddG, file = paste0('./data/out/dG_', as.integer(Sys.time()),'_', modelName, '.RData'))
 
   done <- Sys.time()
   elapsed[[ii]] <- done - start
@@ -210,13 +212,15 @@ for (iter in itersToUse) {
 source("./R/plotFunctions.R") #will put into functions later
   plotInt()
   plotBetas(1:2)
+  plotBetas(3:4)
+  plotBetas(5:18)
 
   plotSigma()
   plotSigmaBetas(1:2)
   plotSigmaBetas(3:4)
 
-  save(dG,ddG,dddG, file = paste0('./data/out/dG_', as.integer(Sys.time()),'_', modelName, '.RData'))
-}
+
+##### }
 
 ggplot(ddG[[1]][[2]], aes(nAllFishBySpeciesPStd,grLength)) + geom_point() + facet_grid(species+river~season)
 
@@ -231,10 +235,10 @@ jagsUI::traceplot(dG[[1]], parameters = "grSigma")
 jagsUI::traceplot(dG[[1]], parameters = "grInt[2,1,1,3]")
 jagsUI::traceplot(dG[[1]], parameters = "grIntSigma")
 
-whiskerplot(dG[[1]], parameters = "sigmaInt")
-whiskerplot(dG[[1]], parameters = "sigmaBetaMu")
+whiskerplot(dG[[1]], parameters = "grSigma")
+whiskerplot(dG[[1]], parameters = "grSigmaMu")
 whiskerplot(dG[[1]], parameters = "sigmaBetaSigma")
-whiskerplot(dG[[1]], parameters = "sigmaBeta[4,,,,]")
+whiskerplot(dG[[1]], parameters = "sigmaBeta")
 traceplot(dG[[1]], parameters = "sigmaIntSigma")
 
 whiskerplot(dG[[1]], parameters = "grBeta")
@@ -243,7 +247,7 @@ whiskerplot(dG[[1]], parameters = "grBetaMu")
 whiskerplot(dG[[1]], parameters = "grBetaSigma")
 jagsUI::traceplot(dG[[1]], parameters = "grBeta")
 
-whiskerplot(dG[[1]], parameters = "grIndRE[1:10]")
+whiskerplot(dG[[1]], parameters = "grIndRE[1:100]")
 jagsUI::traceplot(dG[[1]], parameters = "grIndRE[1:10]")
 
 whiskerplot(dG[[1]], parameters = "grBetaMu")
@@ -270,10 +274,10 @@ p <- getPrediction( dG[[1]], limits, nPoints, itersForPred, c("len", "temp", "fl
 #######################
 # graph function, in analyzeOutputFunctions.R
 
-plotPred(p, "len", 1, "bkt")
+plotPred(p, "len", 1, "bkt") #spp is just a pss-through for title until I combine the species results into one df
 plotPred(p, "temp", 1, "bkt")
 plotPred(p, "flow", 1, "bkt")
-plotPred(p, "count", 1, "bnt")
+plotPred(p, "count", 1, "bkt")
 plotPred(p, c("temp", "flow"), 1, "bkt")
 plotPred(p, c("temp", "flow"), 0, "bkt")
 plotPred(p, c("temp","count"), 1, "bkt")
@@ -283,70 +287,9 @@ plotPred(p, c("len","count"), 1, "bkt")
 
 
 
-########################################################################################
-# traceplots
-
-# isYOY[ evalRows[i] ],species[ evalRows[i]],season[ evalRows[i] ],riverDATA[ evalRows[i] ]
-# [1:675, 1, 1:2, 1:2, 1:4, 1:4]
-ggGrInt <-array2df(dG[[1]]$sims.list$grInt, label.x = "est")
-
-ggGrInt$chain <- rep(1:dG[[1]]$mcmc.info$n.chains, each = dG[[1]]$mcmc.info$n.samples/dG[[1]]$mcmc.info$n.chains)
-ggGrInt$iter <- 1:as.numeric(dG[[1]]$mcmc.info$n.samples/dG[[1]]$mcmc.info$n.chains)
-ggplot(filter(ggGrInt), aes(iter,est)) + geom_point( aes(color=factor(chain)), size = 0.1 ) + facet_grid(d2+d4~d5+d3)+ylim(-1,1)
-
-# isYOY[ evalRows[i] ],species[ evalRows[i]],season[ evalRows[i] ],riverDATA[ evalRows[i] ]
-# [1:675, 1, 1:2, 1:2, 1:4, 1:4]
-ggSigmaInt <- array2df(dG[[1]]$sims.list$sigmaInt, label.x = "est")
-
-ggSigmaInt$chain <- rep(1:dG[[1]]$mcmc.info$n.chains, each = dG[[1]]$mcmc.info$n.samples/dG[[1]]$mcmc.info$n.chains)
-ggSigmaInt$iter <- 1:as.numeric(dG[[1]]$mcmc.info$n.samples/dG[[1]]$mcmc.info$n.chains)
-ggplot(filter(ggSigmaInt), aes(iter,est)) + geom_point( aes(color=factor(chain)), size = 0.1 ) + facet_grid(d2+d4~d5+d3)
-
-# isYOY[ evalRows[i] ],species[ evalRows[i]],season[ evalRows[i] ],riverDATA[ evalRows[i] ]
-# [1:675, 1, 1:2, 1:2, 1:4, 1:4]
-ggGrBeta <- array2df(dG[[1]]$sims.list$grBeta, label.x = "est")
-
-ggGrBeta$chain <- rep(1:dG[[1]]$mcmc.info$n.chains, each = dG[[1]]$mcmc.info$n.samples/dG[[1]]$mcmc.info$n.chains)
-ggGrBeta$iter <- 1:as.numeric(dG[[1]]$mcmc.info$n.samples/dG[[1]]$mcmc.info$n.chains)
-
-gg <- list()
-numBetas <- 11
-for (i in 1:numBetas){
-  gg[[i]] <- ggplot(filter(ggGrBeta,d2 == i), aes(iter,est)) + geom_hline(yintercept = 0) + geom_point( aes(color = factor(chain)), size = 0.1 ) + ylim(-1,1) + facet_grid(d3+d5~d6+d4) + ggtitle(paste("beta =", i))
-}
 
 
-ggSigmaBeta <- array2df(dG[[1]]$sims.list$sigmaBeta, label.x = "est")
-
-ggSigmaBeta$chain <- rep(1:dG[[1]]$mcmc.info$n.chains, each = dG[[1]]$mcmc.info$n.samples/dG[[1]]$mcmc.info$n.chains)
-ggSigmaBeta$iter <- 1:as.numeric(dG[[1]]$mcmc.info$n.samples/dG[[1]]$mcmc.info$n.chains)
-
-ggSigma <- list()
-numBetas <- 7
-for (i in 1:numBetas){
-  ggSigma[[i]] <- ggplot(filter(ggSigmaBeta,d2 == i), aes(iter,est)) + geom_hline(yintercept = 0) + geom_point( aes(color = factor(chain)), size = 0.1 ) + facet_grid(d3+d5~d6+d4) + ggtitle(paste("beta =", i))
-}
-
-# isYOY[ evalRows[i] ],season[ evalRows[i] ] ]
-# [1:675, 1:2, 1:4]
-gg2 <- array2df(dG[[1]]$sims.list$grIntMu, label.x = "est")
-gg2 <- array2df(dG[[1]]$sims.list$grIntSigma, label.x = "est")
-gg2 <- array2df(dG[[1]]$sims.list$sigmaIntMu, label.x = "est")
-gg2 <- array2df(dG[[1]]$sims.list$sigmaIntSigma, label.x = "est")
-
-gg2$chain <- rep(1:dG[[1]]$mcmc.info$n.chains, each = dG[[1]]$mcmc.info$n.samples/dG[[1]]$mcmc.info$n.chains)
-gg2$iter <- 1:as.numeric(dG[[1]]$mcmc.info$n.samples/dG[[1]]$mcmc.info$n.chains)
-ggplot(gg2, aes(iter,est)) + geom_point( aes(color = factor(chain)), size = 0.1 ) + facet_grid(d2~d3)
-
-gg3 <- array2df(dG[[1]]$sims.list$grBetaMu, label.x = "est")
-gg3 <- array2df(dG[[1]]$sims.list$grBetaSigma, label.x = "est") # seems uninformative
-
-gg3$chain <- rep(1:dG[[1]]$mcmc.info$n.chains, each = dG[[1]]$mcmc.info$n.samples/dG[[1]]$mcmc.info$n.chains)
-gg3$iter <- 1:as.numeric(dG[[1]]$mcmc.info$n.samples/dG[[1]]$mcmc.info$n.chains)
-ggplot(gg3, aes(iter,est)) + geom_point( aes(color=factor(chain)), size = 0.1 ) + facet_grid(d2~d4+d3)
-
-
-pairs(ddG[[1]][c('countPStd','tempStd','flowStd')])
+pairs(ddG[[1]][[1]][c('countPStd','tempStd','flowStd')])
 
 
 #To do:

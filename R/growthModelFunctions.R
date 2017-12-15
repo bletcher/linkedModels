@@ -8,7 +8,7 @@
 
 runGrowthModel <- function(d, parallel = FALSE){
 
-  #grBetaOutside = array( runif( 11 *2*d$nSpecies*d$nSeasons*d$nRivers,-2,2),c( 11 ,2,d$nSpecies,d$nSeasons,d$nRivers))
+  #grBetaOutside = array( runif( 11 *2*d$nSeasons*d$nRivers,-2,2),c( 11 ,2,d$nSeasons,d$nRivers))
   #grBetaOutside[ ,1,,2, ] <- 0
 
   nBetas <- 18
@@ -16,13 +16,13 @@ runGrowthModel <- function(d, parallel = FALSE){
 
   inits <- function(){
     list(
-      grInt = array(rnorm(2*d$nSpecies*d$nSeasons*d$nRivers,0.5,0.25),c(2,d$nSpecies,d$nSeasons,d$nRivers)),
+      grInt = array(rnorm(2*d$nSeasons*d$nRivers,0.5,0.25),c(2,d$nSeasons,d$nRivers)),
       #grBeta[x,1:2,1,1:4,1:4]
-      grBeta = array(rnorm(nBetas*2*d$nSpecies*d$nSeasons*d$nRivers,0,0.1),c(nBetas,2,d$nSpecies,d$nSeasons,d$nRivers)),
+      grBeta = array(rnorm(nBetas*2*d$nSeasons*d$nRivers,0,0.1),c(nBetas,2,d$nSeasons,d$nRivers)),
       #grSigma[ yoy,spp,s,r ]
-      grSigma = array(runif(2*d$nSpecies*d$nSeasons*d$nRivers,0,0.05),c(2,d$nSpecies,d$nSeasons,d$nRivers)),
+      grSigma = array(runif(2*d$nSeasons*d$nRivers,0,0.05),c(2,d$nSeasons,d$nRivers)),
       # sigmaBeta[ b,yoy,spp,s,r ]
-      sigmaBeta = array(rnorm(nBetasSigma*2*d$nSpecies*d$nSeasons*d$nRivers,0,0.05),c(nBetasSigma,2,d$nSpecies,d$nSeasons,d$nRivers)),
+      sigmaBeta = array(rnorm(nBetasSigma*2*d$nSeasons*d$nRivers,0,0.05),c(nBetasSigma,2,d$nSeasons,d$nRivers)),
       grIndRE = rnorm(d$nInd,0,0.1)
     )
   }
@@ -34,16 +34,21 @@ runGrowthModel <- function(d, parallel = FALSE){
   #    #          , 'grIndRE','grIndREMean','grIndRETau'
   #             )
 
-  params <- c('grInt', 'grBeta', 'grSigma','sigmaBeta', 'lengthExp', 'grIntMu', 'grIntSigma', 'grIndRE', 'sigmaInd', 'grBetaMu', 'grBetaSigma', 'sigmaBetaMu', 'sigmaBetaSigma' )
+  params <- c('grInt','grIntMu','grIntSigma',
+              'grBeta','grBetaMu', 'grBetaSigma',
+              'sigmaInt','sigmaIntMu','sigmaIntSigma',
+              'sigmaBeta','sigmaBetaMu', 'sigmaBetaSigma',
+              'grIndRE', 'sigmaIndRE',
+              'lengthExp')
 
   outGR <- jags(data = d,
                 inits = inits,
                 parameters.to.save = params,
-                model.file = "./jags/grModel6.jags",
+                model.file = "./jags/grModel7.jags",
                 n.chains = 3,
-                n.adapt = 100, #1000
-                n.iter = 200,
-                n.burnin = 100,
+                n.adapt = 500, #1000
+                n.iter = 1000,
+                n.burnin = 500,
                 n.thin = 5,
                 parallel = parallel
   )
@@ -54,7 +59,7 @@ runGrowthModel <- function(d, parallel = FALSE){
 
 #'Adjust counts
 #'
-#'@param ddddGIn growth data
+#'@param cdIn core data
 #'@param ddDIn results from the detection model
 #'@param ddddGIn detection data
 #'@param meanOrIterIn whether the growth model gets mean P from the detection model, or results from an iteration
@@ -63,7 +68,7 @@ runGrowthModel <- function(d, parallel = FALSE){
 #'@export
 #'
 
-adjustCounts <- function( ddddGIn,ddDIn,ddddDIn,meanOrIterIn,sampleToUse ){
+adjustCounts <- function( cdIn,ddDIn,ddddDIn,meanOrIterIn,sampleToUse ){
 
   if ( meanOrIterIn == "mean") {
     den <- getDensities(ddddDIn, ddDIn, meanOrIterIn, sampleToUse )
@@ -109,14 +114,17 @@ adjustCounts <- function( ddddGIn,ddDIn,ddddDIn,meanOrIterIn,sampleToUse ){
                   mutate( nAllFishBySpeciesPStd = ( nAllFishBySpeciesP - nAllFishBySpeciesPMean )/nAllFishBySpeciesPSD,
                           nAllFishPStd =          ( nAllFishP -          nAllFishPMean )         /nAllFishPSD,
                           massAllFishBySpeciesStd = ( massAllFishBySpecies - massAllFishBySpeciesMean )/massAllFishBySpeciesSD,
-                          massAllFishPStd =         ( massAllFish -          massAllFishMean )         /massAllFishSD)
+                          massAllFishStd =         ( massAllFish -          massAllFishMean )         /massAllFishSD
+                        )
 
-  ddddGIn <- left_join( ddddGIn,denForMerge2, by = (c("species", "year", "season", "riverOrdered")) )
+  cdIn <- left_join( cdIn,denForMerge2, by = c("species", "year", "season", "riverOrdered") )
 
   # counts are missing for samples with propSampled == 0. For now, fill in mean (0). Need this for when enc==0 and propSampled==0 in the gr model
   #should this be a low # instead of 0???
-  ddddGIn$nAllFishBySpeciesPStd <-   ifelse( is.na(ddddGIn$nAllFishBySpeciesPStd),   0, ddddGIn$nAllFishBySpeciesPStd )
-  ddddGIn$massAllFishBySpeciesStd <- ifelse( is.na(ddddGIn$massAllFishBySpeciesStd), 0, ddddGIn$massAllFishBySpeciesStd )
+  cdIn$nAllFishBySpeciesPStd <-   ifelse( is.na(cdIn$nAllFishBySpeciesPStd),   0, cdIn$nAllFishBySpeciesPStd )
+  cdIn$nAllFishPStd <-            ifelse( is.na(cdIn$nAllFishPStd),            0, cdIn$nAllFishPStd )
+  cdIn$massAllFishBySpeciesStd <- ifelse( is.na(cdIn$massAllFishBySpeciesStd), 0, cdIn$massAllFishBySpeciesStd )
+  cdIn$massAllFishStd <-          ifelse( is.na(cdIn$massAllFishStd),          0, cdIn$massAllFishStd )
 
   #####
   # counts by species in separate columns
@@ -124,10 +132,10 @@ adjustCounts <- function( ddddGIn,ddDIn,ddddDIn,meanOrIterIn,sampleToUse ){
     dplyr::select(species, season, riverOrdered, year, nAllFishBySpeciesPStd) %>%
     spread(species, nAllFishBySpeciesPStd, fill=0) %>%
     rename(nAllFishBySpeciesPStdBKT = bkt,nAllFishBySpeciesPStdBNT = bnt, nAllFishBySpeciesPStdATS = ats)
-  ddddGIn <- left_join( ddddGIn,nAllFishBySpeciesPStdBySpp )
+  cdIn <- left_join( cdIn,nAllFishBySpeciesPStdBySpp )
 
 
-  return(ddddGIn)
+  return(cdIn)
 
 }
 

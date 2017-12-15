@@ -125,6 +125,17 @@ addNPasses <- function(cd,dr){
   return(cd)
 }
 
+#'Remove low abundance rivers
+#'
+#'@param drainage Which drainage, "west" or "stanley"
+#'@return a data frame
+#'@export
+
+removeLowAbundanceRivers <- function(cd,drainage){
+  # Ats,Jimmy
+  cd <- cd %>% filter( !(species == 'ats' & river == "wb jimmy"))
+}
+
 
 #'Get data from sites table
 #'

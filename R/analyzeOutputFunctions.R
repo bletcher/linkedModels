@@ -12,10 +12,13 @@
 getPrediction <- function(d, limits = 2, nPoints = 5, itersForPred, varsToEstimate){
 
   # get grInt in df format
-  grInt <- array2df(d$sims.list$grInt, levels = list(iter=NA,isYOY=c(0,1),species=species,season=1:nSeasons,river=riverOrderedIn), label.x="int")
+  #grInt <- array2df(d$sims.list$grInt, levels = list(iter=NA,isYOY=c(0,1),species=species,season=1:nSeasons,river=riverOrderedIn), label.x="int")
+  grInt <- array2df(d$sims.list$grInt, levels = list(iter=NA,isYOY=c(0,1),season=1:nSeasons,river=riverOrderedIn), label.x="int")
 
   # get grBeta in df format and merge in grInt
-  grBeta1 <- array2df(d$sims.list$grBeta, levels = list(iter=NA,beta=NA,isYOY=c(0,1),species=species,season=1:nSeasons,river=riverOrderedIn), label.x="est")
+ # grBeta1 <- array2df(d$sims.list$grBeta, levels = list(iter=NA,beta=NA,isYOY=c(0,1),species=species,season=1:nSeasons,river=riverOrderedIn), label.x="est")
+  grBeta1 <- array2df(d$sims.list$grBeta, levels = list(iter=NA,beta=NA,isYOY=c(0,1),season=1:nSeasons,river=riverOrderedIn), label.x="est")
+
   grBeta <- spread( grBeta1, key = beta, value = est, sep = "" ) %>%
     left_join( .,grInt )
 
@@ -184,8 +187,10 @@ plotPred <- function(p, varsToPlot, isYOYGG, speciesGG) {
     notPlot[2] <- all[!(all %in% varsToPlot)][2]
     notPlot[3] <- all[!(all %in% varsToPlot)][3]
 
-    pGG <- p %>% filter(isYOY == isYOYGG, species == speciesGG, eval(as.name(notPlot[1])) == 0, eval(as.name(notPlot[2])) == 0, eval(as.name(notPlot[3])) == 0 ) %>%
-                 distinct(eval(as.name(varsToPlot[1])), iter, isYOY, river, species, season, .keep_all = TRUE)
+ #   pGG <- p %>% filter(isYOY == isYOYGG, species == speciesGG, eval(as.name(notPlot[1])) == 0, eval(as.name(notPlot[2])) == 0, eval(as.name(notPlot[3])) == 0 ) %>%
+#                 distinct(eval(as.name(varsToPlot[1])), iter, isYOY, river, species, season, .keep_all = TRUE)
+    pGG <- p %>% filter(isYOY == isYOYGG, eval(as.name(notPlot[1])) == 0, eval(as.name(notPlot[2])) == 0, eval(as.name(notPlot[3])) == 0 ) %>%
+      distinct(eval(as.name(varsToPlot[1])), iter, isYOY, river, season, .keep_all = TRUE)
 
     ggOut <- ggplot(pGG, aes(eval(as.name(varsToPlot[1])),predGr, group = iter,color=(iter))) +
       geom_line( alpha=0.25 ) +
@@ -203,8 +208,11 @@ plotPred <- function(p, varsToPlot, isYOYGG, speciesGG) {
     notPlot[1] <- all[!(all %in% varsToPlot)][1]
     notPlot[2] <- all[!(all %in% varsToPlot)][2]
 
-    pGG <- p %>% filter(isYOY == isYOYGG, species == speciesGG, eval(as.name(notPlot[1])) == 0, eval(as.name(notPlot[2])) == 0 ) %>%
-      distinct(eval(as.name(varsToPlot[1])), eval(as.name(varsToPlot[2])), iter, isYOY, river, species, season, .keep_all = TRUE)
+#    pGG <- p %>% filter(isYOY == isYOYGG, species == speciesGG, eval(as.name(notPlot[1])) == 0, eval(as.name(notPlot[2])) == 0 ) %>%
+#      distinct(eval(as.name(varsToPlot[1])), eval(as.name(varsToPlot[2])), iter, isYOY, river, species, season, .keep_all = TRUE)
+
+    pGG <- p %>% filter(isYOY == isYOYGG, eval(as.name(notPlot[1])) == 0, eval(as.name(notPlot[2])) == 0 ) %>%
+      distinct(eval(as.name(varsToPlot[1])), eval(as.name(varsToPlot[2])), iter, isYOY, river, season, .keep_all = TRUE)
 
     pGG$iterGroup <- paste0(pGG$iter,pGG[[varsToPlot[2]]])
 

@@ -79,6 +79,20 @@ ggplot(allFishBySpecies, aes(year,nAllFishBySpecies)) +
   facet_grid( seasonGG ~ riverOrderedGG)#, scales = "free_y" )
 
 ggsave('figures/rawCount.png')
+
+tmp <- d %>% distinct(season,year,sampleNumber)
+allFishBySpecies <- left_join(allFishBySpecies,tmp)
+allFish <- left_join(allFish,tmp)
+
+ggplot(allFishBySpecies, aes(sampleNumber,nAllFishBySpecies)) +
+  geom_point(aes(color = speciesGG)) +
+  geom_line(aes(color = speciesGG)) +
+  geom_line( data = allFish, aes(sampleNumber,nAllFish) ) +
+  theme_publication() +
+  labs( x = "SampleNumber", y = "Count" ) +
+  facet_wrap(  ~riverOrderedGG )#, scales = "free_y" )
+
+
 ```
 
 
