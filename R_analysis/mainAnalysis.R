@@ -37,6 +37,9 @@ drainage <- "west" # ==
 speciesDet <- c("bkt", "bnt","ats") #keep as all three spp
 speciesInDet <- factor(speciesDet, levels = c('bkt','bnt','ats'), ordered = T)
 
+speciesGr <- "ats"
+speciesInGr <- factor(speciesGr, levels = c('bkt','bnt','ats'), ordered = T)
+
 riverOrderedIn <- factor(c('west brook', 'wb jimmy', 'wb mitchell',"wb obear"),levels=c('west brook', 'wb jimmy', 'wb mitchell',"wb obear"),labels = c("west brook","wb jimmy","wb mitchell","wb obear"), ordered = T)
 
 minCohort <- 1997#1995 # >=
@@ -66,14 +69,14 @@ reconnect()
 # Only need to run this when data or functions have changed
 # or you want to change drainages
 
-cdFile <- paste0('./data/cd_',drainage,"_",minCohort,'.RData')
+cdFileBeforeDetMod <- paste0('./data/cd_',drainage,"_",minCohort,'_BeforeDetMod.RData')
 
-if ( file.exists(cdFile) ) {
-  load(cdFile)
+if ( file.exists(cdFileBeforeDetMod) ) {
+  load(cdFileBeforeDetMod)
 } else {
 
   # core data
-  cd <- getCoreData(drainage) %>%
+  cdBeforeDetMod <- getCoreData(drainage) %>%
     cleanData(drainage) %>%
     mergeSites(drainage) %>%
     mutate(drainage = drainage,
@@ -82,7 +85,7 @@ if ( file.exists(cdFile) ) {
     removeUnsampledRows(drainage, removeIncomplete = T) %>% # removes enc=0 rows for samples with no or very few() sections sampled (p=0 otherwise for those samples)
     removeLowAbundanceRivers(drainage) # removes ats,jimmy fish from drainage=='west' - too few fish for estimates
 
-  save(cd, file = cdFile)
+  save(cdBeforeDetMod, file = cdFileBeforeDetMod)
 }
 
 #################################
@@ -95,7 +98,7 @@ dModelName <- paste0(paste0(speciesDet,collapse = ''),"_",minCohort)
 
 (start <- Sys.time())
 
-ddddD <- cd %>%
+ddddD <- cdBeforeDetMod %>%
   filter(  species %in% speciesInDet,
            cohort >= minCohort,
            sampleInterval < maxSampleInterval  # this removes the later yearly samples. Want to stick with seasonal samples
@@ -112,12 +115,16 @@ if (runDetectionModelTF) {
   done <- Sys.time()
   (elapsed <- done - start)
 
+  # add counts derived from counts/p to cdBeforeDetMod. ddD and ddddD need to have all three spp to create spp-specific abundances
+  cd <- adjustCounts( cdBeforeDetMod,ddD,ddddD,meanOrIter,iter )
+  cdFile <- paste0('./data/cd_',drainage,"_",minCohort,'.RData')
+  save(cd, file = cdFile)
+
 } else {
-  load(file = paste0('./data/out/ddD_', dModelName,'.RData'))
+  load( file = paste0('./data/out/ddD_', dModelName,'.RData') )
+  load( file = paste0('./data/cd_',drainage,"_",minCohort,'.RData') )
 }
 
-# add counts derived from counts/p to cd. ddD and ddddD need to have all three spp to create spp-specific abundances
-cd <- adjustCounts( cd,ddD,ddddD,meanOrIter,iter )
 
 # with full intercepts, effect of nPasses is insignificant (massive overlap). Leaving, nPasses out. Just going with pBetaInt.
 #whiskerplot(ddD, parameters = "pBetaInt")
@@ -136,7 +143,6 @@ cd <- adjustCounts( cd,ddD,ddddD,meanOrIter,iter )
 ###############
 #
 #
-speciesGr <- "bkt"
 #speciesInGr <- factor(speciesGr, levels = c('bkt','bnt','ats'), ordered = T)
 
 
@@ -254,15 +260,9 @@ whiskerplot(dG[[1]], parameters = "grBetaMu")
 jagsUI::traceplot(dG[[1]], parameters = "grBetaMu")
 
 
-########################################################################################
-# traceplots
-
-# isYOY[ evalRows[i] ],species[ evalRows[i]],season[ evalRows[i] ],riverDATA[ evalRows[i] ]
-# [1:675, 1, 1:2, 1:2, 1:4, 1:4]
-
 ######################################
-
 # Explore predictions
+
 limits <- 1.5 # -/+ limits on standardized range of input variable
 nPoints <- 5
 
@@ -274,18 +274,26 @@ p <- getPrediction( dG[[1]], limits, nPoints, itersForPred, c("len", "temp", "fl
 #######################
 # graph function, in analyzeOutputFunctions.R
 
-plotPred(p, "len", 1, "bkt") #spp is just a pss-through for title until I combine the species results into one df
+plotPred(p, "len", 1, "bkt") #spp is just a pass-through for title until I combine the species results into one df
 plotPred(p, "temp", 1, "bkt")
 plotPred(p, "flow", 1, "bkt")
 plotPred(p, "count", 1, "bkt")
-plotPred(p, c("temp", "flow"), 1, "bkt")
+plotPred(p, c("flow", "temp"), 1, "bkt")
 plotPred(p, c("temp", "flow"), 0, "bkt")
 plotPred(p, c("temp","count"), 1, "bkt")
 plotPred(p, c("flow","count"), 1, "bkt")
 plotPred(p, c("len","count"), 1, "bkt")
+plotPred(p, c("flow","len"), 1, "bkt")
 
+# predictions of sigma across the grid
+pSigma <- getPredictionSigma( dG[[1]], limits, nPoints, itersForPred, c("len", "temp", "flow","count") )
+#######################
+# graph function, in analyzeOutputFunctions.R
 
-
+plotPred(pSigma, "len", 1, "bkt")
+plotPred(pSigma, "temp", 1, "bkt")
+plotPred(pSigma, "flow", 1, "bkt")
+plotPred(pSigma, "count", 1, "bkt")
 
 
 
@@ -293,5 +301,5 @@ pairs(ddG[[1]][[1]][c('countPStd','tempStd','flowStd')])
 
 
 #To do:
-# Line up ddd$YOY with actual year in model run
+
 

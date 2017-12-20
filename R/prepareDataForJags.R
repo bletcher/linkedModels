@@ -205,7 +205,8 @@ prepareDataForJags <- function(d,modelType){
                   #       logitPhiStd = d$logitPhiStd,
                   #                lForInit = d$lInterp,
                   isYOYDATA = d$isYOYDATA,
-                  speciesByInd = speciesByInd$speciesN
+                  speciesByInd = speciesByInd$speciesN,
+                  grNotUse = d$grLength
     )
   }
 

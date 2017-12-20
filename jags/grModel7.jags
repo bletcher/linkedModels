@@ -25,12 +25,12 @@ model{
      +    grBeta[13, isYOYDATA[evalRows[i]], season[evalRows[i]], riverDATA[evalRows[i]] ] * lengthDATA[evalRows[i]] * flowStd[evalRows[i]]
      +    grBeta[14, isYOYDATA[evalRows[i]], season[evalRows[i]], riverDATA[evalRows[i]] ] * lengthDATA[evalRows[i]] * tempStd[evalRows[i]]
      #
-      +    grBeta[15, isYOYDATA[evalRows[i]], season[evalRows[i]], riverDATA[evalRows[i]] ] * countPAllSppStd[evalRows[i]] * tempStd[evalRows[i]] * flowStd[evalRows[i]]
-      +    grBeta[16, isYOYDATA[evalRows[i]], season[evalRows[i]], riverDATA[evalRows[i]] ] * lengthDATA[evalRows[i]] * tempStd[evalRows[i]] * flowStd[evalRows[i]]
-      +    grBeta[17, isYOYDATA[evalRows[i]], season[evalRows[i]], riverDATA[evalRows[i]] ] * countPAllSppStd[evalRows[i]] * lengthDATA[evalRows[i]] * flowStd[evalRows[i]]
-      +    grBeta[18, isYOYDATA[evalRows[i]], season[evalRows[i]], riverDATA[evalRows[i]] ] * countPAllSppStd[evalRows[i]] * tempStd[evalRows[i]] * lengthDATA[evalRows[i]]
+     +    grBeta[15, isYOYDATA[evalRows[i]], season[evalRows[i]], riverDATA[evalRows[i]] ] * countPAllSppStd[evalRows[i]] * tempStd[evalRows[i]] * flowStd[evalRows[i]]
+     +    grBeta[16, isYOYDATA[evalRows[i]], season[evalRows[i]], riverDATA[evalRows[i]] ] * lengthDATA[evalRows[i]] * tempStd[evalRows[i]] * flowStd[evalRows[i]]
+     +    grBeta[17, isYOYDATA[evalRows[i]], season[evalRows[i]], riverDATA[evalRows[i]] ] * countPAllSppStd[evalRows[i]] * lengthDATA[evalRows[i]] * flowStd[evalRows[i]]
+     +    grBeta[18, isYOYDATA[evalRows[i]], season[evalRows[i]], riverDATA[evalRows[i]] ] * countPAllSppStd[evalRows[i]] * tempStd[evalRows[i]] * lengthDATA[evalRows[i]]
 
-      +    grIndRE[ ind[evalRows[i]] ]
+     +    grIndRE[ ind[evalRows[i]] ]
 
     expectedGRTau[ evalRows[i] ] <- 1 / ( expectedGRSigma[ evalRows[i] ] * expectedGRSigma[ evalRows[i] ] )
   log( expectedGRSigma[ evalRows[i] ] ) <- #grSigma
