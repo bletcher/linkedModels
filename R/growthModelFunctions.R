@@ -11,8 +11,8 @@ runGrowthModel <- function(d, parallel = FALSE){
   #grBetaOutside = array( runif( 11 *2*d$nSeasons*d$nRivers,-2,2),c( 11 ,2,d$nSeasons,d$nRivers))
   #grBetaOutside[ ,1,,2, ] <- 0
 
-  nBetas <- 18
-  nBetasSigma <- 4
+  nBetas <- 11
+  nBetasSigma <- 6
 
   inits <- function(){
     list(
@@ -47,8 +47,8 @@ runGrowthModel <- function(d, parallel = FALSE){
                 model.file = "./jags/grModel7.jags",
                 n.chains = 3,
                 n.adapt = 500, #1000
-                n.iter = 1000,
-                n.burnin = 500,
+                n.iter = 2500,
+                n.burnin = 1500,
                 n.thin = 5,
                 parallel = parallel
   )

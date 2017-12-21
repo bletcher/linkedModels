@@ -37,7 +37,7 @@ drainage <- "west" # ==
 speciesDet <- c("bkt", "bnt","ats") #keep as all three spp
 speciesInDet <- factor(speciesDet, levels = c('bkt','bnt','ats'), ordered = T)
 
-speciesGr <- "ats"
+speciesGr <- "bkt"
 speciesInGr <- factor(speciesGr, levels = c('bkt','bnt','ats'), ordered = T)
 
 riverOrderedIn <- factor(c('west brook', 'wb jimmy', 'wb mitchell',"wb obear"),levels=c('west brook', 'wb jimmy', 'wb mitchell',"wb obear"),labels = c("west brook","wb jimmy","wb mitchell","wb obear"), ordered = T)
@@ -198,8 +198,8 @@ iter=1
   dddG[[ii]] <- addSurvivals( ddddG,ddD,meanOrIter,iter )
   dddG[[ii]] <- dddG[[ii]] %>% filter(tag != '1c2d6c51d3') # salmon with many missing obs before last one - trouble estimating
 
-  ddG[[ii]] <- dddG[[ii]] %>% prepareDataForJags("growth") # returns a list, list for running model in [[1]], input df in [[2]]
-
+  ddG[[ii]] <- dddG[[ii]] %>% prepareDataForJags("growth") # returns a list, list for running model in [[ii]][[1]], input df in [[ii]][[2]]
+    #save(dG,ddG,dddG, file = paste0('./data/out/dG_', modelName, '_forLmer.RData')) # for Lmer model with all spp
   #####
   start <- Sys.time()
   print(start)
