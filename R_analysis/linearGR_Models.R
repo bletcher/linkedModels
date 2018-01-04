@@ -123,8 +123,8 @@ mod2_100 <- lmer( grLength ~ isYOY * species * river * season * ( tempStd + flow
                 #    isYOY * species * river * season * countPStd2 +
                 (1|ind), data = d )
 
-aicSquared <- AIC(mod2_1,mod2_2,mod2_3,mod2_4,mod2_5,mod2_6,mod2_7,mod2_8,mod2_100) %>% rownames_to_column() %>% arrange(AIC)
-aicSquared <- AIC(mod2_2,mod2_3,mod2_4,mod2_5,mod2_7,mod2_100) %>% rownames_to_column() %>% arrange(AIC)
+aicSquared <- AIC(mod2_1,mod2_1a,mod2_2,mod2_3,mod2_4,mod2_5,mod2_6,mod2_7,mod2_8,mod2_100) %>% rownames_to_column() %>% arrange(AIC)
+aicSquared <- AIC(mod2_1,mod2_1a,mod2_2,mod2_3,mod2_5,mod2_6,mod2_7,mod2_100) %>% rownames_to_column() %>% arrange(AIC)
 
 aicLinear
 aicSquared

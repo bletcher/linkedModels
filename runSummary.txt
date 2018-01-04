@@ -104,3 +104,18 @@ int main[1] sigma[,,,] sigma[1], mix = , rmse = 0.1015615
 int main[2] sigma[,,,] sigma[2], mix = , rmse = 0.1036494
 int main[4] sigma[,,,] sigma[4], mix = , rmse = 0.09433439
 int main[18] sigma[,,,] sigma[4], mix = , rmse = 0.07794665
+
+Having trouble with bnt indRE
+Tried gamma prior - didn't really help,
+tighter initials indRE and priors for indRESigma helped a little
+Looks like big fish are having troyuble with estimates
+Added back length^2 to betas, didn't help
+
+taking out sigmaBetas - no error with sigmaInt only
+sigmaInt + linear sigmaBetas, works
+sigmaInt + linear sigmaBetas + count*temp, works
+sigmaInt + linear sigmaBetas + count*temp + temp*flow, not work
+sigmaInt + linear sigmaBetas + count*temp + count*flow, not work, does work with no sigmaBeta inital
+ggplot(d2, aes(flow,temp)) + geom_point() + facet_grid(~season)
+SO, flow interactions do not work for sigmaBeta with bnt. Not sure why not
+Also, seem to need length^2 to avoid indRE errors for large fish

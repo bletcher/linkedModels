@@ -32,12 +32,14 @@ library(tidyverse)
 ######################################################
 # selection criteria
 
+reconnect()
+
 drainage <- "west" # ==
 
 speciesDet <- c("bkt", "bnt","ats") #keep as all three spp
 speciesInDet <- factor(speciesDet, levels = c('bkt','bnt','ats'), ordered = T)
 
-speciesGr <- "bkt"
+speciesGr <- "bnt"
 speciesInGr <- factor(speciesGr, levels = c('bkt','bnt','ats'), ordered = T)
 
 riverOrderedIn <- factor(c('west brook', 'wb jimmy', 'wb mitchell',"wb obear"),levels=c('west brook', 'wb jimmy', 'wb mitchell',"wb obear"),labels = c("west brook","wb jimmy","wb mitchell","wb obear"), ordered = T)
@@ -51,8 +53,6 @@ percentLeftOut <- 10
 meanOrIter <- "mean"; iter <- 1
 ####### or ########
 #meanOrIter = "iter"
-
-reconnect()
 
 #make sure species are always in order and indexed correctly for arrays
 #riverOrderedIn <- factor(1:3,levels=c('mainstem', 'west', 'east'),labels = c('mainstem', 'west', 'east'), ordered=T)
@@ -83,7 +83,7 @@ if ( file.exists(cdFileBeforeDetMod) ) {
            countP = NA) %>% # placeholder so prepareDataForJags() works for detection model
     addRawCounts(drainage, filteredAreas = c("inside","trib")) %>% # counts and summed masses of all fish, tagged and untagged. Not adjusted for P (happens in addDensities())
     removeUnsampledRows(drainage, removeIncomplete = T) %>% # removes enc=0 rows for samples with no or very few() sections sampled (p=0 otherwise for those samples)
-    removeLowAbundanceRivers(drainage) # removes ats,jimmy fish from drainage=='west' - too few fish for estimates
+    removeLowAbundanceRivers(drainage) # removes ats,jimmy fish and bnt,mitchell from drainage=='west' - too few fish for estimates
 
   save(cdBeforeDetMod, file = cdFileBeforeDetMod)
 }
@@ -195,8 +195,7 @@ iter=1
   # saving into a list for now, could also map()
 
   # dddG[[ii]] <- addBiomassDeltas( dddG[[ii]] )
-  dddG[[ii]] <- addSurvivals( ddddG,ddD,meanOrIter,iter )
-  dddG[[ii]] <- dddG[[ii]] %>% filter(tag != '1c2d6c51d3') # salmon with many missing obs before last one - trouble estimating
+  dddG[[ii]] <- addSurvivals( ddddG,ddD,meanOrIter,iter ) %>% removeFishWithManyIntermediateNAs()
 
   ddG[[ii]] <- dddG[[ii]] %>% prepareDataForJags("growth") # returns a list, list for running model in [[ii]][[1]], input df in [[ii]][[2]]
     #save(dG,ddG,dddG, file = paste0('./data/out/dG_', modelName, '_forLmer.RData')) # for Lmer model with all spp
@@ -205,7 +204,7 @@ iter=1
   print(start)
   print(c("in loop",meanOrIter,ii,iter))
 
-  dG[[ii]] <- ddG[[ii]][[1]] %>% runGrowthModel( parallel = TRUE )
+  dG[[ii]] <- ddG[[ii]][[1]] %>% runGrowthModel( parallel = FALSE )
 
   save(dG,ddG,dddG, file = paste0('./data/out/dG_', as.integer(Sys.time()),'_', modelName, '.RData'))
 
@@ -213,7 +212,8 @@ iter=1
   elapsed[[ii]] <- done - start
   print(paste("Elapsed =",elapsed))
 
-  getRMSE()
+  tmp <- getRMSE()
+  tmp$outliers%>% as.data.frame()
   #####
 source("./R/plotFunctions.R") #will put into functions later
   plotInt()

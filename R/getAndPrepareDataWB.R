@@ -132,8 +132,10 @@ addNPasses <- function(cd,dr){
 #'@export
 
 removeLowAbundanceRivers <- function(cd,drainage){
-  # Ats,Jimmy
+  # Ats, Jimmy
   cd <- cd %>% filter( !(species == 'ats' & river == "wb jimmy"))
+  # bnt, Mitchell
+  cd <- cd %>% filter( !(species == 'bnt' & river == "wb mitchell"))
 }
 
 

@@ -11,7 +11,7 @@ runGrowthModel <- function(d, parallel = FALSE){
   #grBetaOutside = array( runif( 11 *2*d$nSeasons*d$nRivers,-2,2),c( 11 ,2,d$nSeasons,d$nRivers))
   #grBetaOutside[ ,1,,2, ] <- 0
 
-  nBetas <- 11
+  nBetas <- 12
   nBetasSigma <- 6
 
   inits <- function(){
@@ -20,10 +20,10 @@ runGrowthModel <- function(d, parallel = FALSE){
       #grBeta[x,1:2,1,1:4,1:4]
       grBeta = array(rnorm(nBetas*2*d$nSeasons*d$nRivers,0,0.1),c(nBetas,2,d$nSeasons,d$nRivers)),
       #grSigma[ yoy,spp,s,r ]
-      grSigma = array(runif(2*d$nSeasons*d$nRivers,0,0.05),c(2,d$nSeasons,d$nRivers)),
+      grSigma = array(runif(2*d$nSeasons*d$nRivers,0,0.05),c(2,d$nSeasons,d$nRivers))
       # sigmaBeta[ b,yoy,spp,s,r ]
-      sigmaBeta = array(rnorm(nBetasSigma*2*d$nSeasons*d$nRivers,0,0.05),c(nBetasSigma,2,d$nSeasons,d$nRivers)),
-      grIndRE = rnorm(d$nInd,0,0.1)
+    #  sigmaBeta = array(rnorm(nBetasSigma*2*d$nSeasons*d$nRivers,0,0.05),c(nBetasSigma,2,d$nSeasons,d$nRivers))
+   #   grIndRE = rnorm(d$nInd,0,0.001)
     )
   }
 
@@ -155,5 +155,21 @@ crossValidate <- function(d, runCrossValidationTF){
     d$leftOut <- ifelse( (runif(nrow(d)) < percentLeftOut/propFOcc/100) & (d$fOcc == 0), T, F ) # adjust percentLeftOut higher to acct for the fOcc that can't be NA
     d$observedLength <- ifelse( d$leftOut, NA, d$observedLength )
   }
+  return(d)
+}
+
+
+#'Remove fish with many intermediate NAs - these cause problems with indRE estimates
+#'
+#'@param d a dataframe
+#'@return a data frame with problem fish removed
+#'@export
+#'
+
+removeFishWithManyIntermediateNAs <- function(d){
+
+  tagsToRemove <- c('00088cc02a','1c2d6c51d3','00088cc364')
+  d <- d %>% filter( !(tag %in% tagsToRemove) )
+
   return(d)
 }

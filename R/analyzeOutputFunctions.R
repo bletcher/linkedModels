@@ -59,7 +59,7 @@ getPrediction <- function(d, limits = 2, nPoints = 5, itersForPred, varsToEstima
    lenData <- 0
 
   predTemplate <- data.frame(
-                  #            len = lenData,
+                              len = lenData,
                               count = countData,
                               flow =  flowData,
                               temp =  tempData
@@ -80,25 +80,25 @@ getPrediction <- function(d, limits = 2, nPoints = 5, itersForPred, varsToEstima
   preds <- preds %>%
     mutate( predGr =
               int +
-       #       beta1 * len +
-              beta1 * count +
-              beta2 * temp +
-              beta3 * flow +
+              beta1 * len +
+              beta2 * count +
+              beta3 * temp +
+              beta4 * flow +
 
           #    beta4 * len^2 +
-              beta4 * count^2 +
-              beta5 * temp^2 +
-              beta6 * flow^2 +
+              beta5 * count^2 +
+              beta6 * temp^2 +
+              beta7 * flow^2 +
 
-              beta7 * temp * flow +
-              beta8 * temp * count +
-              beta9 * count * flow +
+              beta8 * temp * flow +
+              beta9 * temp * count +
+              beta10 * count * flow +
 
       #        beta12 * len * count +
       #        beta13 * len * flow +
       #        beta14 * len * temp +
 
-              beta10 * count * temp * flow
+              beta11 * count * temp * flow
        #       beta16 * len * temp * flow +
       #        beta17 * count * len * flow +
        #       beta18 * count * temp * len
@@ -214,10 +214,13 @@ getPredictionSigma <- function(d, limits = 2, nPoints = 5, itersForPred, varsToE
   preds <- preds %>%
     mutate( predGr = int +
 
-              beta1 * len +
-              beta2 * count +
-              beta3 * temp +
-              beta4 * flow
+              beta1 * count +
+              beta2 * temp +
+              beta3 * flow +
+              beta4 * count * temp +
+              beta5 * temp * flow +
+              beta6 * count * flow
+
     )
 
   return(preds)
@@ -286,18 +289,18 @@ getPredictionSigma <- function(d, limits = 2, nPoints = 5, itersForPred, varsToE
 #'
 
 plotPred <- function(p, varsToPlot, isYOYGG, speciesGG) {
-#  all = c('len','temp','flow','count')
-  all = c('temp','flow','count')
+  all = c('len','temp','flow','count')
+
 
   if(length(varsToPlot) == 1) {
     notPlot <- NA
     notPlot[1] <- all[!(all %in% varsToPlot)][1]
     notPlot[2] <- all[!(all %in% varsToPlot)][2]
- #   notPlot[3] <- all[!(all %in% varsToPlot)][3]
+    notPlot[3] <- all[!(all %in% varsToPlot)][3]
 
  #   pGG <- p %>% filter(isYOY == isYOYGG, species == speciesGG, eval(as.name(notPlot[1])) == 0, eval(as.name(notPlot[2])) == 0, eval(as.name(notPlot[3])) == 0 ) %>%
 #                 distinct(eval(as.name(varsToPlot[1])), iter, isYOY, river, species, season, .keep_all = TRUE)
-    pGG <- p %>% filter(isYOY == isYOYGG, eval(as.name(notPlot[1])) == 0, eval(as.name(notPlot[2])) == 0 ) %>%
+    pGG <- p %>% filter(isYOY == isYOYGG, eval(as.name(notPlot[1])) == 0, eval(as.name(notPlot[2])) == 0, eval(as.name(notPlot[3])) == 0  ) %>%
       distinct(eval(as.name(varsToPlot[1])), iter, isYOY, river, season, .keep_all = TRUE)
 
     ggOut <- ggplot(pGG, aes(eval(as.name(varsToPlot[1])),predGr, group = iter,color=(iter))) +
@@ -314,12 +317,12 @@ plotPred <- function(p, varsToPlot, isYOYGG, speciesGG) {
   if(length(varsToPlot) == 2) {
     notPlot <- NA
     notPlot[1] <- all[!(all %in% varsToPlot)][1]
-  #  notPlot[2] <- all[!(all %in% varsToPlot)][2]
+    notPlot[2] <- all[!(all %in% varsToPlot)][2]
 
 #    pGG <- p %>% filter(isYOY == isYOYGG, species == speciesGG, eval(as.name(notPlot[1])) == 0, eval(as.name(notPlot[2])) == 0 ) %>%
 #      distinct(eval(as.name(varsToPlot[1])), eval(as.name(varsToPlot[2])), iter, isYOY, river, species, season, .keep_all = TRUE)
 
-    pGG <- p %>% filter(isYOY == isYOYGG, eval(as.name(notPlot[1])) == 0 ) %>%
+    pGG <- p %>% filter(isYOY == isYOYGG, eval(as.name(notPlot[1])) == 0, eval(as.name(notPlot[2])) == 0 ) %>%
       distinct(eval(as.name(varsToPlot[1])), eval(as.name(varsToPlot[2])), iter, isYOY, river, season, .keep_all = TRUE)
 
     pGG$iterGroup <- paste0(pGG$iter,pGG[[varsToPlot[2]]])
@@ -343,7 +346,7 @@ plotPred <- function(p, varsToPlot, isYOYGG, speciesGG) {
 #'Plot observed/predicted and return RMSE
 #'
 #'@param empty Nothing passed to function
-#'@return Nothing, print text and plot graph
+#'@return rmse and outliers, print text and plot graph
 #'@export
 #'
 #'
@@ -353,17 +356,26 @@ getRMSE <- function(){
   ddGIn <- ddG[[ii]][[2]]
   ddGIn$isEvalRow <- ifelse( ddGIn$lOcc == 0,TRUE, FALSE )
 
-  ddGIn <- left_join( ddGIn, estLen, by = 'rowNumber')
+  ddGIn <- left_join( ddGIn, estLen, by = 'rowNumber') %>%
+    mutate( resid = abs(estLen - lengthDATAOriginalLnStd),
+            isOutlier = resid > 0.5 )
 
-  gg <- ggplot( ddGIn, aes( lengthDATAOriginalLnStd, estLen, color = leftOut ) ) +
+  outlierFish1 <- ddGIn %>% filter(isOutlier) %>% select(tag)
+
+  outlierFish <- ddGIn %>% filter(tag %in% outlierFish1$tag) %>%
+    select(tag,season,observedLength,lengthDATAOriginalLnStd,estLen,resid,rowNumber,isOutlier)
+
+  gg <- ggplot( ddGIn, aes( lengthDATAOriginalLnStd, estLen, color = isOutlier ) ) +
     geom_point( alpha = 0.2 ) +
     geom_abline(intercept = 0, slope = 1) +
     ylim(-2,4) +
     facet_wrap(~leftOut)
   print(gg)
 
-  ddGIn %>%
+  rmse <- ddGIn %>%
     mutate( resid = estLen - lengthDATAOriginalLnStd ) %>%
     group_by(leftOut) %>%
     summarise( rmse = sqrt( sum(resid^2,na.rm=T)/length(resid) ) )
+
+  return(list(rmse = rmse, outliers = outlierFish))
 }
