@@ -345,12 +345,12 @@ plotPred <- function(p, varsToPlot, isYOYGG, speciesGG) {
 
 #'Plot observed/predicted and return RMSE
 #'
-#'@param empty Nothing passed to function
+#'@param residLimit THis is the lower limit for flagging a residual as an outlier
 #'@return rmse and outliers, print text and plot graph
 #'@export
 #'
 #'
-getRMSE <- function(){
+getRMSE <- function(residLimit = 0.6){
   estLen <- array2df(dG[[1]]$q50$lengthExp, label.x = "estLen") %>% rename(rowNumber = d1)
 
   ddGIn <- ddG[[ii]][[2]]
@@ -358,12 +358,12 @@ getRMSE <- function(){
 
   ddGIn <- left_join( ddGIn, estLen, by = 'rowNumber') %>%
     mutate( resid = abs(estLen - lengthDATAOriginalLnStd),
-            isOutlier = resid > 0.5 )
+            isOutlier = resid > residLimit )
 
   outlierFish1 <- ddGIn %>% filter(isOutlier) %>% select(tag)
 
   outlierFish <- ddGIn %>% filter(tag %in% outlierFish1$tag) %>%
-    select(tag,season,observedLength,lengthDATAOriginalLnStd,estLen,resid,rowNumber,isOutlier)
+    select(tag,season,observedLength,lengthDATAOriginalLnStd,estLen,resid,rowNumber,isOutlier,species)
 
   gg <- ggplot( ddGIn, aes( lengthDATAOriginalLnStd, estLen, color = isOutlier ) ) +
     geom_point( alpha = 0.2 ) +

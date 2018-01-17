@@ -28,6 +28,7 @@ library(jagsUI)
 library(getWBData)
 library(stringr)
 library(lubridate)
+library(dbplyr)
 library(tidyverse)
 ######################################################
 # selection criteria
@@ -39,7 +40,7 @@ drainage <- "west" # ==
 speciesDet <- c("bkt", "bnt","ats") #keep as all three spp
 speciesInDet <- factor(speciesDet, levels = c('bkt','bnt','ats'), ordered = T)
 
-speciesGr <- "bnt"
+speciesGr <- "bkt"
 speciesInGr <- factor(speciesGr, levels = c('bkt','bnt','ats'), ordered = T)
 
 riverOrderedIn <- factor(c('west brook', 'wb jimmy', 'wb mitchell',"wb obear"),levels=c('west brook', 'wb jimmy', 'wb mitchell',"wb obear"),labels = c("west brook","wb jimmy","wb mitchell","wb obear"), ordered = T)
@@ -82,7 +83,7 @@ if ( file.exists(cdFileBeforeDetMod) ) {
     mutate(drainage = drainage,
            countP = NA) %>% # placeholder so prepareDataForJags() works for detection model
     addRawCounts(drainage, filteredAreas = c("inside","trib")) %>% # counts and summed masses of all fish, tagged and untagged. Not adjusted for P (happens in addDensities())
-    removeUnsampledRows(drainage, removeIncomplete = T) %>% # removes enc=0 rows for samples with no or very few() sections sampled (p=0 otherwise for those samples)
+   # do this in detection model, removeUnsampledRows(drainage, removeIncomplete = T) %>% # removes enc=0 rows for samples with no or very few() sections sampled (p=0 otherwise for those samples)
     removeLowAbundanceRivers(drainage) # removes ats,jimmy fish and bnt,mitchell from drainage=='west' - too few fish for estimates
 
   save(cdBeforeDetMod, file = cdFileBeforeDetMod)
@@ -101,7 +102,8 @@ dModelName <- paste0(paste0(speciesDet,collapse = ''),"_",minCohort)
 ddddD <- cdBeforeDetMod %>%
   filter(  species %in% speciesInDet,
            cohort >= minCohort,
-           sampleInterval < maxSampleInterval  # this removes the later yearly samples. Want to stick with seasonal samples
+           sampleInterval < maxSampleInterval %>%  # this removes the later yearly samples. Want to stick with seasonal samples
+           removeUnsampledRows(drainage, removeIncomplete = T) # removes enc=0 rows for samples with no or very few() sections sampled (p=0 otherwise for those samples)
   )
 
 dddD <- ddddD %>%
@@ -145,6 +147,7 @@ if (runDetectionModelTF) {
 #
 #speciesInGr <- factor(speciesGr, levels = c('bkt','bnt','ats'), ordered = T)
 
+#cd <- cd %>% filter(!(tag %in% tmp$tag)) #### for bnt test
 
 ddddG <- cd %>%
   filter(  species %in% speciesGr,
@@ -161,6 +164,7 @@ nSeasons <- n_distinct(ddddG$season, na.rm=T)
 # meanOrIter ="mean" uses means of all iterations
 # meanOrIter ="iter" uses the sample that is the combo of sampleToUse and chainToUse (ignored if meanOrIter="mean")
 #  for numOfItersToUse samples
+
 
 ######################################
 ######################################
@@ -212,8 +216,9 @@ iter=1
   elapsed[[ii]] <- done - start
   print(paste("Elapsed =",elapsed))
 
-  tmp <- getRMSE()
-  tmp$outliers%>% as.data.frame()
+  obsPred <- getRMSE(0.6)
+  obsPred$rmse
+  obsPred$outliers%>% as.data.frame()
   #####
 source("./R/plotFunctions.R") #will put into functions later
   plotInt()
