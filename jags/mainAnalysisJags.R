@@ -45,7 +45,7 @@ speciesInGr <- factor(speciesGr, levels = c('bkt','bnt','ats'), ordered = T)
 
 riverOrderedIn <- factor(c('west brook', 'wb jimmy', 'wb mitchell',"wb obear"),levels=c('west brook', 'wb jimmy', 'wb mitchell',"wb obear"),labels = c("west brook","wb jimmy","wb mitchell","wb obear"), ordered = T)
 
-minCohort <- 1997#1995 # >=
+minCohort <- 2010#1995 # >=
 maxSampleInterval <- 200 # <
 runDetectionModelTF <- F
 runCrossValidationTF <- F

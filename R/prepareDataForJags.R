@@ -29,7 +29,7 @@ prepareDataForJags <- function(d,modelType){
   print(paste("NA length for first observation", length(noLenFOcc$tagIndex)))
   print( noLenFOcc$tagIndex )
 
-  d$leftOut <- F #placeholder
+  d$leftOut <- FALSE #placeholder
   d <- d %>% crossValidate( runCrossValidationTF )
 
   evalRows <- which( d$lOcc == 0 )

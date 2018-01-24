@@ -59,3 +59,43 @@ plotSigmaBetas <- function(b){
     if(i %in% b) print(gg[[i]])
   }
 }
+
+
+# from Daniel Turek
+samplesPlot <- function(samples, var=colnames(samples), ind=NULL, burnin=NULL, width=7, height=4, legend=TRUE, legend.location='topright', traceplot=TRUE, densityplot=TRUE, file=NULL) {
+  if(!is.null(file)) pdf(file, width=width, height=height) else
+    if(inherits(try(knitr::opts_chunk$get('dev'), silent=TRUE), 'try-error') || is.null(knitr::opts_chunk$get('dev')))   ## if called from Rmarkdown/knitr
+      dev.new(height=height, width=width)
+  par.save <- par(no.readonly = TRUE)
+  par(mfrow=c(1,traceplot+densityplot), cex=0.7, cex.main=1.5, cex.axis=0.9, lab=c(3,3,7), mgp=c(0,0.4,0), mar=c(1.6,1.6,2,0.6), oma=c(0,0,0,0), tcl=-0.3, bty='l')
+  ## process samples
+  var <- gsub('\\[', '\\\\\\[', gsub('\\]', '\\\\\\]', var))   ## add \\ before any '[' or ']' appearing in var
+  var <- unlist(lapply(var, function(n) grep(paste0('^', n,'(\\[.+\\])?$'), colnames(samples), value=TRUE)))  ## expanded any indexing
+  samples <- samples[, var, drop=FALSE]
+  if(!is.null(ind) && !is.null(burnin)) stop('only specify either ind or burnin')
+  if(!is.null(ind))     samples <- samples[ind, , drop=FALSE]
+  if(!is.null(burnin))  samples <- samples[(burnin+1):dim(samples)[1], , drop=FALSE]
+  nparam <- ncol(samples)
+  rng <- range(samples)
+  if(!traceplot & !densityplot) stop('both traceplot and densityplot are false')
+  if(traceplot) {  ## traceplot
+    plot(1:nrow(samples), ylim=rng, type='n', main='Traceplots', xlab='', ylab='')
+    for(i in 1:nparam)
+      lines(samples[,i], col=rainbow(nparam, alpha=0.75)[i])
+    if(legend & !densityplot & !is.null(dimnames(samples)) & is.character(dimnames(samples)[[2]]))
+      legend(legend=dimnames(samples)[[2]], fill=rainbow(nparam, alpha=0.5), bty='n', x=legend.location)
+  }  ## finish traceplot
+  if(densityplot) {  ## denstyplot
+    xMin <- xMax <- yMax <- NULL
+    for(i in 1:nparam) {
+      d <- density(samples[,i])
+      xMin <- min(xMin,d$x); xMax <- max(xMax,d$x); yMax <- max(yMax, d$y) }
+    plot(1, xlim=c(xMin,xMax), ylim=c(0,yMax), type='n', main='Posterior Densities', xlab='', ylab='', yaxt='n')
+    for(i in 1:nparam)
+      polygon(density(samples[,i]), col=rainbow(nparam, alpha=0.2)[i], border=rainbow(nparam, alpha=0.2)[i])
+    if(legend & !is.null(dimnames(samples)) & is.character(dimnames(samples)[[2]]))
+      legend(legend=dimnames(samples)[[2]], fill=rainbow(nparam, alpha=0.5), bty='n', x=legend.location)
+  }  ## finish densityplot
+  if(!is.null(file)) dev.off()
+  invisible(par(par.save))
+}

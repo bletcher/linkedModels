@@ -1,7 +1,9 @@
 
 
 library(nimble)
+library(arrayhelpers)
 library(zoo)
+library(tidyverse)
 
 code <- nimbleCode({
     ##
@@ -117,7 +119,7 @@ constants <- list(riverDATA = jd$riverDATA,
                   tempStd = jd$tempStd,
                   flowStd = jd$flowStd)
 ##
-##data <- list(lengthDATA = jd$lengthDATA)
+#data <- list(lengthDATA = jd$lengthDATA)
 data <- list(lengthDATA = jd$lengthDATA[1:33518])    ## length(data$lengthDATA) = 33519, last obs is a fish with a single obs - doesn't get an evalRow
 ##
 nBetas <- 11
@@ -147,13 +149,13 @@ params <- c('grInt', 'grIntMu', 'grIntSigma', 'grBeta', 'grBetaMu',
 
 
 
-system.time(Rmodel <- nimbleModel(code, constants, data, inits))
+(Rmodel <- nimbleModel(code, constants, data, inits))
 
 Rmodel$lengthDATA <- zoo::na.approx(data$lengthDATA)
 table(is.na(Rmodel$lengthDATA))
 
-system.time(lp <- Rmodel$calculate())
-lp
+#system.time(lp <- Rmodel$calculate())
+#lp
 
 ##Rmodel$getVarNames(nodes = Rmodel$getNodeNames(stochOnly = TRUE))
 ## [1] "lengthDATA"     "grIntMu"        "grIntSigma"     "sigmaIntMu"
@@ -171,8 +173,8 @@ lp
 ##Rmodel$lengthDATA
 
 
-system.time(conf <- configureMCMC(Rmodel))
-##system.time(conf <- configureMCMC(Rmodel, useConjugacy = FALSE))
+(conf <- configureMCMC(Rmodel))
+##(conf <- configureMCMC(Rmodel, useConjugacy = FALSE))
 
 ##conf$printSamplers()
 
@@ -190,26 +192,82 @@ conf$addMonitors(params)
 
 ##setdiff(params, conf$getMonitors())
 
-system.time(Rmcmc <- buildMCMC(conf))
+(Rmcmc <- buildMCMC(conf))
 
-system.time(Cmodel <- compileNimble(Rmodel))
+(Cmodel <- compileNimble(Rmodel))
 
-system.time(Cmcmc <- compileNimble(Rmcmc, project = Rmodel))
+(Cmcmc <- compileNimble(Rmcmc, project = Rmodel))
+
+##args(runMCMC)
+
+mcmc1 <- runMCMC(Cmcmc, nburnin = 50, niter = 100, nchains = 1,
+                                samples = TRUE, samplesAsCodaMCMC = TRUE,
+                                summary = TRUE, WAIC =TRUE)
+
+extractSamples <- function(samples, varIn, thin = 3) {
+  outDFAll <- data.frame()
+
+  # more than 1 chain
+  if(is.list(samples)) { nChains <- length(samples)
+                         ## process samples
+                         var <- gsub('\\[', '\\\\\\[', gsub('\\]', '\\\\\\]', varIn))   ## add \\ before any '[' or ']' appearing in var
+                         var <- unlist(lapply(var, function(n) grep(paste0('^', n,'(\\[.+\\])?$'), colnames(samples[[1]]) , value=TRUE)))  ## expanded any indexing
+
+                         for( i in 1:nChains ){
+                           out <- samples[[i]][,var]
+                           outDF <- array2df(out) %>% rename(estimate = out, rowNumber = d1, variable = d2) %>% mutate( chain = i )
+                           outDFAll <- bind_rows(outDFAll,outDF)
+                         }
+
+  # 1 chain
+                         } else {
+                          nChains <- 1
+                          ## process samples
+                          var <- gsub('\\[', '\\\\\\[', gsub('\\]', '\\\\\\]', varIn))   ## add \\ before any '[' or ']' appearing in var
+                          var <- unlist(lapply(var, function(n) grep(paste0('^', n,'(\\[.+\\])?$'), colnames(samples), value=TRUE)))  ## expanded any indexing
+                          out <- samples[,var]
+                          outDFAll <- array2df(out) %>% rename(estimate = out, rowNumber = d1, variable = d2) %>% mutate( chain = 1 )
+                        }
+  outDFAll <- outDFAll %>% filter( rowNumber %% thin == 0)
+  return(outDFAll)
+}
+
+out1 = extractSamples(mcmc1$samples, "sigmaIntSigma")
+
+
+mcmc2 <- runMCMC(Cmcmc, nburnin = 50, niter = 100, nchains = 2,
+                               samples = TRUE, samplesAsCodaMCMC = TRUE,
+                               summary = TRUE, WAIC =TRUE)
+
+out2 = extractSamples(mcmc2$samples, "sigmaIntSigma")
+
+mcmc3 <- runMCMC(Cmcmc, nburnin = 50, niter = 100, nchains = 3,
+                               samples = TRUE, samplesAsCodaMCMC = TRUE,
+                               summary = TRUE, WAIC =TRUE)
+
+out3 = extractSamples(mcmc3$samples, "sigmaIntSigma")
+out3 = extractSamples(mcmc3$samples, "grInt")
+
+
+
+
+
+
+mvSamples <- samples2$mvSamples
+samplesMatrix <- as.matrix(mvSamples)
+
+str(samples2)
+dim(samples)
+colnames(samples)
+samplesPlot(samples$samples, 'sigmaIntSigma')
+
+
+
 
 
 
 ###############################
 # or, do all in one step
-##args(runMCMC)
-
-system.time(samples <- runMCMC(Cmcmc, nburnin = 500, niter = 1000,
-                               samples = TRUE, samplesAsCodaMCMC = TRUE,
-                               summary = TRUE, WAIC =TRUE))
-
-dim(samples)
-colnames(samples)
-###############################
-
 # system.time(
 #   mcmcOut <- nimbleMCMC(code = code, constants = constants,
 #                         data = data, inits = inits,
