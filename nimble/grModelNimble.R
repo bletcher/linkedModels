@@ -3,6 +3,8 @@
 library(nimble)
 library(arrayhelpers)
 library(zoo)
+library(jagsUI)
+library(coda)
 library(tidyverse)
 
 code <- nimbleCode({
@@ -199,58 +201,110 @@ conf$addMonitors(params)
 (Cmcmc <- compileNimble(Rmcmc, project = Rmodel))
 
 ##args(runMCMC)
+mcmcInfo <- list()
+mcmcInfo$nChains <- 3
+mcmcInfo$nIter <- 2500
+mcmcInfo$nBurnIn <- 500
+mcmcInfo$nSamples <- (mcmcInfo$nIter - mcmcInfo$nBurnIn) * mcmcInfo$nChains
 
-mcmc1 <- runMCMC(Cmcmc, nburnin = 50, niter = 100, nchains = 1,
-                                samples = TRUE, samplesAsCodaMCMC = TRUE,
-                                summary = TRUE, WAIC =TRUE)
+mcmc <- runMCMC(Cmcmc, nburnin = mcmcInfo$nBurnIn, niter = mcmcInfo$nIter, nchains = mcmcInfo$nChains,
+                               samples = TRUE, samplesAsCodaMCMC = TRUE,
+                               summary = TRUE, WAIC =TRUE)
+
+mcmcProcessed <- process.output(mcmc3$samples,DIC=FALSE)#,params.omit=("lengthExp")) #jagsUI function, DIC = FALSE because it requires 'deviance'
+
+obsPred <- getRMSENimble(mcmcProcessed,0.6)
+obsPred$rmse
+obsPred$outliers%>% as.data.frame()
+
+#####
+source("./R/plotFunctions.R") #will put into functions later
+plotIntNimble(mcmcProcessed)
+plotBetasNimble(mcmcProcessed,1:2)
+plotBetasNimble(mcmcProcessed,3:4)
+plotBetasNimble(mcmcProcessed,5:18)
+
+plotSigmaIntNimble(mcmcProcessed)
+plotSigmaBetasNimble(mcmcProcessed,1:2)
+plotSigmaBetasNimble(mcmcProcessed,3:4)
+
+#########
+limits <- 1.5 # -/+ limits on standardized range of input variable
+nPoints <- 5
+
+nItersForPred <- 100
+itersForPred <- sample( 1:mcmcInfo$nSamples, nItersForPred )
+
+# predictions across the grid
+p <- getPrediction( mcmcProcessed, limits, nPoints, itersForPred, c("len", "temp", "flow","count") )
+#######################
+# graph function, in analyzeOutputFunctions.R
+
+plotPred(p, "len", 1, "bkt") #spp is just a pass-through for title until I combine the species results into one df
+plotPred(p, "temp", 1, "bkt")
+plotPred(p, "flow", 1, "bkt")
+plotPred(p, "count", 1, "bkt")
+plotPred(p, c("flow", "temp"), 1, "bkt")
+plotPred(p, c("temp", "flow"), 0, "bkt")
+plotPred(p, c("temp","count"), 1, "bkt")
+plotPred(p, c("flow","count"), 1, "bkt")
+plotPred(p, c("len","count"), 1, "bkt")
+plotPred(p, c("flow","len"), 1, "bkt")
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
 
 extractSamples <- function(samples, varIn, thin = 3) {
   outDFAll <- data.frame()
 
   # more than 1 chain
   if(is.list(samples)) { nChains <- length(samples)
-                         ## process samples
-                         var <- gsub('\\[', '\\\\\\[', gsub('\\]', '\\\\\\]', varIn))   ## add \\ before any '[' or ']' appearing in var
-                         var <- unlist(lapply(var, function(n) grep(paste0('^', n,'(\\[.+\\])?$'), colnames(samples[[1]]) , value=TRUE)))  ## expanded any indexing
+  ## process samples
+  var <- gsub('\\[', '\\\\\\[', gsub('\\]', '\\\\\\]', varIn))   ## add \\ before any '[' or ']' appearing in var
+  var <- unlist(lapply(var, function(n) grep(paste0('^', n,'(\\[.+\\])?$'), colnames(samples[[1]]) , value=TRUE)))  ## expanded any indexing
 
-                         for( i in 1:nChains ){
-                           out <- samples[[i]][,var]
-                           outDF <- array2df(out) %>% rename(estimate = out, rowNumber = d1, variable = d2) %>% mutate( chain = i )
-                           outDFAll <- bind_rows(outDFAll,outDF)
-                         }
+  for( i in 1:nChains ){
+    out <- samples[[i]][,var]
+    outDF <- array2df(out) %>% rename(estimate = out, rowNumber = d1, variable = d2) %>% mutate( chain = i )
+    outDFAll <- bind_rows(outDFAll,outDF)
+  }
 
   # 1 chain
-                         } else {
-                          nChains <- 1
-                          ## process samples
-                          var <- gsub('\\[', '\\\\\\[', gsub('\\]', '\\\\\\]', varIn))   ## add \\ before any '[' or ']' appearing in var
-                          var <- unlist(lapply(var, function(n) grep(paste0('^', n,'(\\[.+\\])?$'), colnames(samples), value=TRUE)))  ## expanded any indexing
-                          out <- samples[,var]
-                          outDFAll <- array2df(out) %>% rename(estimate = out, rowNumber = d1, variable = d2) %>% mutate( chain = 1 )
-                        }
+  } else {
+    nChains <- 1
+    ## process samples
+    var <- gsub('\\[', '\\\\\\[', gsub('\\]', '\\\\\\]', varIn))   ## add \\ before any '[' or ']' appearing in var
+    var <- unlist(lapply(var, function(n) grep(paste0('^', n,'(\\[.+\\])?$'), colnames(samples), value=TRUE)))  ## expanded any indexing
+    out <- samples[,var]
+    outDFAll <- array2df(out) %>% rename(estimate = out, rowNumber = d1, variable = d2) %>% mutate( chain = 1 )
+  }
   outDFAll <- outDFAll %>% filter( rowNumber %% thin == 0)
   return(outDFAll)
 }
-
-out1 = extractSamples(mcmc1$samples, "sigmaIntSigma")
-
-
-mcmc2 <- runMCMC(Cmcmc, nburnin = 50, niter = 100, nchains = 2,
-                               samples = TRUE, samplesAsCodaMCMC = TRUE,
-                               summary = TRUE, WAIC =TRUE)
-
-out2 = extractSamples(mcmc2$samples, "sigmaIntSigma")
-
-mcmc3 <- runMCMC(Cmcmc, nburnin = 50, niter = 100, nchains = 3,
-                               samples = TRUE, samplesAsCodaMCMC = TRUE,
-                               summary = TRUE, WAIC =TRUE)
-
-out3 = extractSamples(mcmc3$samples, "sigmaIntSigma")
-out3 = extractSamples(mcmc3$samples, "grInt")
-
-
-
-
 
 
 mvSamples <- samples2$mvSamples

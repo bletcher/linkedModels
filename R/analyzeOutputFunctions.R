@@ -379,3 +379,41 @@ getRMSE <- function(residLimit = 0.6){
 
   return(list(rmse = rmse, outliers = outlierFish))
 }
+
+
+#'Plot observed/predicted and return RMSE
+#'
+#'@param residLimit THis is the lower limit for flagging a residual as an outlier
+#'@return rmse and outliers, print text and plot graph
+#'@export
+#'
+#'
+getRMSENimble <- function(d,residLimit = 0.6){
+  estLen <- array2df(d$q50$lengthExp, label.x = "estLen") %>% rename(rowNumber = d1) %>% mutate( estLen = na_if(estLen, 0) )
+
+  ddGIn <- ddG[[ii]][[2]]
+  ddGIn$isEvalRow <- ifelse( ddGIn$lOcc == 0,TRUE, FALSE )
+
+  ddGIn <- left_join( ddGIn, estLen, by = 'rowNumber') %>%
+    mutate( resid = abs(estLen - lengthDATAOriginalLnStd),
+            isOutlier = resid > residLimit )
+
+  outlierFish1 <- ddGIn %>% filter(isOutlier) %>% select(tag)
+
+  outlierFish <- ddGIn %>% filter(tag %in% outlierFish1$tag) %>%
+    select(tag,season,observedLength,lengthDATAOriginalLnStd,estLen,resid,rowNumber,isOutlier,species)
+
+  gg <- ggplot( ddGIn, aes( lengthDATAOriginalLnStd, estLen, color = isOutlier ) ) +
+    geom_point( alpha = 0.2 ) +
+    geom_abline(intercept = 0, slope = 1) +
+    ylim(-2,4) +
+    facet_wrap(~leftOut)
+  print(gg)
+
+  rmse <- ddGIn %>%
+    mutate( resid = estLen - lengthDATAOriginalLnStd ) %>%
+    group_by(leftOut) %>%
+    summarise( rmse = sqrt( sum(resid^2,na.rm=T)/length(resid) ) )
+
+  return(list(rmse = rmse, outliers = outlierFish))
+}

@@ -1,3 +1,74 @@
+##################
+# Nimble
+
+plotIntNimble <- function(d){
+  ggGrInt <- array2df(d$sims.list$grInt, label.x = "est") %>%
+    #  rename(yoy=d2,species=d3,season=d4,river=d5)
+    rename(yoy=d2,season=d3,river=d4)
+
+  ggGrInt$chain <- rep(1:mcmcInfo$nChains, each = mcmcInfo$nSamples/mcmcInfo$nChains)
+  ggGrInt$iter <- 1:as.numeric(mcmcInfo$nSamples/mcmcInfo$nChains)
+
+  gg <- ggplot(filter(ggGrInt), aes(iter,est)) + geom_point( aes(color=factor(chain)), size = 0.1 ) + ylim(-1.5,1.5) +
+    #   facet_grid(d2+d4~d5+d3)
+    facet_grid(yoy + river ~ season )
+  print(gg)
+}
+
+# isYOY[ evalRows[i] ],species[ evalRows[i]],season[ evalRows[i] ],riverDATA[ evalRows[i] ]
+# [1:675, 1, 1:2, 1:2, 1:4, 1:4]
+plotBetasNimble <- function(d,b){
+  ggGrBeta <- array2df(d$sims.list$grBeta, label.x = "est")
+
+  ggGrBeta$chain <- rep(1:mcmcInfo$nChains, each = mcmcInfo$nSamples/mcmcInfo$nChains)
+  ggGrBeta$iter <- 1:as.numeric(mcmcInfo$nSamples/mcmcInfo$nChains)
+
+  gg <- list()
+  numBetas <- 18
+  for (i in 1:numBetas){
+    gg[[i]] <- ggplot(filter(ggGrBeta,d2 == i), aes(iter,est)) +
+      geom_hline(yintercept = 0) +
+      geom_point( aes(color = factor(chain)), size = 0.1 ) +
+      ylim(-1,1) +
+      facet_grid(d3+d5 ~ d4) +
+      ggtitle(paste("beta =", i))
+    if(i %in% b) print(gg[[i]])
+  }
+}
+
+# isYOY[ evalRows[i] ],species[ evalRows[i]],season[ evalRows[i] ],riverDATA[ evalRows[i] ]
+# [1:675, 1, 1:2, 1:2, 1:4, 1:4]
+plotSigmaIntNimble <- function(d){
+  ggSigmaInt <- array2df(d$sims.list$sigmaInt, label.x = "est")
+
+  ggSigmaInt$chain <- rep(1:mcmcInfo$nChains, each = mcmcInfo$nSamples/mcmcInfo$nChains)
+  ggSigmaInt$iter <- 1:as.numeric(mcmcInfo$nSamples/mcmcInfo$nChains)
+
+  gg <- ggplot(filter(ggSigmaInt), aes(iter,est)) + geom_point( aes(color=factor(chain)), size = 0.1 ) + ylim(-5,5) + facet_grid(d2+d4~d3)
+  print(gg)
+}
+
+# isYOY[ evalRows[i] ],species[ evalRows[i]],season[ evalRows[i] ],riverDATA[ evalRows[i] ]
+# [1:675, 1, 1:2, 1:2, 1:4, 1:4]
+plotSigmaBetasNimble <- function(d,b){
+  ggSigmaBeta <- array2df(d$sims.list$sigmaBeta, label.x = "est")
+
+  ggSigmaBeta$chain <- rep(1:mcmcInfo$nChains, each = mcmcInfo$nSamples/mcmcInfo$nChains)
+  ggSigmaBeta$iter <- 1:as.numeric(mcmcInfo$nSamples/mcmcInfo$nChains)
+
+  gg <- list()
+  numBetas <- 6
+  for (i in 1:numBetas){
+    gg[[i]] <- ggplot(filter(ggGrBeta,d2 == i), aes(iter,est)) + geom_hline(yintercept = 0) + geom_point( aes(color = factor(chain)), size = 0.1 ) +
+      ylim(-1,1) + facet_grid(d3+d5~d4) + ggtitle(paste("beta =", i))
+    if(i %in% b) print(gg[[i]])
+  }
+}
+
+
+##################
+# jags
+
 plotInt <- function(){
   ggGrInt <- array2df(dG[[1]]$sims.list$grInt, label.x = "est") %>%
   #  rename(yoy=d2,species=d3,season=d4,river=d5)
