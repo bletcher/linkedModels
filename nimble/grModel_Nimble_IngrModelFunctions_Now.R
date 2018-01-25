@@ -78,8 +78,13 @@ code <- nimbleCode({
     }
     ##
     for(ii in 1:nEvalRows) {
-        lengthExp[ evalRows[ii] + 1 ] <- lengthDATA[ evalRows[ii] ] + gr[ evalRows[ii] ]
+      lengthExp[ evalRows[ii] + 1 ] <- lengthDATA[ evalRows[ii] ] + gr[ evalRows[ii] ]
     }
+    ##
+    # including this messes up predictions
+    # for(ii in 1:nFirstObsRows) {
+    #   lengthExp[ firstObsRows[ii]  ] <- lengthDATA[ firstObsRows[ii] ]
+    # }
     ##
     ## individual random effect on gr
     for(iii in 1:nInd) {
@@ -122,7 +127,7 @@ constants <- list(riverDATA = jd$riverDATA,
                   flowStd = jd$flowStd)
 ##
 #data <- list(lengthDATA = jd$lengthDATA)
-data <- list(lengthDATA = jd$lengthDATA[1:33518])    ## length(data$lengthDATA) = 33519, last obs is a fish with a single obs - doesn't get an evalRow
+data <- list(lengthDATA = jd$lengthDATA[1:33518])
 ##
 nBetas <- 11
 nBetasSigma <- 6
@@ -151,9 +156,9 @@ params <- c('grInt', 'grIntMu', 'grIntSigma', 'grBeta', 'grBetaMu',
 
 
 
-(Rmodel <- nimbleModel(code, constants, data, inits))
+Rmodel <- nimbleModel(code, constants, data, inits)
 
-Rmodel$lengthDATA <- zoo::na.approx(data$lengthDATA)
+Rmodel$lengthDATA <- zoo::na.approx(data$lengthDATA[1:33518]) ## length(data$lengthDATA) = 33519, last obs is a fish with a single obs - doesn't get an evalRow
 table(is.na(Rmodel$lengthDATA))
 
 #system.time(lp <- Rmodel$calculate())
@@ -175,7 +180,7 @@ table(is.na(Rmodel$lengthDATA))
 ##Rmodel$lengthDATA
 
 
-(conf <- configureMCMC(Rmodel))
+conf <- configureMCMC(Rmodel)
 ##(conf <- configureMCMC(Rmodel, useConjugacy = FALSE))
 
 ##conf$printSamplers()
@@ -194,39 +199,41 @@ conf$addMonitors(params)
 
 ##setdiff(params, conf$getMonitors())
 
-(Rmcmc <- buildMCMC(conf))
+Rmcmc <- buildMCMC(conf)
 
-(Cmodel <- compileNimble(Rmodel))
+Cmodel <- compileNimble(Rmodel)
 
-(Cmcmc <- compileNimble(Rmcmc, project = Rmodel))
+Cmcmc <- compileNimble(Rmcmc, project = Rmodel)
 
 ##args(runMCMC)
 mcmcInfo <- list()
 mcmcInfo$nChains <- 3
-mcmcInfo$nIter <- 2500
-mcmcInfo$nBurnIn <- 500
+mcmcInfo$nIter <- 3000
+mcmcInfo$nBurnIn <- 1500
 mcmcInfo$nSamples <- (mcmcInfo$nIter - mcmcInfo$nBurnIn) * mcmcInfo$nChains
 
 mcmc <- runMCMC(Cmcmc, nburnin = mcmcInfo$nBurnIn, niter = mcmcInfo$nIter, nchains = mcmcInfo$nChains,
                                samples = TRUE, samplesAsCodaMCMC = TRUE,
                                summary = TRUE, WAIC =TRUE)
 
-mcmcProcessed <- process.output(mcmc3$samples,DIC=FALSE)#,params.omit=("lengthExp")) #jagsUI function, DIC = FALSE because it requires 'deviance'
+# Use jagsUI functions to get output ionto jagsUI format for analysis functions
+source("./R/jagsUIFunctions.R")
+mcmcProcessed <- process.output(mcmc$samples, DIC=FALSE, params.omit=FALSE)#,params.omit=("lengthExp")) #jagsUI function, DIC = FALSE because it requires 'deviance'
 
-obsPred <- getRMSENimble(mcmcProcessed,0.6)
+obsPred <- getRMSE_Nimble(mcmcProcessed,0.6)
 obsPred$rmse
 obsPred$outliers%>% as.data.frame()
 
 #####
 source("./R/plotFunctions.R") #will put into functions later
-plotIntNimble(mcmcProcessed)
-plotBetasNimble(mcmcProcessed,1:2)
-plotBetasNimble(mcmcProcessed,3:4)
-plotBetasNimble(mcmcProcessed,5:18)
+plotInt_Nimble(mcmcProcessed)
+plotBetas_Nimble(mcmcProcessed,1:2)
+plotBetas_Nimble(mcmcProcessed,3:4)
+plotBetas_Nimble(mcmcProcessed,5:18)
 
-plotSigmaIntNimble(mcmcProcessed)
-plotSigmaBetasNimble(mcmcProcessed,1:2)
-plotSigmaBetasNimble(mcmcProcessed,3:4)
+plotSigmaInt_Nimble(mcmcProcessed)
+plotSigmaBetas_Nimble(mcmcProcessed,1:2)
+plotSigmaBetas_Nimble(mcmcProcessed,3:4)
 
 #########
 limits <- 1.5 # -/+ limits on standardized range of input variable
@@ -236,7 +243,7 @@ nItersForPred <- 100
 itersForPred <- sample( 1:mcmcInfo$nSamples, nItersForPred )
 
 # predictions across the grid
-p <- getPrediction( mcmcProcessed, limits, nPoints, itersForPred, c("len", "temp", "flow","count") )
+p <- getPrediction( mcmcProcessed, limits, nPoints, itersForPred, constants, c("len", "temp", "flow","count") )
 #######################
 # graph function, in analyzeOutputFunctions.R
 
@@ -331,7 +338,7 @@ samplesPlot(samples$samples, 'sigmaIntSigma')
 
 
 library(coda)
-ess <- apply(samples, 2, effectiveSize)
+ess <- apply(mcmcProcessed, 2, effectiveSize)
 
 ess5 <- ess * 5
 

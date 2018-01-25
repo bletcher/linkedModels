@@ -1,7 +1,7 @@
 ##################
 # Nimble
 
-plotIntNimble <- function(d){
+plotInt_Nimble <- function(d){
   ggGrInt <- array2df(d$sims.list$grInt, label.x = "est") %>%
     #  rename(yoy=d2,species=d3,season=d4,river=d5)
     rename(yoy=d2,season=d3,river=d4)
@@ -17,7 +17,7 @@ plotIntNimble <- function(d){
 
 # isYOY[ evalRows[i] ],species[ evalRows[i]],season[ evalRows[i] ],riverDATA[ evalRows[i] ]
 # [1:675, 1, 1:2, 1:2, 1:4, 1:4]
-plotBetasNimble <- function(d,b){
+plotBetas_Nimble <- function(d,b){
   ggGrBeta <- array2df(d$sims.list$grBeta, label.x = "est")
 
   ggGrBeta$chain <- rep(1:mcmcInfo$nChains, each = mcmcInfo$nSamples/mcmcInfo$nChains)
@@ -38,7 +38,7 @@ plotBetasNimble <- function(d,b){
 
 # isYOY[ evalRows[i] ],species[ evalRows[i]],season[ evalRows[i] ],riverDATA[ evalRows[i] ]
 # [1:675, 1, 1:2, 1:2, 1:4, 1:4]
-plotSigmaIntNimble <- function(d){
+plotSigmaInt_Nimble <- function(d){
   ggSigmaInt <- array2df(d$sims.list$sigmaInt, label.x = "est")
 
   ggSigmaInt$chain <- rep(1:mcmcInfo$nChains, each = mcmcInfo$nSamples/mcmcInfo$nChains)
@@ -50,7 +50,7 @@ plotSigmaIntNimble <- function(d){
 
 # isYOY[ evalRows[i] ],species[ evalRows[i]],season[ evalRows[i] ],riverDATA[ evalRows[i] ]
 # [1:675, 1, 1:2, 1:2, 1:4, 1:4]
-plotSigmaBetasNimble <- function(d,b){
+plotSigmaBetas_Nimble <- function(d,b){
   ggSigmaBeta <- array2df(d$sims.list$sigmaBeta, label.x = "est")
 
   ggSigmaBeta$chain <- rep(1:mcmcInfo$nChains, each = mcmcInfo$nSamples/mcmcInfo$nChains)

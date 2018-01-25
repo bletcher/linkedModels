@@ -26,6 +26,7 @@ library(arrayhelpers)
 library(linkedModels)
 library(coda)
 library(jagsUI)
+library(nimble)
 library(getWBData)
 library(stringr)
 library(lubridate)
@@ -209,97 +210,72 @@ iter=1
   print(start)
   print(c("in loop",meanOrIter,ii,iter))
 
-  dG[[ii]] <- ddG[[ii]][[1]] %>% runGrowthModel( parallel = FALSE )  ###################change to nimble #######################
+  dG[[ii]] <- ddG[[ii]][[1]] %>% runGrowthModel_Nimble( )
 
-  save(dG,ddG,dddG, file = paste0('./data/out/dG_', as.integer(Sys.time()),'_', modelName, '.RData'))
+  save(dG,ddG,dddG, file = paste0('./data/out/dG_', as.integer(Sys.time()),'_', modelName, '_Nimble.RData'))
 
   done <- Sys.time()
   elapsed[[ii]] <- done - start
   print(paste("Elapsed =",elapsed))
 
-  obsPred <- getRMSENimble(0.6)
+
+  #########################################
+  # Use jagsUI functions to get output into jagsUI format for analysis functions
+
+  source("./R/jagsUIFunctions.R")
+  mcmcProcessed <- process.output(dG[[ii]]$mcmc$samples, DIC=FALSE, params.omit=FALSE)#,params.omit=("lengthExp")) #jagsUI function, DIC = FALSE because it requires 'deviance'
+
+  obsPred <- getRMSE_Nimble(mcmcProcessed,0.6)
   obsPred$rmse
   obsPred$outliers%>% as.data.frame()
-  #####
-source("./R/plotFunctions.R") #will put into functions later
-  plotInt()
-  plotBetas(1:2)
-  plotBetas(3:4)
-  plotBetas(5:18)
 
-  plotSigma()
-  plotSigmaBetas(1:2)
-  plotSigmaBetas(3:4)
+  ######################
+  # Plot traces
 
+  source("./R/plotFunctions.R") #will put into functions later
+  plotInt_Nimble(mcmcProcessed)
+  plotBetas_Nimble(mcmcProcessed,1:2)
+  plotBetas_Nimble(mcmcProcessed,3:4)
+  plotBetas_Nimble(mcmcProcessed,5:18)
 
-##### }
+  plotSigmaInt_Nimble(mcmcProcessed)
+  plotSigmaBetas_Nimble(mcmcProcessed,1:2)
+  plotSigmaBetas_Nimble(mcmcProcessed,3:4)
 
-ggplot(ddG[[1]][[2]], aes(nAllFishBySpeciesPStd,grLength)) + geom_point() + facet_grid(species+river~season)
+  #########################
+  # Predictions
 
-whiskerplot(dG[[1]], parameters = "lengthExp[1:20]")
-traceplot(dG[[1]], parameters = "lengthExp[7:8]")
+  limits <- 1.5 # -/+ limits on standardized range of input variable
+  nPoints <- 5
 
-whiskerplot(dG[[1]], parameters = "grInt")
-whiskerplot(dG[[1]], parameters = "grIntMu")
-whiskerplot(dG[[1]], parameters = "grSigma")
-jagsUI::traceplot(dG[[1]], parameters = "grSigma")
+  nItersForPred <- 100
+  itersForPred <- sample( 1:mcmcInfo$nSamples, nItersForPred )
 
-jagsUI::traceplot(dG[[1]], parameters = "grInt[2,1,1,3]")
-jagsUI::traceplot(dG[[1]], parameters = "grIntSigma")
+  # predictions across the grid
+  p <- getPrediction( mcmcProcessed, limits, nPoints, itersForPred, constants, c("len", "temp", "flow","count") )#######################
+  save(p,file = "./data/out/P_ForMike.R")
+  # graph function, in analyzeOutputFunctions.R
 
-whiskerplot(dG[[1]], parameters = "grSigma")
-whiskerplot(dG[[1]], parameters = "grSigmaMu")
-whiskerplot(dG[[1]], parameters = "sigmaBetaSigma")
-whiskerplot(dG[[1]], parameters = "sigmaBeta")
-traceplot(dG[[1]], parameters = "sigmaIntSigma")
+  plotPred(p, "len", 1, "bkt") #spp is just a pass-through for title until I combine the species results into one df
+  plotPred(p, "temp", 1, "bkt")
+  plotPred(p, "flow", 1, "bkt")
+  plotPred(p, "count", 1, "bkt")
+  plotPred(p, c("flow", "temp"), 1, "bkt")
+  plotPred(p, c("temp", "flow"), 0, "bkt")
+  plotPred(p, c("temp","count"), 1, "bkt")
+  plotPred(p, c("flow","count"), 1, "bkt")
+  plotPred(p, c("len","count"), 1, "bkt")
+  plotPred(p, c("flow","len"), 1, "bkt")
 
-whiskerplot(dG[[1]], parameters = "grBeta")
-whiskerplot(dG[[1]], parameters = "grBeta[2,,,,]")
-whiskerplot(dG[[1]], parameters = "grBetaMu")
-whiskerplot(dG[[1]], parameters = "grBetaSigma")
-jagsUI::traceplot(dG[[1]], parameters = "grBeta")
+  # predictions of sigma across the grid
+  pSigma <- getPredictionSigma( dG[[1]], limits, nPoints, itersForPred, c("len", "temp", "flow","count") )
+  #######################
+  # graph function, in analyzeOutputFunctions.R
 
-whiskerplot(dG[[1]], parameters = "grIndRE[1:100]")
-jagsUI::traceplot(dG[[1]], parameters = "grIndRE[1:10]")
-
-whiskerplot(dG[[1]], parameters = "grBetaMu")
-jagsUI::traceplot(dG[[1]], parameters = "grBetaMu")
-
-
-######################################
-# Explore predictions
-
-limits <- 1.5 # -/+ limits on standardized range of input variable
-nPoints <- 5
-
-nItersForPred <- 100
-itersForPred <- sample( 1:dG[[1]]$mcmc.info$n.samples,nItersForPred )
-
-# predictions across the grid
-p <- getPrediction( dG[[1]], limits, nPoints, itersForPred, c("len", "temp", "flow","count") )
-#######################
-# graph function, in analyzeOutputFunctions.R
-
-plotPred(p, "len", 1, "bkt") #spp is just a pass-through for title until I combine the species results into one df
-plotPred(p, "temp", 1, "bkt")
-plotPred(p, "flow", 1, "bkt")
-plotPred(p, "count", 1, "bkt")
-plotPred(p, c("flow", "temp"), 1, "bkt")
-plotPred(p, c("temp", "flow"), 0, "bkt")
-plotPred(p, c("temp","count"), 1, "bkt")
-plotPred(p, c("flow","count"), 1, "bkt")
-plotPred(p, c("len","count"), 1, "bkt")
-plotPred(p, c("flow","len"), 1, "bkt")
-
-# predictions of sigma across the grid
-pSigma <- getPredictionSigma( dG[[1]], limits, nPoints, itersForPred, c("len", "temp", "flow","count") )
-#######################
-# graph function, in analyzeOutputFunctions.R
-
-plotPred(pSigma, "len", 1, "bkt")
-plotPred(pSigma, "temp", 1, "bkt")
-plotPred(pSigma, "flow", 1, "bkt")
-plotPred(pSigma, "count", 1, "bkt")
+  plotPred(pSigma, "len", 1, "bkt")
+  plotPred(pSigma, "temp", 1, "bkt")
+  plotPred(pSigma, "flow", 1, "bkt")
+  plotPred(pSigma, "count", 1, "bkt")
 
 
 

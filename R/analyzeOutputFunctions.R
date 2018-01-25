@@ -9,15 +9,15 @@
 #'@return a data frame
 #'@export
 
-getPrediction <- function(d, limits = 2, nPoints = 5, itersForPred, varsToEstimate){
+getPrediction <- function(d, limits = 2, nPoints = 5, itersForPred, constants, varsToEstimate){
 
   # get grInt in df format
   #grInt <- array2df(d$sims.list$grInt, levels = list(iter=NA,isYOY=c(0,1),species=species,season=1:nSeasons,river=riverOrderedIn), label.x="int")
-  grInt <- array2df(d$sims.list$grInt, levels = list(iter=NA,isYOY=c(0,1),season=1:nSeasons,river=riverOrderedIn), label.x="int")
+  grInt <- array2df(d$sims.list$grInt, levels = list(iter=NA,isYOY=c(0,1),season=1:constants$nSeasons,river=riverOrderedIn), label.x="int")
 
   # get grBeta in df format and merge in grInt
  # grBeta1 <- array2df(d$sims.list$grBeta, levels = list(iter=NA,beta=NA,isYOY=c(0,1),species=species,season=1:nSeasons,river=riverOrderedIn), label.x="est")
-  grBeta1 <- array2df(d$sims.list$grBeta, levels = list(iter=NA,beta=NA,isYOY=c(0,1),season=1:nSeasons,river=riverOrderedIn), label.x="est")
+  grBeta1 <- array2df(d$sims.list$grBeta, levels = list(iter=NA,beta=NA,isYOY=c(0,1),season=1:constants$nSeasons,river=riverOrderedIn), label.x="est")
 
   grBeta <- spread( grBeta1, key = beta, value = est, sep = "" ) %>%
     left_join( .,grInt )
@@ -50,7 +50,7 @@ getPrediction <- function(d, limits = 2, nPoints = 5, itersForPred, varsToEstima
     countData <- rep(x, each = nPoints ^ expIndex)
     expIndex <- expIndex + 1
   }  else
-    countData <- 0
+  countData <- 0
 
   if ("len" %in% varsToEstimate) {
     lenData <- rep(x, each = nPoints ^ expIndex)
@@ -388,8 +388,8 @@ getRMSE <- function(residLimit = 0.6){
 #'@export
 #'
 #'
-getRMSENimble <- function(d,residLimit = 0.6){
-  estLen <- array2df(d$q50$lengthExp, label.x = "estLen") %>% rename(rowNumber = d1) %>% mutate( estLen = na_if(estLen, 0) )
+getRMSE_Nimble <- function(d,residLimit = 0.6, ii = 1){
+  estLen <- array2df(d$q50$lengthExp, label.x = "estLen") %>% rename(rowNumber = d1) #%>% mutate( estLen = na_if(estLen, 0) )
 
   ddGIn <- ddG[[ii]][[2]]
   ddGIn$isEvalRow <- ifelse( ddGIn$lOcc == 0,TRUE, FALSE )
