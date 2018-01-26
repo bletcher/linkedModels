@@ -374,7 +374,7 @@ removeUnsampledRows <- function(d,drainage,removeIncomplete = F){
   #d$riverN <- as.numeric(d$riverOrdered)
 
   d <- left_join(d,unsampledSamples) %>%
-    filter( unsampled01 == 0 )
+    dplyr:::filter( unsampled01 == 0 )
 
   return(d)
   # zeroSectionsDATA - completely unsampled winter samples. not including samples before season 4,year 1 because we didn't want to rewrite the meanPhiS34 indexing [mostly noise ni these estimates anyway]
@@ -418,7 +418,7 @@ getYOYCutoffs <- function(d,dr = 'west'){
             drainage = tolower(drainage),
             river = tolower(river),
             riverOrdered = factor(river, levels = c('west brook','wb jimmy','wb mitchell','wb obear'), ordered = T) ) %>%
-    filter( drainage == dr,
+    dplyr:::filter( drainage == dr,
             age == 0,
             species %in% speciesIn ) %>%
     arrange( species,riverOrdered,sampleName ) %>%

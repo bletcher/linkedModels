@@ -5,7 +5,7 @@
 #'@return A list for importing into the jags run. Run with run"modelType"Model()
 #'@export
 
-prepareDataForJags <- function(d,modelType){
+prepareDataForJags_Nimble <- function(d,modelType){
 
   nOcc <- n_distinct(d$sampleIndex, na.rm = T)
   minOcc <- min(d$sampleIndex)

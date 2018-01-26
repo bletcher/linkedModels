@@ -1,10 +1,11 @@
 #'Run the growth model using Nimble
 #'
-#'@param drainage Which drainage, "west" or "stanley"
+#'@param d, input dataframe
+#'@param mcmcInfo, a list containing run info
 #'@return a data frame
 #'@export
 
-runGrowthModel_Nimble <- function(d){
+runGrowthModel_Nimble <- function(d,mcmcInfo){
 
   code <- nimbleCode({
     ##
@@ -122,7 +123,8 @@ runGrowthModel_Nimble <- function(d){
                     flowStd = d$flowStd)
   ##
   #data <- list(lengthDATA = d$lengthDATA)
-  data <- list(lengthDATA = d$lengthDATA[1:33518])
+  #data <- list(lengthDATA = d$lengthDATA[1:33518])
+  data <- list(lengthDATA = d$lengthDATA[1:34701])
   ##
   nBetas <- 11
   nBetasSigma <- 6
@@ -151,73 +153,72 @@ runGrowthModel_Nimble <- function(d){
 
 
 
-  Rmodel <- nimbleModel(code, constants, data, inits)
+  # Rmodel <- nimbleModel(code, constants, data, inits)
+  #
+  # #  Rmodel$lengthDATA <- zoo::na.approx(data$lengthDATA[1:33518]) ## length(data$lengthDATA) = 33519, last obs is a fish with a single obs - doesn't get an evalRow
+  # Rmodel$lengthDATA <- zoo::na.approx(data$lengthDATA[1:34701]) ## length(data$lengthDATA) = 33519, last obs is a fish with a single obs - doesn't get an evalRow
+  #   table(is.na(Rmodel$lengthDATA))
+  #
+  # #system.time(lp <- Rmodel$calculate())
+  # #lp
+  #
+  # ##Rmodel$getVarNames(nodes = Rmodel$getNodeNames(stochOnly = TRUE))
+  # ## [1] "lengthDATA"     "grIntMu"        "grIntSigma"     "sigmaIntMu"
+  # ## [5] "sigmaIntSigma"  "grBetaMu"       "grBetaSigma"    "sigmaBetaMu"
+  # ## [9] "sigmaBetaSigma" "sigmaIndRE"     "grInt"          "sigmaInt"
+  # ##[13] "grBeta"         "sigmaBeta"      "grIndRE"
+  #
+  #
+  # ##for(nn in Rmodel$getVarNames(nodes = Rmodel$getNodeNames(stochOnly = TRUE))) {
+  # ##    print(nn)
+  # ##    print(any(is.na(Rmodel[[paste0('logProb_', nn)]])))
+  # ##}
+  # ##
+  # ##Rmodel$logProb_lengthDATA
+  # ##Rmodel$lengthDATA
+  #
+  #
+  # conf <- configureMCMC(Rmodel)
+  # ##(conf <- configureMCMC(Rmodel, useConjugacy = FALSE))
+  #
+  # ##conf$printSamplers()
+  #
+  # #conf$removeSamplers('sigmaIntSigma')
+  #
+  # #for(nn in Rmodel$expandNodeNames('sigmaIntSigma'))
+  # #    conf$addSampler(nn, 'RW', control = list(log = TRUE))
+  #
+  # #conf$addSampler('sigmaIntSigma', 'RW_block')
+  #
+  # ##conf$printSamplers('sigmaIntSigma')
+  #
+  # conf$getMonitors()
+  # conf$addMonitors(params)
+  #
+  # ##setdiff(params, conf$getMonitors())
+  #
+  # Rmcmc <- buildMCMC(conf)
+  #
+  # Cmodel <- compileNimble(Rmodel)
+  #
+  # Cmcmc <- compileNimble(Rmcmc, project = Rmodel)
+  #
+  # ##args(runMCMC)
+  #
+  # mcmcInfo$nSamples <- (mcmcInfo$nIter - mcmcInfo$nBurnIn) * mcmcInfo$nChains
+  #
+  # mcmc <- runMCMC(Cmcmc, nburnin = mcmcInfo$nBurnIn, niter = mcmcInfo$nIter, nchains = mcmcInfo$nChains,
+  #                 samples = TRUE, samplesAsCodaMCMC = TRUE,
+  #                 summary = TRUE, WAIC = TRUE)
 
-  Rmodel$lengthDATA <- zoo::na.approx(data$lengthDATA[1:33518]) ## length(data$lengthDATA) = 33519, last obs is a fish with a single obs - doesn't get an evalRow
-  table(is.na(Rmodel$lengthDATA))
-
-  #system.time(lp <- Rmodel$calculate())
-  #lp
-
-  ##Rmodel$getVarNames(nodes = Rmodel$getNodeNames(stochOnly = TRUE))
-  ## [1] "lengthDATA"     "grIntMu"        "grIntSigma"     "sigmaIntMu"
-  ## [5] "sigmaIntSigma"  "grBetaMu"       "grBetaSigma"    "sigmaBetaMu"
-  ## [9] "sigmaBetaSigma" "sigmaIndRE"     "grInt"          "sigmaInt"
-  ##[13] "grBeta"         "sigmaBeta"      "grIndRE"
-
-
-  ##for(nn in Rmodel$getVarNames(nodes = Rmodel$getNodeNames(stochOnly = TRUE))) {
-  ##    print(nn)
-  ##    print(any(is.na(Rmodel[[paste0('logProb_', nn)]])))
-  ##}
-  ##
-  ##Rmodel$logProb_lengthDATA
-  ##Rmodel$lengthDATA
-
-
-  conf <- configureMCMC(Rmodel)
-  ##(conf <- configureMCMC(Rmodel, useConjugacy = FALSE))
-
-  ##conf$printSamplers()
-
-  #conf$removeSamplers('sigmaIntSigma')
-
-  #for(nn in Rmodel$expandNodeNames('sigmaIntSigma'))
-  #    conf$addSampler(nn, 'RW', control = list(log = TRUE))
-
-  #conf$addSampler('sigmaIntSigma', 'RW_block')
-
-  ##conf$printSamplers('sigmaIntSigma')
-
-  conf$getMonitors()
-  conf$addMonitors(params)
-
-  ##setdiff(params, conf$getMonitors())
-
-  Rmcmc <- buildMCMC(conf)
-
-  Cmodel <- compileNimble(Rmodel)
-
-  Cmcmc <- compileNimble(Rmcmc, project = Rmodel)
-
-  ##args(runMCMC)
-  mcmcInfo <- list()
-  mcmcInfo$nChains <- 3
-  mcmcInfo$nIter <- 3000
-  mcmcInfo$nBurnIn <- 1500
-  mcmcInfo$nSamples <- (mcmcInfo$nIter - mcmcInfo$nBurnIn) * mcmcInfo$nChains
-
-  mcmc <- runMCMC(Cmcmc, nburnin = mcmcInfo$nBurnIn, niter = mcmcInfo$nIter, nchains = mcmcInfo$nChains,
-                  samples = TRUE, samplesAsCodaMCMC = TRUE,
-                  summary = TRUE, WAIC =TRUE)
-
-  return(list(Rmodel,conf,Rmcmc,Cmodel,Cmcmc,mcmcInfo,mcmc))
+  return(list(code=code,data=data,constants=constants,inits=inits,params=params))
 }
 
 
 #'Run the growth model using jags
 #'
-#'@param drainage Which drainage, "west" or "stanley"
+#'@param d, the input dataframe
+#'@param paralel, boolean for running chains in parallel
 #'@return a data frame
 #'@export
 

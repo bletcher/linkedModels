@@ -109,7 +109,7 @@ ddddD <- cdBeforeDetMod %>%
   )
 
 dddD <- ddddD %>%
-  prepareDataForJagsNimble('detection')
+  prepareDataForJags_Nimble('detection')
 
 if (runDetectionModelTF) {
   ddD <- dddD[[1]] %>% runDetectionModel(parallel = TRUE) ###################### currently for jags
@@ -200,34 +200,66 @@ iter=1
 
   # saving into a list for now, could also map()
 
+  #########################################
+  # Prepare data for model run
+
   # dddG[[ii]] <- addBiomassDeltas( dddG[[ii]] )
   dddG[[ii]] <- addSurvivals( ddddG,ddD,meanOrIter,iter ) %>% removeFishWithManyIntermediateNAs()
 
-  ddG[[ii]] <- dddG[[ii]] %>% prepareDataForJagsNimble("growth") # returns a list, list for running model in [[ii]][[1]], input df in [[ii]][[2]]
+  ddG[[ii]] <- dddG[[ii]] %>% prepareDataForJags_Nimble("growth") # returns a list, list for running model in [[ii]][[1]], input df in [[ii]][[2]]
     #save(dG,ddG,dddG, file = paste0('./data/out/dG_', modelName, '_forLmer.RData')) # for Lmer model with all spp
   #####
   start <- Sys.time()
   print(start)
   print(c("in loop",meanOrIter,ii,iter))
 
-  dG[[ii]] <- ddG[[ii]][[1]] %>% runGrowthModel_Nimble( )
+  #########################################
+  # mcmc run data
+  mcmcInfo <- list()
+  mcmcInfo$nChains <- 3
+  mcmcInfo$nIter <- 300
+  mcmcInfo$nBurnIn <- 150
+  mcmcInfo$nSamples <- (mcmcInfo$nIter - mcmcInfo$nBurnIn) * mcmcInfo$nChains
 
-  save(dG,ddG,dddG, file = paste0('./data/out/dG_', as.integer(Sys.time()),'_', modelName, '_Nimble.RData'))
+  #########################################
+  # Get data for model run
 
-  done <- Sys.time()
-  elapsed[[ii]] <- done - start
-  print(paste("Elapsed =",elapsed))
+  dG[[ii]] <- ddG[[ii]][[1]] %>% runGrowthModel_Nimble(mcmcInfo)
+
+  #########################################
+  # Nimble model run
+
+  Rmodel <- nimbleModel(dG[[ii]]$code, dG[[ii]]$constants, dG[[ii]]$data, dG[[ii]]$inits)
+  Rmodel$lengthDATA <- zoo::na.approx(dG[[ii]]$data$lengthDATA[1:34701]) ## length(data$lengthDATA) = 33519, last obs is a fish with a single obs - doesn't get an evalRow
+
+  conf <- configureMCMC(Rmodel)
+  conf$addMonitors(dG[[ii]]$params)
+  Rmcmc <- buildMCMC(conf)
+  Cmodel <- compileNimble(Rmodel)
+  Cmcmc <- compileNimble(Rmcmc, project = Rmodel)
+  mcmc <- runMCMC(Cmcmc, nburnin = mcmcInfo$nBurnIn, niter = mcmcInfo$nIter, nchains = mcmcInfo$nChains,
+                  samples = TRUE, samplesAsCodaMCMC = TRUE,
+                  summary = TRUE, WAIC = TRUE)
 
 
   #########################################
   # Use jagsUI functions to get output into jagsUI format for analysis functions
 
   source("./R/jagsUIFunctions.R")
-  mcmcProcessed <- process.output(dG[[ii]]$mcmc$samples, DIC=FALSE, params.omit=FALSE)#,params.omit=("lengthExp")) #jagsUI function, DIC = FALSE because it requires 'deviance'
+  mcmcProcessed <- process.output(mcmc$samples, DIC=FALSE, params.omit=FALSE)#,params.omit=("lengthExp")) #jagsUI function, DIC = FALSE because it requires 'deviance'
 
   obsPred <- getRMSE_Nimble(mcmcProcessed,0.6)
   obsPred$rmse
   obsPred$outliers%>% as.data.frame()
+
+  #########################################
+  # save data to file
+
+  save(mcmcProcessed,dG,ddG,dddG, file = paste0('./data/out/dG_', as.integer(Sys.time()),'_', modelName, '_Nimble.RData'))
+
+  done <- Sys.time()
+  elapsed[[ii]] <- done - start
+  print(paste("Elapsed =",elapsed))
 
   ######################
   # Plot traces
@@ -252,8 +284,8 @@ iter=1
   itersForPred <- sample( 1:mcmcInfo$nSamples, nItersForPred )
 
   # predictions across the grid
-  p <- getPrediction( mcmcProcessed, limits, nPoints, itersForPred, constants, c("len", "temp", "flow","count") )#######################
-  save(p,file = "./data/out/P_ForMike.R")
+  p <- getPrediction( mcmcProcessed, limits, nPoints, itersForPred, dG[[1]]$constants, c("len", "temp", "flow","count") )#######################
+  # save(p,file = "./data/out/P_ForMike.R")
   # graph function, in analyzeOutputFunctions.R
 
   plotPred(p, "len", 1, "bkt") #spp is just a pass-through for title until I combine the species results into one df
