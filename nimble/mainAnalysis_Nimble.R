@@ -42,7 +42,7 @@ drainage <- "west" # ==
 speciesDet <- c("bkt", "bnt","ats") #keep as all three spp
 speciesInDet <- factor(speciesDet, levels = c('bkt','bnt','ats'), ordered = T)
 
-speciesGr <- "bkt"
+speciesGr <- "ats"
 speciesInGr <- factor(speciesGr, levels = c('bkt','bnt','ats'), ordered = T)
 
 riverOrderedIn <- factor(c('west brook', 'wb jimmy', 'wb mitchell',"wb obear"),levels=c('west brook', 'wb jimmy', 'wb mitchell',"wb obear"),labels = c("west brook","wb jimmy","wb mitchell","wb obear"), ordered = T)
@@ -104,9 +104,8 @@ dModelName <- paste0(paste0(speciesDet,collapse = ''),"_",minCohort)
 ddddD <- cdBeforeDetMod %>%
   filter(  species %in% speciesInDet,
            cohort >= minCohort,
-           sampleInterval < maxSampleInterval %>%  # this removes the later yearly samples. Want to stick with seasonal samples
-           removeUnsampledRows(drainage, removeIncomplete = T) # removes enc=0 rows for samples with no or very few() sections sampled (p=0 otherwise for those samples)
-  )
+           sampleInterval < maxSampleInterval) %>%  # this removes the later yearly samples. Want to stick with seasonal samples
+           removeUnsampledRows(drainage, removeIncomplete = TRUE) # removes enc=0 rows for samples with no or very few() sections sampled (p=0 otherwise for those samples)
 
 dddD <- ddddD %>%
   prepareDataForJags_Nimble('detection')
@@ -141,16 +140,13 @@ if (runDetectionModelTF) {
 # until they are seen somewhere else.
 # Accomplished with %>% fillSizeLocation(size = F) in getCoreData()
 
-##########################################################################################################################################
+##############################################################################################################################
 # Growth model
 # One species at a time
 ###############
-#
-#
-#speciesInGr <- factor(speciesGr, levels = c('bkt','bnt','ats'), ordered = T)
 
-#cd <- cd %>% filter(!(tag %in% tmp$tag)) #### for bnt test
-
+#########################################
+# Filter raw data (cd)
 ddddG <- cd %>%
   filter(  species %in% speciesGr,
            cohort >= minCohort,
@@ -198,14 +194,11 @@ iter=1
 #######for (iter in itersToUse) {
   ii <- ii + 1
 
-  # saving into a list for now, could also map()
-
   #########################################
   # Prepare data for model run
 
   # dddG[[ii]] <- addBiomassDeltas( dddG[[ii]] )
   dddG[[ii]] <- addSurvivals( ddddG,ddD,meanOrIter,iter ) %>% removeFishWithManyIntermediateNAs()
-
   ddG[[ii]] <- dddG[[ii]] %>% prepareDataForJags_Nimble("growth") # returns a list, list for running model in [[ii]][[1]], input df in [[ii]][[2]]
     #save(dG,ddG,dddG, file = paste0('./data/out/dG_', modelName, '_forLmer.RData')) # for Lmer model with all spp
   #####
@@ -217,8 +210,8 @@ iter=1
   # mcmc run data
   mcmcInfo <- list()
   mcmcInfo$nChains <- 3
-  mcmcInfo$nIter <- 300
-  mcmcInfo$nBurnIn <- 150
+  mcmcInfo$nIter <- 2000
+  mcmcInfo$nBurnIn <- 1500
   mcmcInfo$nSamples <- (mcmcInfo$nIter - mcmcInfo$nBurnIn) * mcmcInfo$nChains
 
   #########################################
@@ -230,10 +223,9 @@ iter=1
   # Nimble model run
 
   Rmodel <- nimbleModel(dG[[ii]]$code, dG[[ii]]$constants, dG[[ii]]$data, dG[[ii]]$inits)
-  Rmodel$lengthDATA <- zoo::na.approx(dG[[ii]]$data$lengthDATA[1:34701]) ## length(data$lengthDATA) = 33519, last obs is a fish with a single obs - doesn't get an evalRow
+  Rmodel$lengthDATA <- zoo::na.approx(dG[[ii]]$data$lengthDATA)
 
-  conf <- configureMCMC(Rmodel)
-  conf$addMonitors(dG[[ii]]$params)
+  conf <- configureMCMC(Rmodel); conf$addMonitors(dG[[ii]]$params)
   Rmcmc <- buildMCMC(conf)
   Cmodel <- compileNimble(Rmodel)
   Cmcmc <- compileNimble(Rmcmc, project = Rmodel)
@@ -254,8 +246,7 @@ iter=1
 
   #########################################
   # save data to file
-
-  save(mcmcProcessed,dG,ddG,dddG, file = paste0('./data/out/dG_', as.integer(Sys.time()),'_', modelName, '_Nimble.RData'))
+  save(mcmcProcessed,dG,ddG, file = paste0('./data/out/dG_', as.integer(Sys.time()),'_', modelName, '_Nimble.RData'))
 
   done <- Sys.time()
   elapsed[[ii]] <- done - start
@@ -285,7 +276,7 @@ iter=1
 
   # predictions across the grid
   p <- getPrediction( mcmcProcessed, limits, nPoints, itersForPred, dG[[1]]$constants, c("len", "temp", "flow","count") )#######################
-  # save(p,file = "./data/out/P_ForMike.R")
+  # save(p,file = "./data/out/P_ForMikeBNT.RData")
   # graph function, in analyzeOutputFunctions.R
 
   plotPred(p, "len", 1, "bkt") #spp is just a pass-through for title until I combine the species results into one df

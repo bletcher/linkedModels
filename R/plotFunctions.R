@@ -59,7 +59,7 @@ plotSigmaBetas_Nimble <- function(d,b){
   gg <- list()
   numBetas <- 6
   for (i in 1:numBetas){
-    gg[[i]] <- ggplot(filter(ggGrBeta,d2 == i), aes(iter,est)) + geom_hline(yintercept = 0) + geom_point( aes(color = factor(chain)), size = 0.1 ) +
+    gg[[i]] <- ggplot(filter(ggSigmaBeta,d2 == i), aes(iter,est)) + geom_hline(yintercept = 0) + geom_point( aes(color = factor(chain)), size = 0.1 ) +
       ylim(-1,1) + facet_grid(d3+d5~d4) + ggtitle(paste("beta =", i))
     if(i %in% b) print(gg[[i]])
   }

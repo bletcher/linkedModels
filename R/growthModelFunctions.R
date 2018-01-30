@@ -108,6 +108,9 @@ runGrowthModel_Nimble <- function(d,mcmcInfo){
   ##"countPStdBKT"       "countPStdBNT"       "countPStdATS"
   ##"speciesByInd"       "grNotUse"
 
+  # Need to trim off fish at the end of the data that aer only observed once and aren't in evalRows
+
+
   constants <- list(riverDATA = d$riverDATA,
                     nRivers = d$nRivers,
                     nSpecies = d$nSpecies,
@@ -122,9 +125,8 @@ runGrowthModel_Nimble <- function(d,mcmcInfo){
                     tempStd = d$tempStd,
                     flowStd = d$flowStd)
   ##
-  #data <- list(lengthDATA = d$lengthDATA)
-  #data <- list(lengthDATA = d$lengthDATA[1:33518])
-  data <- list(lengthDATA = d$lengthDATA[1:34701])
+  data <- list(lengthDATA = d$lengthDATA[1:(max(constants$evalRows)+1)]) # so don't have trailing single obs fish at end of df
+  print(paste("Trimmed", length(d$lengthDATA) - length(data$lengthDATA), "fish that had single observation(s) at end of df"))
   ##
   nBetas <- 11
   nBetasSigma <- 6
@@ -384,7 +386,7 @@ crossValidate <- function(d, runCrossValidationTF){
 
 removeFishWithManyIntermediateNAs <- function(d){
 
-  tagsToRemove <- c('00088cc02a','1c2d6c51d3','00088cc364')
+  tagsToRemove <- c('00088cc02a','1c2d6c51d3','00088cc364','1c2c582218')
   d <- d %>% filter( !(tag %in% tagsToRemove) )
 
   return(d)

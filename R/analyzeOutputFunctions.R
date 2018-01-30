@@ -13,11 +13,11 @@ getPrediction <- function(d, limits = 2, nPoints = 5, itersForPred, constants, v
 
   # get grInt in df format
   #grInt <- array2df(d$sims.list$grInt, levels = list(iter=NA,isYOY=c(0,1),species=species,season=1:nSeasons,river=riverOrderedIn), label.x="int")
-  grInt <- array2df(d$sims.list$grInt, levels = list(iter=NA,isYOY=c(0,1),season=1:constants$nSeasons,river=riverOrderedIn), label.x="int")
+  grInt <- array2df(d$sims.list$grInt, levels = list(iter=NA,isYOY=c(0,1),season=1:constants$nSeasons,river=riverOrderedIn[1:constants$nRivers]), label.x="int")
 
   # get grBeta in df format and merge in grInt
  # grBeta1 <- array2df(d$sims.list$grBeta, levels = list(iter=NA,beta=NA,isYOY=c(0,1),species=species,season=1:nSeasons,river=riverOrderedIn), label.x="est")
-  grBeta1 <- array2df(d$sims.list$grBeta, levels = list(iter=NA,beta=NA,isYOY=c(0,1),season=1:constants$nSeasons,river=riverOrderedIn), label.x="est")
+  grBeta1 <- array2df(d$sims.list$grBeta, levels = list(iter=NA,beta=NA,isYOY=c(0,1),season=1:constants$nSeasons,river=riverOrderedIn[1:constants$nRivers]), label.x="est")
 
   grBeta <- spread( grBeta1, key = beta, value = est, sep = "" ) %>%
     left_join( .,grInt )
@@ -389,7 +389,10 @@ getRMSE <- function(residLimit = 0.6){
 #'
 #'
 getRMSE_Nimble <- function(d,residLimit = 0.6, ii = 1){
-  estLen <- array2df(d$q50$lengthExp, label.x = "estLen") %>% rename(rowNumber = d1) #%>% mutate( estLen = na_if(estLen, 0) )
+  estLen <- array2df(d$q50$lengthExp, label.x = "estLen") %>%
+    rename(rowNumber = d1) %>%
+  #  filter( estLen != 0 ) #
+    mutate( estLen = na_if(estLen, 0) )
 
   ddGIn <- ddG[[ii]][[2]]
   ddGIn$isEvalRow <- ifelse( ddGIn$lOcc == 0,TRUE, FALSE )
@@ -401,7 +404,7 @@ getRMSE_Nimble <- function(d,residLimit = 0.6, ii = 1){
   outlierFish1 <- ddGIn %>% filter(isOutlier) %>% select(tag)
 
   outlierFish <- ddGIn %>% filter(tag %in% outlierFish1$tag) %>%
-    select(tag,season,observedLength,lengthDATAOriginalLnStd,estLen,resid,rowNumber,isOutlier,species)
+    select(tag,season,sampleName,observedLength,lengthDATAOriginalLnStd,estLen,resid,rowNumber,isOutlier,species)
 
   gg <- ggplot( ddGIn, aes( lengthDATAOriginalLnStd, estLen, color = isOutlier ) ) +
     geom_point( alpha = 0.2 ) +
