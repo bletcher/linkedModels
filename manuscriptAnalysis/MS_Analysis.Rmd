@@ -24,6 +24,8 @@ load("D:/projects/linkedModels/data/out/dG_1517347750_ats1997_Nimble.RData")
 mcmc[['ats']]  <- mcmcProcessed
 
 rm(dddG,ddG,dG,mcmcProcessed)
+
+load("D:/projects/linkedModels/data/cd_west_1997.RData")
 ```
 
 ```{r custom theme}
@@ -168,6 +170,51 @@ ggplot(d, aes(year,nAllFishBySpeciesP)) +
   theme_publication() +
   facet_grid(seasonGG ~ riverOrderedGG, scales = "free")
 ```
+```{r raw growth rates}
+
+cdMeans <- cd %>%
+  mutate( gr = (observedLength - lagObservedLength)/as.integer(detectionDate - lagDetectionDate) ) %>%
+  group_by(species,riverOrdered,season) %>%
+  summarize( meanGr = mean( gr, na.rm = TRUE ),
+             sdGr = sd( gr, na.rm = TRUE )) %>%
+  mutate( meanGrUp = meanGr + sdGr,
+          meanGrDn = meanGr - sdGr
+          )
+
+pd <- position_dodge(0.05) # move them .05 to the left and right
+
+# all three species
+ggplot( cdMeans %>% filter(riverOrdered == 'west brook'), aes(season, meanGr, color = species) ) +
+  geom_errorbar(aes(ymin = meanGrDn, ymax = meanGrUp), width = 0.25, position = pd) +
+  geom_point( size = 2 ) +
+  geom_line()
+
+cd$isYOY <- ifelse( cd$ageInSamples <= 3, 1, 2 )
+cdMeansByisYOY <- cd %>%
+  mutate( gr = (observedLength - lagObservedLength)/as.integer(detectionDate - lagDetectionDate) ) %>%
+  group_by(species,riverOrdered,season,isYOY) %>%
+  summarize( meanGr = mean( gr, na.rm = TRUE ),
+             sdGr = sd( gr, na.rm = TRUE )) %>%
+  mutate( meanGrUp = meanGr + sdGr,
+          meanGrDn = meanGr - sdGr
+          )
+
+# all three species
+ggplot( cdMeansByisYOY %>% filter(riverOrdered == 'west brook'), aes(season, meanGr, color = species) ) +
+  geom_errorbar(aes(ymin = meanGrDn, ymax = meanGrUp), width = 0.25, position = pd) +
+  geom_point( size = 2 ) +
+  geom_line()+
+  facet_wrap(~isYOY)
+
+# bkt only
+pdBKT <- position_dodge(0.05) # move them .05 to the left and right
+ggplot( cdMeans %>% filter(species=='bkt'), aes(season, meanGr, color = riverOrdered) ) +
+  geom_errorbar(aes(ymin = meanGrDn, ymax = meanGrUp), width = 0.25, position = pdBKT) +
+  geom_point( size = 3 ) +
+  geom_line( size = 1 ) +
+  facet_wrap(~isYOY)
+
+```
 
 
 
@@ -269,7 +316,7 @@ grIndRE[['bkt']] <- as.data.frame(mcmc[['bkt']]$q50$grIndRE); names(grIndRE[['bk
 grIndRE[['bnt']] <- as.data.frame(mcmc[['bnt']]$q50$grIndRE); names(grIndRE[['bnt']]) <- 'value'
 grIndRE[['ats']] <- as.data.frame(mcmc[['ats']]$q50$grIndRE); names(grIndRE[['ats']]) <- 'value'
 
-ggplot( grIndRE[[1]], aes(value) ) +
+ggplot( grIndRE[[1]], aes(value,..density..) ) +
   geom_freqpoly(binwidth = 0.0025) +
   geom_freqpoly(aes(value), color = "brown", binwidth = 0.0025, data = grIndRE[[2]]) +
   geom_freqpoly(aes(value), color = "lightblue", binwidth = 0.0025, data = grIndRE[[3]])

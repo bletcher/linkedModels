@@ -11,7 +11,8 @@ runGrowthModel_Nimble <- function(d,mcmcInfo){
     ##
     for( i in 1:nEvalRows ) {
       ##
-      lengthDATA[ evalRows[i] + 1 ] ~ dnorm( lengthDATA[ evalRows[i] ] + gr[ evalRows[i] ], sd = expectedGRSigma[ evalRows[i] ] )
+      lengthDATA[ evalRows[i] + 1 ] ~ dnorm( lengthDATA[ evalRows[i] ] + gr[ evalRows[i] ] / sampleInterval[ evalRows[i] ],
+                                             sd = expectedGRSigma[ evalRows[i] ] )
       ##
       gr[ evalRows[i] ] <-
         grInt[         isYOYDATA[evalRows[i]], season[evalRows[i]], riverDATA[evalRows[i]] ] +
@@ -123,7 +124,8 @@ runGrowthModel_Nimble <- function(d,mcmcInfo){
                     countPAllSppStd = d$countPAllSppStd,
                     isYOYDATA = d$isYOYDATA,
                     tempStd = d$tempStd,
-                    flowStd = d$flowStd)
+                    flowStd = d$flowStd,
+                    sampleInterval = d$sampleInterval)
   ##
   data <- list(lengthDATA = d$lengthDATA[1:(max(constants$evalRows)+1)]) # so don't have trailing single obs fish at end of df
   print(paste("Trimmed", length(d$lengthDATA) - length(data$lengthDATA), "fish that had single observation(s) at end of df"))
