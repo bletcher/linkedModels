@@ -42,7 +42,7 @@ drainage <- "west" # ==
 speciesDet <- c("bkt", "bnt","ats") #keep as all three spp
 speciesInDet <- factor(speciesDet, levels = c('bkt','bnt','ats'), ordered = T)
 
-speciesGr <- "bkt"
+speciesGr <- "ats"
 speciesInGr <- factor(speciesGr, levels = c('bkt','bnt','ats'), ordered = T)
 
 riverOrderedIn <- factor(c('west brook', 'wb jimmy', 'wb mitchell',"wb obear"),levels=c('west brook', 'wb jimmy', 'wb mitchell',"wb obear"),labels = c("west brook","wb jimmy","wb mitchell","wb obear"), ordered = T)
@@ -240,7 +240,7 @@ iter=1
   source("./R/jagsUIFunctions.R")
   mcmcProcessed <- process.output(mcmc$samples, DIC=FALSE, params.omit=FALSE)#,params.omit=("lengthExp")) #jagsUI function, DIC = FALSE because it requires 'deviance'
 
-  obsPred <- getRMSE_Nimble(mcmcProcessed,0.6)
+  obsPred <- getRMSE_Nimble(mcmcProcessed,20)
   obsPred$rmse
   obsPred$outliers%>% as.data.frame()
 
@@ -275,30 +275,30 @@ iter=1
   itersForPred <- sample( 1:mcmcInfo$nSamples, nItersForPred )
 
   # predictions across the grid
-  p <- getPrediction( mcmcProcessed, limits, nPoints, itersForPred, dG[[1]]$constants, c("len", "temp", "flow","count") )#######################
-  # save(p,file = "./data/out/P_ForMikeBNT.RData")
+  p <- getPrediction( mcmcProcessed, limits, nPoints, itersForPred, dG[[1]]$constants, ddG[[ii]][[1]]$sampleIntervalMean, c("len", "temp", "flow","count") )#######################
+    save(p,file = paste0("./data/out/P_ForMike_",speciesGr,".RData"))
   # graph function, in analyzeOutputFunctions.R
 
-  plotPred(p, "len", 1, "bkt") #spp is just a pass-through for title until I combine the species results into one df
-  plotPred(p, "temp", 1, "bkt")
-  plotPred(p, "flow", 1, "bkt")
-  plotPred(p, "count", 1, "bkt")
-  plotPred(p, c("flow", "temp"), 1, "bkt")
-  plotPred(p, c("temp", "flow"), 0, "bkt")
-  plotPred(p, c("temp","count"), 1, "bkt")
-  plotPred(p, c("flow","count"), 1, "bkt")
-  plotPred(p, c("len","count"), 1, "bkt")
-  plotPred(p, c("flow","len"), 1, "bkt")
+  plotPred(p, "len", 1, speciesGr) #spp is just a pass-through for title until I combine the species results into one df
+
+  plotPred(p, "temp", 1, speciesGr)
+  plotPred(p, "flow", 1, speciesGr)
+  plotPred(p, "count", 1, speciesGr)
+  plotPred(p, c("temp", "flow"), 1, speciesGr)
+  plotPred(p, c("temp","count"), 1, speciesGr)
+  plotPred(p, c("flow","count"), 1, speciesGr)
+  plotPred(p, c("len","count"), 1, speciesGr)
+  plotPred(p, c("flow","len"), 1, speciesGr)
 
   # predictions of sigma across the grid
   pSigma <- getPredictionSigma( dG[[1]], limits, nPoints, itersForPred, c("len", "temp", "flow","count") )
   #######################
   # graph function, in analyzeOutputFunctions.R
 
-  plotPred(pSigma, "len", 1, "bkt")
-  plotPred(pSigma, "temp", 1, "bkt")
-  plotPred(pSigma, "flow", 1, "bkt")
-  plotPred(pSigma, "count", 1, "bkt")
+  plotPred(pSigma, "len", 1, speciesGr)
+  plotPred(pSigma, "temp", 1, speciesGr)
+  plotPred(pSigma, "flow", 1, speciesGr)
+  plotPred(pSigma, "count", 1, speciesGr)
 
 
 

@@ -9,7 +9,7 @@
 #'@return a data frame
 #'@export
 
-getPrediction <- function(d, limits = 2, nPoints = 5, itersForPred, constants, varsToEstimate){
+getPrediction <- function(d, limits = 2, nPoints = 5, itersForPred, constants, sampleIntervalMeanIn, varsToEstimate){
 
   # get grInt in df format
   #grInt <- array2df(d$sims.list$grInt, levels = list(iter=NA,isYOY=c(0,1),species=species,season=1:nSeasons,river=riverOrderedIn), label.x="int")
@@ -22,6 +22,8 @@ getPrediction <- function(d, limits = 2, nPoints = 5, itersForPred, constants, v
   grBeta <- spread( grBeta1, key = beta, value = est, sep = "" ) %>%
     left_join( .,grInt )
 
+  sampleIntervalMean <- array2df(sampleIntervalMeanIn, levels = list( river=riverOrderedIn[1:constants$nRivers],season=1:constants$nSeasons,species=1:constants$nSpecies), label.x = "interval")
+  grBeta <- left_join(grBeta,sampleIntervalMean)
   # prediction template
   x <- seq( -limits,limits,length.out = nPoints )
 
@@ -71,7 +73,7 @@ getPrediction <- function(d, limits = 2, nPoints = 5, itersForPred, constants, v
 
     # repeat predTemplate nrow( grBetaIter ) times
     predTemplateLong <- do.call("rbind", replicate( nrow( grBetaIter ), predTemplate, simplify = FALSE) )
-    # repeat each row of grbetaIter nrow(predTemplate) times
+    # repeat each row of grBetaIter nrow(predTemplate) times
     grBetaLong <- grBetaIter[rep(seq_len(nrow(grBetaIter)), each = nrow(predTemplate)),]
     # Put them together
     preds <- cbind( predTemplateLong,grBetaLong )
@@ -79,7 +81,7 @@ getPrediction <- function(d, limits = 2, nPoints = 5, itersForPred, constants, v
   # This model structure needs to match that in grModelx.jags
   preds <- preds %>%
     mutate( predGr =
-              int +
+            ( int +
               beta1 * len +
               beta2 * count +
               beta3 * temp +
@@ -94,38 +96,9 @@ getPrediction <- function(d, limits = 2, nPoints = 5, itersForPred, constants, v
               beta9 * temp * count +
               beta10 * count * flow +
 
-      #        beta12 * len * count +
-      #        beta13 * len * flow +
-      #        beta14 * len * temp +
-
               beta11 * count * temp * flow
-       #       beta16 * len * temp * flow +
-      #        beta17 * count * len * flow +
-       #       beta18 * count * temp * len
+            ) #/ interval
 
-              # int +
-              # beta1 * len +
-              # beta2 * count +
-              # beta3 * temp +
-              # beta4 * flow +
-              #
-              # beta5 * len^2 +
-              # beta6 * count^2 +
-              # beta7 * temp^2 +
-              # beta8 * flow^2 +
-              #
-              # beta9 * temp * flow +
-              # beta10 * temp * count +
-              # beta11 * count * flow +
-              #
-              # beta12 * len * count +
-              # beta13 * len * flow +
-              # beta14 * len * temp +
-              #
-              # beta15 * count * temp * flow +
-              # beta16 * len * temp * flow +
-              # beta17 * count * len * flow +
-              # beta18 * count * temp * len
 
     )
 
@@ -398,23 +371,24 @@ getRMSE_Nimble <- function(d,residLimit = 0.6, ii = 1){
   ddGIn$isEvalRow <- ifelse( ddGIn$lOcc == 0,TRUE, FALSE )
 
   ddGIn <- left_join( ddGIn, estLen, by = 'rowNumber') %>%
-    mutate( resid = abs(estLen - lengthDATAOriginalLnStd),
+    #mutate( resid = abs(estLen - lengthDATAOriginalLnStd),
+    mutate( resid = abs(estLen - observedLength),
             isOutlier = resid > residLimit )
 
-  outlierFish1 <- ddGIn %>% filter(isOutlier) %>% select(tag)
+  outlierFish1 <- ddGIn %>% filter(isOutlier) %>% dplyr::select(tag)
 
   outlierFish <- ddGIn %>% filter(tag %in% outlierFish1$tag) %>%
-    select(tag,season,sampleName,observedLength,lengthDATAOriginalLnStd,estLen,resid,rowNumber,isOutlier,species)
+    dplyr::select(tag,season,sampleName,observedLength,lengthDATALnStd,observedLength,estLen,resid,rowNumber,isOutlier,species)
 
-  gg <- ggplot( ddGIn, aes( lengthDATAOriginalLnStd, estLen, color = isOutlier ) ) +
-    geom_point( alpha = 0.2 ) +
-    geom_abline(intercept = 0, slope = 1) +
-    ylim(-2,4) +
-    facet_wrap(~leftOut)
+  gg <- ggplot( ddGIn, aes( observedLength, estLen, color = isOutlier ) ) +
+        geom_point( alpha = 0.2 ) +
+        geom_abline(intercept = 0, slope = 1) +
+ #   ylim(-2,4) +
+        facet_wrap(~leftOut)
   print(gg)
 
   rmse <- ddGIn %>%
-    mutate( resid = estLen - lengthDATAOriginalLnStd ) %>%
+    mutate( resid = estLen - observedLength ) %>%
     group_by(leftOut) %>%
     summarise( rmse = sqrt( sum(resid^2,na.rm=T)/length(resid) ) )
 

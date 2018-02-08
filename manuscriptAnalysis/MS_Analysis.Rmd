@@ -3,32 +3,7 @@ title: "Growth model analysis"
 output: html_notebook
 ---
 
-Plots for the manuscript
-
-```{r}
-library(arrayhelpers)
-library(tidyverse)
-
-load("D:/projects/linkedModels/data/out/ddD_bktbntats_1997.RData")
-load("D:/projects/linkedModels/data/out/countsAndMasses.RData")
-
-mcmc <- list()
-load("D:/projects/linkedModels/data/out/dG_1517338587_bkt1997_Nimble.RData")
-mcmc[['bkt']] <- mcmcProcessed
-d <- dddG[[1]]
-
-load("D:/projects/linkedModels/data/out/dG_1517344974_bnt1997_Nimble.RData")
-mcmc[['bnt']]  <- mcmcProcessed
-
-load("D:/projects/linkedModels/data/out/dG_1517347750_ats1997_Nimble.RData")
-mcmc[['ats']]  <- mcmcProcessed
-
-rm(dddG,ddG,dG,mcmcProcessed)
-
-load("D:/projects/linkedModels/data/cd_west_1997.RData")
-```
-
-```{r custom theme}
+```{r functions}
 theme_publication <- function(base_size=14, base_family="") {
   library(grid)
   library(ggthemes)
@@ -72,6 +47,52 @@ scale_colour_Publication <- function(...){
 
 }
 
+```
+
+
+Plots for the manuscript
+
+```{r message=FALSE}
+library(arrayhelpers)
+library(tidyverse)
+
+load("D:/projects/linkedModels/data/out/ddD_bktbntats_1997.RData")
+load("D:/projects/linkedModels/data/out/countsAndMasses.RData")
+
+mcmc <- list()
+load("D:/projects/linkedModels/data/out/dG_1517846073_bkt1997_Nimble.RData")
+
+# input data
+d1 <- ddG[[1]][[1]]
+d2 <- ddG[[1]][[2]]
+meanSampleIntervalMean <- data.frame( meanSampleInterval = colMeans(d1$sampleIntervalMean), season = 1:d1$nSeasons )
+
+#RECALCULATE gr for dataset. Filtering by maxSampleInterval in the creat ddddG step leaves in trailing lengths from the long samp intervals
+d2 <- d2 %>%
+  group_by(tag) %>%
+  # arrange(tag,sampleNumber) %>%
+  mutate( lagObservedWeight = lead(observedWeight),
+          lagObservedLength = lead(observedLength),
+          grWeight = exp(lagObservedWeight - observedWeight)/as.numeric((lagDetectionDate - detectionDate)),
+          grLength = (lagObservedLength - observedLength)/as.numeric((lagDetectionDate - detectionDate))
+  )  
+#d2 %>% filter(tag=='00088cc059') %>% select(tag,riverOrdered,riverN,lagRiverN,sampleNumber,observedLength,lagObservedLength)
+
+
+
+# output data
+mcmc[['bkt']] <- mcmcProcessed
+
+
+load("D:/projects/linkedModels/data/out/dG_1517850064_bnt1997_Nimble.RData")
+mcmc[['bnt']]  <- mcmcProcessed
+
+load("D:/projects/linkedModels/data/out/dG_1517853143_ats1997_Nimble.RData")
+mcmc[['ats']]  <- mcmcProcessed
+
+rm(ddG,dG,mcmcProcessed)
+
+load("D:/projects/linkedModels/data/cd_west_1997.RData")
 ```
 
 ```{r raw counts}
@@ -200,11 +221,18 @@ cdMeansByisYOY <- cd %>%
           )
 
 # all three species
-ggplot( cdMeansByisYOY %>% filter(riverOrdered == 'west brook'), aes(season, meanGr, color = species) ) +
+ggplot( cdMeansByisYOY %>% filter(riverOrdered == 'west brook', !(season == 2 & isYOY == 1)), aes(season, meanGr, color = species) ) +
   geom_errorbar(aes(ymin = meanGrDn, ymax = meanGrUp), width = 0.25, position = pd) +
   geom_point( size = 2 ) +
   geom_line()+
   facet_wrap(~isYOY)
+
+# all three species by river
+ggplot( cdMeansByisYOY %>% filter(!(season == 2 & isYOY == 1)) , aes(season, meanGr, color = riverOrdered) ) +
+  geom_errorbar(aes(ymin = meanGrDn, ymax = meanGrUp), width = 0.25, position = pd) +
+  geom_point( size = 2 ) +
+  geom_line()+
+  facet_grid(species~isYOY)
 
 # bkt only
 pdBKT <- position_dodge(0.05) # move them .05 to the left and right
@@ -214,6 +242,39 @@ ggplot( cdMeans %>% filter(species=='bkt'), aes(season, meanGr, color = riverOrd
   geom_line( size = 1 ) +
   facet_wrap(~isYOY)
 
+```
+```{r growth by movement}
+d2$isYOY <- ifelse( d2$ageInSamples <= 3, 1, 2 )
+d2 <-  d2 %>%
+  group_by(tag) %>%
+  mutate( lagRiverN = lead(riverN), 
+          riverNMove = paste(riverN,lagRiverN, sep="_")
+          #gr = (observedLength - lagObservedLength)/as.integer(detectionDate - lagDetectionDate)
+          )
+
+#d2 %>% filter(tag=='00088cbf44') %>% select(tag,riverN,lagRiverN,sampleNumber,observedLength,lagObservedLength)
+table(d2$riverNMove)
+
+cdMeansByisYOYriverNMove <- d2 %>%
+  #mutate( gr = (observedLength - lagObservedLength)/as.integer(detectionDate - lagDetectionDate) ) %>%
+  group_by(species,riverN,lagRiverN,season,isYOY) %>%
+  summarize( meanGr = mean( grLength, na.rm = TRUE ),
+             sdGr = sd( grLength, na.rm = TRUE ),
+             n = n()) %>%
+  mutate( meanGrUp = meanGr + sdGr,
+          meanGrDn = meanGr - sdGr
+          )
+
+# 
+ggplot( cdMeansByisYOYriverNMove %>% filter(!(season == 2 & isYOY == 1), species == "bkt", isYOY == 2) , aes(season, meanGr, color = factor(lagRiverN)) ) +
+  geom_errorbar(aes(ymin = meanGrDn, ymax = meanGrUp), width = 0.25, position = pd) +
+  geom_point( size = 2 ) +
+  geom_line()+
+  facet_wrap(~riverN)
+
+d2 %>% filter(riverN == 1 & lagRiverN == 4) %>% select(tag,river,sampleNumber)
+d2 %>% filter(riverN == 2, is.na(lagRiverN), !is.na(grLength)) %>% select(tag,riverN,sampleNumber,lagRiverN,observedLength,lagObservedLength,gr,grLength)
+d2 %>% filter(tag=='00088cc059') %>% select(tag,riverOrdered,riverN,lagRiverN,sampleNumber,observedLength,lagObservedLength,gr,grLength)
 ```
 
 
@@ -293,7 +354,48 @@ ggplot( grInt[['bkt']] %>% filter(river %in% c('west brook','wb jimmy')), aes(in
   theme_publication() +
   facet_grid(season ~ river + isYOY)
 
+# as range plot
+probs <- c(0.05,0.1,0.5,0.9,0.95)
+q <- grInt[['bkt']] %>%
+  group_by(isYOY,season,river) %>%
+  summarize(
+    p = list(probs),
+    q = list(quantile(int,probs))
+  ) %>%
+  unnest() %>%
+  spread(key = p, value = q)
 
+
+p <- array2df(mcmc[['bkt']]$mean$grInt, levels = list(isYOY=c(0,1),season=1:4,river=riverOrderedIn[1:4]), label.x="int") %>%
+  mutate( season = as.numeric(season) ) %>%
+  left_join(.,meanSampleIntervalMean, by = 'season')
+p$intByDay <- p$int/p$meanSampleInterval
+p$intByDay <- ifelse(p$isYOY == 1 & p$season == 2, NA, p$intByDay)
+p$parameter <- paste(p$river,p$season,sep="_")
+
+pUp <- array2df(mcmc[['bkt']]$q97.5$grInt, levels = list(isYOY=c(0,1),season=1:4,river=riverOrderedIn[1:4]), label.x="intUp") %>%
+  mutate( season = as.numeric(season) ) 
+pDown <- array2df(mcmc[['bkt']]$q2.5$grInt, levels = list(isYOY=c(0,1),season=1:4,river=riverOrderedIn[1:4]), label.x="intDown") %>%
+  mutate( season = as.numeric(season) )
+p$intByDayUp <- p$intUp/p$meanSampleInterval; p$intByDayDown <- p$intDown/p$meanSampleInterval
+p$intByDay <- ifelse(p$isYOY == 1 & p$season == 2, NA, p$intByDay)
+p <- left_join(p,pUp) %>% left_join(.,pDown)
+
+   ggplot(p, aes(x = intByDay, y = reorder(parameter,intByDay,na.rm=TRUE), color = factor(season), shape = factor(season))) + 
+      geom_point(size = 3) +
+      facet_grid(~isYOY)
+     
+      geom_segment(aes(x = Low, 
+      xend = High, yend = reorder(Parameter, median)), 
+      size = 1.5) + geom_segment(aes(x = low, xend = high, 
+      yend = reorder(Parameter, median)), size = 0.5) + 
+      xlab("HPD") + ylab("Parameter")
+
+        
+```
+
+```{r}
+        
 sigmaInt <- list()
 sigmaInt[['bkt']] <- array2df(mcmc[['bkt']]$sims.list$sigmaInt, levels = list(iter=NA,isYOY=c(0,1),season=1:4,river=riverOrderedIn[1:4]), label.x="int")
 sigmaInt[['bnt']] <- array2df(mcmc[['bnt']]$sims.list$sigmaInt, levels = list(iter=NA,isYOY=c(0,1),season=1:4,river=riverOrderedIn[1:2]), label.x="int")
@@ -309,6 +411,7 @@ ggplot( sigmaInt[['bkt']] %>% filter(river %in% c('west brook','wb jimmy')), aes
   facet_grid(season ~ river + isYOY)
 
 ```
+
 ```{r ind RE among spp}
 
 grIndRE <- list()
@@ -322,6 +425,13 @@ ggplot( grIndRE[[1]], aes(value,..density..) ) +
   geom_freqpoly(aes(value), color = "lightblue", binwidth = 0.0025, data = grIndRE[[3]])
 
 ```
+
+```{r tables}
+
+round(mcmc$summary$all.chains[startsWith(attributes(mcmc$summary$all.chains)$dimnames[[1]], "grBeta["),],2)
+
+```
+
 
 
 ```{r overview graphs - Fig Appendix}

@@ -225,8 +225,8 @@ cleanData <- function(d,drainageIn){
             distMoved = section - lagSection,
             lagObservedWeight = lead(observedWeight),
             lagObservedLength = lead(observedLength),
-            grWeight = exp(lagObservedWeight - observedWeight)/as.numeric((lagDetectionDate - detectionDate)),
-            grLength = (lagObservedLength - observedLength)/as.numeric((lagDetectionDate - detectionDate)),
+        #    grWeight = exp(lagObservedWeight - observedWeight)/as.numeric((lagDetectionDate - detectionDate)),
+        #    grLength = (lagObservedLength - observedLength)/as.numeric((lagDetectionDate - detectionDate)),
             minSample = min(sampleNumber),
             maxSample = max(sampleNumber),
             minYear = minYear) %>%

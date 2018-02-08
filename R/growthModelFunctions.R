@@ -11,12 +11,13 @@ runGrowthModel_Nimble <- function(d,mcmcInfo){
     ##
     for( i in 1:nEvalRows ) {
       ##
-      lengthDATA[ evalRows[i] + 1 ] ~ dnorm( lengthDATA[ evalRows[i] ] + gr[ evalRows[i] ] / sampleInterval[ evalRows[i] ],
+      mu[ evalRows[i] ] <- lengthDATA[ evalRows[i] ] + ( gr[ evalRows[i] ] * sampleInterval[ evalRows[i] ] )
+      lengthDATA[ evalRows[i] + 1 ] ~ dnorm( mu[ evalRows[i] ],
                                              sd = expectedGRSigma[ evalRows[i] ] )
       ##
       gr[ evalRows[i] ] <-
-        grInt[         isYOYDATA[evalRows[i]], season[evalRows[i]], riverDATA[evalRows[i]] ] +
-        grBeta[ 1, isYOYDATA[evalRows[i]], season[evalRows[i]], riverDATA[evalRows[i]] ] * lengthDATA[evalRows[i]] +
+        grInt[     isYOYDATA[evalRows[i]], season[evalRows[i]], riverDATA[evalRows[i]] ] +
+        grBeta[ 1, isYOYDATA[evalRows[i]], season[evalRows[i]], riverDATA[evalRows[i]] ] * lengthStd[evalRows[i]] +
         grBeta[ 2, isYOYDATA[evalRows[i]], season[evalRows[i]], riverDATA[evalRows[i]] ] * countPAllSppStd[evalRows[i]] +
         grBeta[ 3, isYOYDATA[evalRows[i]], season[evalRows[i]], riverDATA[evalRows[i]] ] * tempStd[evalRows[i]] +
         grBeta[ 4, isYOYDATA[evalRows[i]], season[evalRows[i]], riverDATA[evalRows[i]] ] * flowStd[evalRows[i]] +
@@ -37,7 +38,7 @@ runGrowthModel_Nimble <- function(d,mcmcInfo){
         grIndRE[ ind[evalRows[i]] ]
       ##
       log( expectedGRSigma[ evalRows[i] ] ) <- #grSigma
-        sigmaInt[ isYOYDATA[evalRows[i]], season[evalRows[i]], riverDATA[evalRows[i]] ] +
+        sigmaInt[     isYOYDATA[evalRows[i]], season[evalRows[i]], riverDATA[evalRows[i]] ] +
         sigmaBeta[ 1, isYOYDATA[evalRows[i]], season[evalRows[i]], riverDATA[evalRows[i]] ] * countPAllSppStd[evalRows[i]] +
         sigmaBeta[ 2, isYOYDATA[evalRows[i]], season[evalRows[i]], riverDATA[evalRows[i]] ] * tempStd[evalRows[i]] +
         sigmaBeta[ 3, isYOYDATA[evalRows[i]], season[evalRows[i]], riverDATA[evalRows[i]] ] * flowStd[evalRows[i]] +
@@ -79,8 +80,49 @@ runGrowthModel_Nimble <- function(d,mcmcInfo){
     }
     ##
     for(ii in 1:nEvalRows) {
-      lengthExp[ evalRows[ii] + 1 ] <- lengthDATA[ evalRows[ii] ] + gr[ evalRows[ii] ]
+      lengthExp[ evalRows[ii] + 1 ] <- lengthDATA[ evalRows[ii] ] + gr[ evalRows[ii] ] * sampleInterval[ evalRows[ii] ]
     }
+
+    ############ standardized length for sizeBetas
+    for( i in 1:(nEvalRows) ){
+      lengthStd[ evalRows[i] ] <-  ( lengthDATA[ evalRows[i] ] - lengthMean ) / lengthSD
+    }
+
+
+   # for(ii in 1:nEvalRows) {
+   #  grExp[ evalRows[ii] ] <- gr[ evalRows[ii] ] / sampleInterval[ evalRows[ii] ]
+  #  }
+
+    # for(y in 1:2) {
+    #   for(s in 1:nSeasons){
+    #     for(r in 1:nRivers){
+    #       for( len in 1:7 ){
+    #         for( count in 1:7 ){
+    #           for( temp in 1:7 ){
+    #             for( flow in 1:7 ){
+    #
+    #               predGR[ y, s, r, len,count,temp,flow ] <-
+    #                   grInt[ y,s,r ] +
+    #                   grBeta[ 1, y,s,r ] * (-2 + len*0.5) +
+    #                   grBeta[ 2, y,s,r ] * (-2 + count*0.5) +
+    #                   grBeta[ 3, y,s,r ] * (-2 + temp*0.5) +
+    #                   grBeta[ 4, y,s,r ] * (-2 + flow*0.5) +
+    #                   grBeta[ 5, y,s,r ] * (-2 + count*0.5)^2 +
+    #                   grBeta[ 6, y,s,r ] * (-2 + temp*0.5)^2 +
+    #                   grBeta[ 7, y,s,r ] * (-2 + flow*0.5)^2 +
+    #                   grBeta[ 8, y,s,r ] * (-2 + temp*0.5) * (-2 + flow*0.5) +
+    #                   grBeta[ 9, y,s,r ] * (-2 + temp*0.5) * (-2 + count*0.5) +
+    #                   grBeta[10, y,s,r ] * (-2 + count*0.5) * (-2 + flow*0.5) +
+    #                   grBeta[11, y,s,r ] * (-2 + count*0.5) * (-2 + temp*0.5) * (-2 + flow*0.5)
+    #
+    #             }
+    #           }
+    #         }
+    #       }
+    #     }
+    #   }
+    # }
+
     ##
     # including this messes up predictions
     # for(ii in 1:nFirstObsRows) {
@@ -125,7 +167,12 @@ runGrowthModel_Nimble <- function(d,mcmcInfo){
                     isYOYDATA = d$isYOYDATA,
                     tempStd = d$tempStd,
                     flowStd = d$flowStd,
-                    sampleInterval = d$sampleInterval)
+                    #lengthDATAStd = d$lengthDATAStd,
+                    lengthMean = d$lengthMean,
+                    lengthSD = d$lengthSD,
+                    sampleInterval = d$sampleInterval[1:(max(d$evalRows)+1)]
+              #      predRange = seq(-15,15,5)
+                    )
   ##
   data <- list(lengthDATA = d$lengthDATA[1:(max(constants$evalRows)+1)]) # so don't have trailing single obs fish at end of df
   print(paste("Trimmed", length(d$lengthDATA) - length(data$lengthDATA), "fish that had single observation(s) at end of df"))

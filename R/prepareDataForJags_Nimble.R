@@ -168,7 +168,8 @@ prepareDataForJags_Nimble <- function(d,modelType){
 
   if ( modelType == "growth" ){
     data <- list( encDATA = d$enc,
-                  lengthDATA = d$lengthDATALnStd, #d$lengthDATAStd,
+                  lengthDATA = d$observedLength, #d$lengthDATAStd, #d$lengthDATALnStd,
+                  lengthDATAStd = d$lengthDATALnStd,
                   riverDATA = d$riverN,
                   ind = d$tagIndexJags,
                   nRivers = nRivers,
@@ -186,8 +187,8 @@ prepareDataForJags_Nimble <- function(d,modelType){
                   nLastObsRows = nLastObsRows, lastObsRows = lastObsRows,
                   nAllRows = nAllRows,
                   nSeasons = nSeasons,
-                  lengthMean = array(means$meanLen, dim = c(nRivers,nSeasons,nSpecies)),
-                  lengthSD = array(means$sdLen, dim = c(nRivers,nSeasons,nSpecies)),
+                  lengthMean = mean(d$observedLength, na.rm = TRUE), #array(means$meanLen, dim = c(nRivers,nSeasons,nSpecies)),
+                  lengthSD = sd(d$observedLength, na.rm = TRUE), #array(means$sdLen, dim = c(nRivers,nSeasons,nSpecies)),
                   sampleIntervalMean = array(means$sampleIntervalMean, dim = c(nRivers,nSeasons,nSpecies)),
                   #   cutoffYOYDATA = cutoffYOYDATA,
                   sampleInterval = d$sampleInterval,
