@@ -60,7 +60,7 @@ load("D:/projects/linkedModels/data/out/ddD_bktbntats_1997.RData")
 load("D:/projects/linkedModels/data/out/countsAndMasses.RData")
 
 mcmc <- list()
-load("D:/projects/linkedModels/data/out/dG_1517846073_bkt1997_Nimble.RData")
+load("D:/projects/linkedModels/data/out/dG_1518555667_bkt1997_Nimble.RData")
 
 # input data
 d1 <- ddG[[1]][[1]]
@@ -84,10 +84,10 @@ d2 <- d2 %>%
 mcmc[['bkt']] <- mcmcProcessed
 
 
-load("D:/projects/linkedModels/data/out/dG_1517850064_bnt1997_Nimble.RData")
+load("D:/projects/linkedModels/data/out/dG_1518559325_bnt1997_Nimble.RData")
 mcmc[['bnt']]  <- mcmcProcessed
 
-load("D:/projects/linkedModels/data/out/dG_1517853143_ats1997_Nimble.RData")
+load("D:/projects/linkedModels/data/out/dG_1518559991_ats1997_Nimble.RData")
 mcmc[['ats']]  <- mcmcProcessed
 
 rm(ddG,dG,mcmcProcessed)
@@ -346,11 +346,11 @@ grInt[['bnt']] <- array2df(mcmc[['bnt']]$sims.list$grInt, levels = list(iter=NA,
 grInt[['ats']] <- array2df(mcmc[['ats']]$sims.list$grInt, levels = list(iter=NA,isYOY=c(0,1),season=1:4,river=riverOrderedIn[1:1]), label.x="int")
 
 
-ggplot( grInt[['bkt']] %>% filter(river %in% c('west brook','wb jimmy')), aes(int)) +
-  geom_freqpoly(binwidth=0.05) +
-  geom_freqpoly(aes(int),color = 'brown', data = grInt[['bnt']]) +
-  geom_freqpoly(aes(int),color = 'lightblue', data = grInt[['ats']]) +
-  xlim(-0.5,1.5) +
+ggplot( grInt[['bkt']] %>% filter(river %in% c('west brook','wb jimmy')), aes(exp(int))) +
+  geom_freqpoly() +
+  geom_freqpoly(aes(exp(int)),color = 'brown', data = grInt[['bnt']]) +
+  geom_freqpoly(aes(exp(int)),color = 'lightblue', data = grInt[['ats']]) +
+ # xlim(-0.5,1.5) +
   theme_publication() +
   facet_grid(season ~ river + isYOY)
 
@@ -401,12 +401,13 @@ sigmaInt[['bkt']] <- array2df(mcmc[['bkt']]$sims.list$sigmaInt, levels = list(it
 sigmaInt[['bnt']] <- array2df(mcmc[['bnt']]$sims.list$sigmaInt, levels = list(iter=NA,isYOY=c(0,1),season=1:4,river=riverOrderedIn[1:2]), label.x="int")
 sigmaInt[['ats']] <- array2df(mcmc[['ats']]$sims.list$sigmaInt, levels = list(iter=NA,isYOY=c(0,1),season=1:4,river=riverOrderedIn[1:1]), label.x="int")
 
-
+bw <- 0.05
 ggplot( sigmaInt[['bkt']] %>% filter(river %in% c('west brook','wb jimmy')), aes(int)) +
-  geom_freqpoly() +
-  geom_freqpoly(aes(int),color = 'brown', data = sigmaInt[['bnt']]) +
-  geom_freqpoly(aes(int),color = 'lightblue', data = sigmaInt[['ats']]) +
-  xlim(-4.5,-1) +
+  geom_freqpoly(binwidth = bw) +
+  geom_freqpoly(aes(int),binwidth = bw,color = 'brown', data = sigmaInt[['bnt']]) +
+  geom_freqpoly(aes(int),binwidth = bw,color = 'lightblue', data = sigmaInt[['ats']]) +
+  #xlim(-4.5,-1) +
+  xlim(-5,2.5) +
   theme_publication() +
   facet_grid(season ~ river + isYOY)
 

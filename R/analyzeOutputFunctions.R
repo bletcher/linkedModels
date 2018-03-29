@@ -9,7 +9,7 @@
 #'@return a data frame
 #'@export
 
-getPrediction <- function(d, limits = 2, nPoints = 5, itersForPred, constants, sampleIntervalMeanIn, varsToEstimate){
+getPrediction <- function(d, limits = 2, nPoints = 5, itersForPred, constants, sampleIntervalMeanIn, varsToEstimate, ii=1){
 
   # get grInt in df format
   #grInt <- array2df(d$sims.list$grInt, levels = list(iter=NA,isYOY=c(0,1),species=species,season=1:nSeasons,river=riverOrderedIn), label.x="int")
@@ -97,7 +97,7 @@ getPrediction <- function(d, limits = 2, nPoints = 5, itersForPred, constants, s
               beta10 * count * flow +
 
               beta11 * count * temp * flow
-            ) #/ interval
+            ) #* interval
 
 
     )
@@ -116,19 +116,21 @@ getPrediction <- function(d, limits = 2, nPoints = 5, itersForPred, constants, s
 #'@return a data frame
 #'@export
 
-getPredictionSigma <- function(d, limits = 2, nPoints = 5, itersForPred, varsToEstimate){
+getPredictionSigma <- function(d, limits = 2, nPoints = 5, itersForPred, constants, sampleIntervalMeanIn, varsToEstimate, ii=1){
 
   # get grInt in df format
   #grInt <- array2df(d$sims.list$grInt, levels = list(iter=NA,isYOY=c(0,1),species=species,season=1:nSeasons,river=riverOrderedIn), label.x="int")
-  grInt <- array2df(d$sims.list$sigmaInt, levels = list(iter=NA,isYOY=c(0,1),season=1:nSeasons,river=riverOrderedIn), label.x="int")
+  grInt <- array2df(d$sims.list$sigmaInt, levels = list(iter=NA,isYOY=c(0,1),season=1:constants$nSeasons,river=riverOrderedIn[1:constants$nRivers]), label.x="int")
 
   # get grBeta in df format and merge in grInt
   # grBeta1 <- array2df(d$sims.list$grBeta, levels = list(iter=NA,beta=NA,isYOY=c(0,1),species=species,season=1:nSeasons,river=riverOrderedIn), label.x="est")
-  grBeta1 <- array2df(d$sims.list$sigmaBeta, levels = list(iter=NA,beta=NA,isYOY=c(0,1),season=1:nSeasons,river=riverOrderedIn), label.x="est")
+  grBeta1 <- array2df(d$sims.list$sigmaBeta, levels = list(iter=NA,beta=NA,isYOY=c(0,1),season=1:constants$nSeasons,river=riverOrderedIn[1:constants$nRivers]), label.x="est")
 
   grBeta <- spread( grBeta1, key = beta, value = est, sep = "" ) %>%
     left_join( .,grInt )
 
+  sampleIntervalMean <- array2df(sampleIntervalMeanIn, levels = list( river=riverOrderedIn[1:constants$nRivers],season=1:constants$nSeasons,species=1:constants$nSpecies), label.x = "interval")
+  grBeta <- left_join(grBeta,sampleIntervalMean)
   # prediction template
   x <- seq( -limits,limits,length.out = nPoints )
 
@@ -185,15 +187,16 @@ getPredictionSigma <- function(d, limits = 2, nPoints = 5, itersForPred, varsToE
 
   # This model structure needs to match that in grModelx.jags
   preds <- preds %>%
-    mutate( predGr = int +
-
-              beta1 * count +
-              beta2 * temp +
-              beta3 * flow +
-              beta4 * count * temp +
-              beta5 * temp * flow +
-              beta6 * count * flow
-
+    mutate( predGrSigma =
+              exp(
+                int +
+                beta1 * (count) +
+                beta2 * (temp) +
+                beta3 * (flow) +
+                beta4 * (count) * (temp) +
+                beta5 * (temp) * (flow) +
+                beta6 * (count) * (flow)
+              )
     )
 
   return(preds)
@@ -261,9 +264,10 @@ getPredictionSigma <- function(d, limits = 2, nPoints = 5, itersForPred, varsToE
 #'@export
 #'
 
-plotPred <- function(p, varsToPlot, isYOYGG, speciesGG) {
+plotPred <- function(p, depVar, varsToPlot, isYOYGG, speciesGG) {
   all = c('len','temp','flow','count')
 
+  #print(c(depVar,(as.name(depVar))))
 
   if(length(varsToPlot) == 1) {
     notPlot <- NA
@@ -276,7 +280,7 @@ plotPred <- function(p, varsToPlot, isYOYGG, speciesGG) {
     pGG <- p %>% filter(isYOY == isYOYGG, eval(as.name(notPlot[1])) == 0, eval(as.name(notPlot[2])) == 0, eval(as.name(notPlot[3])) == 0  ) %>%
       distinct(eval(as.name(varsToPlot[1])), iter, isYOY, river, season, .keep_all = TRUE)
 
-    ggOut <- ggplot(pGG, aes(eval(as.name(varsToPlot[1])),predGr, group = iter,color=(iter))) +
+    ggOut <- ggplot( pGG, aes( eval(as.name(varsToPlot[1])), eval(as.name(depVar)), group = iter,color=(iter) ) ) +
       geom_line( alpha=0.25 ) +
       theme_bw() +
       theme(panel.grid.minor = element_blank(), panel.grid.major = element_blank()) +
@@ -300,7 +304,7 @@ plotPred <- function(p, varsToPlot, isYOYGG, speciesGG) {
 
     pGG$iterGroup <- paste0(pGG$iter,pGG[[varsToPlot[2]]])
 
-    ggOut <- ggplot(pGG, aes(eval(as.name(varsToPlot[1])), predGr, group = iterGroup, name = varsToPlot[2])) +
+    ggOut <- ggplot(pGG, aes(eval(as.name(varsToPlot[1])), eval(as.name(depVar)), group = iterGroup, name = varsToPlot[2])) +
       geom_line(aes( color = (eval(as.name(varsToPlot[2]))) ), alpha = 0.25 ) +
       theme_bw() +
       theme(panel.grid.minor = element_blank(), panel.grid.major = element_blank()) +

@@ -246,7 +246,7 @@ iter=1
 
   #########################################
   # save data to file
-  save(mcmcProcessed,dG,ddG, file = paste0('./data/out/dG_', as.integer(Sys.time()),'_', modelName, '_Nimble.RData'))
+  save(mcmcInfo,mcmcProcessed,dG,ddG, file = paste0('./data/out/dG_', as.integer(Sys.time()),'_', modelName, '_Nimble.RData'))
 
   done <- Sys.time()
   elapsed[[ii]] <- done - start
@@ -276,33 +276,46 @@ iter=1
 
   # predictions across the grid
   p <- getPrediction( mcmcProcessed, limits, nPoints, itersForPred, dG[[1]]$constants, ddG[[ii]][[1]]$sampleIntervalMean, c("len", "temp", "flow","count") )#######################
-    save(p,file = paste0("./data/out/P_ForMike_",speciesGr,".RData"))
+  p$variable <- "mean"
+  # predictions of sigma across the grid
+  pSigma <- getPredictionSigma( mcmcProcessed, limits, nPoints, itersForPred, dG[[1]]$constants, ddG[[ii]][[1]]$sampleIntervalMean, c("len", "temp", "flow","count") )
+  pSigma$variable <- "sd"
+  # combine predicted growth rates and sigma in predicted growth rates to get cv in predicted growth rates
+  pBoth <- left_join( p,pSigma, by = c('len','count','flow','temp','iter','isYOY','season','river')) %>%
+    mutate(predCV = predGrSigma/predGr)
+  pBoth$variable <- "cv"
+  pBoth$predCV <- ifelse(pBoth$predCV > 10, NA, pBoth$predCV) # to avoid very large CVs when gr is very small
+  pBoth$predCV <- ifelse(pBoth$predCV < 0, NA, pBoth$predCV) # to avoid negative CVs when gr is very small and negative
+
+  save(pBoth,file = paste0("./data/out/P_ForMike_",speciesGr,".RData"))
+
+     #
   # graph function, in analyzeOutputFunctions.R
 
-  plotPred(p, "len", 1, speciesGr) #spp is just a pass-through for title until I combine the species results into one df
+  plotPred(p, "predGr", "len", 1, speciesGr)
+  plotPred(p, "predGr", "temp", 1, speciesGr)
+  plotPred(p, "predGr", "flow", 1, speciesGr)
+  plotPred(p, "predGr", "count", 1, speciesGr)
+  plotPred(p, "predGr", c("temp", "flow"), 1, speciesGr)
+  plotPred(p, "predGr", c("temp","count"), 1, speciesGr)
+  plotPred(p, "predGr", c("flow","count"), 1, speciesGr)
+  plotPred(p, "predGr", c("len","count"), 1, speciesGr)
+  plotPred(p, "predGr", c("flow","len"), 1, speciesGr)
 
-  plotPred(p, "temp", 1, speciesGr)
-  plotPred(p, "flow", 1, speciesGr)
-  plotPred(p, "count", 1, speciesGr)
-  plotPred(p, c("temp", "flow"), 1, speciesGr)
-  plotPred(p, c("temp","count"), 1, speciesGr)
-  plotPred(p, c("flow","count"), 1, speciesGr)
-  plotPred(p, c("len","count"), 1, speciesGr)
-  plotPred(p, c("flow","len"), 1, speciesGr)
-
-  # predictions of sigma across the grid
-  pSigma <- getPredictionSigma( dG[[1]], limits, nPoints, itersForPred, c("len", "temp", "flow","count") )
   #######################
   # graph function, in analyzeOutputFunctions.R
 
-  plotPred(pSigma, "len", 1, speciesGr)
-  plotPred(pSigma, "temp", 1, speciesGr)
-  plotPred(pSigma, "flow", 1, speciesGr)
-  plotPred(pSigma, "count", 1, speciesGr)
+  plotPred(pSigma, "predGrSigma", "len", 1, speciesGr) #shows means
+  plotPred(pSigma, "predGrSigma", "temp", 1, speciesGr)
+  plotPred(pSigma, "predGrSigma", "flow", 1, speciesGr)
+  plotPred(pSigma, "predGrSigma", "count", 1, speciesGr)
+  plotPred(pSigma, "predGrSigma", c("temp", "flow"), 1, speciesGr)
 
-
-
-pairs(ddG[[1]][[1]][c('countPStd','tempStd','flowStd')])
+  plotPred(pBoth, "predCV", "len", 1, speciesGr)
+  plotPred(pBoth, "predCV", "temp", 1, speciesGr)
+  plotPred(pBoth, "predCV", "flow", 1, speciesGr)
+  plotPred(pBoth, "predCV", "count", 1, speciesGr)
+  plotPred(pBoth, "predCV", c("temp", "flow"), 1, speciesGr)
 
 
 #To do:
