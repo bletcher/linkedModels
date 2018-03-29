@@ -42,7 +42,7 @@ drainage <- "west" # ==
 speciesDet <- c("bkt", "bnt","ats") #keep as all three spp
 speciesInDet <- factor(speciesDet, levels = c('bkt','bnt','ats'), ordered = T)
 
-speciesGr <- "ats"
+speciesGr <- "bkt"
 speciesInGr <- factor(speciesGr, levels = c('bkt','bnt','ats'), ordered = T)
 
 riverOrderedIn <- factor(c('west brook', 'wb jimmy', 'wb mitchell',"wb obear"),levels=c('west brook', 'wb jimmy', 'wb mitchell',"wb obear"),labels = c("west brook","wb jimmy","wb mitchell","wb obear"), ordered = T)
@@ -163,6 +163,19 @@ nSeasons <- n_distinct(ddddG$season, na.rm=T)
 # meanOrIter ="iter" uses the sample that is the combo of sampleToUse and chainToUse (ignored if meanOrIter="mean")
 #  for numOfItersToUse samples
 
+## quick fixes for models with spp-specific abundances
+# set abundances to average values for unsampled occasions
+ddddG$nAllFishBySpeciesPStdBKT <- ifelse( is.na(ddddG$nAllFishBySpeciesPStdBKT),0,ddddG$nAllFishBySpeciesPStdBKT)
+ddddG$nAllFishBySpeciesPStdBNT <- ifelse( is.na(ddddG$nAllFishBySpeciesPStdBNT),0,ddddG$nAllFishBySpeciesPStdBNT)
+ddddG$nAllFishBySpeciesPStdATS <- ifelse( is.na(ddddG$nAllFishBySpeciesPStdATS),0,ddddG$nAllFishBySpeciesPStdATS)
+
+# set ATS to very low number once they were gone, not to 0 as is done in adjustCounts()
+ddddG$nAllFishBySpeciesPStdATS <- ifelse( ddddG$sampleNumber >= 57,-2.5,ddddG$nAllFishBySpeciesPStdATS)
+ddddG$nAllFishBySpeciesPStdATS <- ifelse( ddddG$sampleNumber == 52,-1.5,ddddG$nAllFishBySpeciesPStdATS)
+ddddG$nAllFishBySpeciesPStdATS <- ifelse( ddddG$sampleNumber == 44,-1,ddddG$nAllFishBySpeciesPStdATS)
+
+#ggplot(ddddG, aes(sampleNumber,nAllFishBySpeciesPStdATS)) + geom_point() + facet_grid(river~season)
+#ggplot(ddddG, aes(sampleNumber,nAllFishBySpeciesPStdBNT)) + geom_point() + facet_grid(river~season)
 
 ######################################
 ######################################
