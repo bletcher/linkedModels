@@ -149,7 +149,8 @@ prepareDataForJags_Nimble <- function(d,modelType){
                   propSampledDATA = d$proportionSampled, # propSampled$propSampledDATA,
                   tempStd = d$tempStd,
                   flowStd = d$flowStd,
-                  nPasses = d$nPasses
+                  nPasses = d$nPasses,
+                  isYOYDATA = d$isYOYDATA
     )
   }
 

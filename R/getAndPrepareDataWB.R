@@ -42,18 +42,24 @@ getCountsAllFish <- function(drainage = "west", filteredAreas = c("inside","trib
     cdWBAll$riverOrdered <- factor(cdWBAll$river,levels=c('west brook', 'wb jimmy', 'wb mitchell',"wb obear"),labels = c("west brook","wb jimmy","wb mitchell","wb obear"), ordered=T)
     cdWBAll$riverN <- as.numeric(cdWBAll$riverOrdered)
 
-    counts <- cdWBAll %>%
+    # add in isYOY for all fish
+    cdWBAll2 <- cdWBAll %>%
+      mutate( ageInSamples = (year-cohort) * 4 + (season - 2) )
+
+    cdWBAll2$isYOY <- ifelse( cdWBAll2$ageInSamples <= 3, 1, 2 )
+
+    counts <- cdWBAll2 %>%
       filter( area %in% filteredAreas ) %>%
-      group_by( species,river,season,year ) %>%
+      group_by( isYOY,species,river,season,year ) %>%
       summarize( nAllFishBySpecies = n(),
                  massAllFishBySpecies = sum(observedWeight,na.rm=T))
 
-    #ggplot(counts, aes(year,nAllFishBySpecies,color=species)) +
+    ggplot(counts, aes(year,nAllFishBySpecies,color=species)) +
     # ggplot(counts, aes(year,massAllFishBySpecies,color=species)) +
-    #   geom_point() +
-    #   geom_line() +
-    #   labs( x = "Year", y = "Estimated count") +
-    #   facet_grid(season ~ riverN, scales = "free")
+       geom_point() +
+       geom_line() +
+       labs( x = "Year", y = "Estimated count") +
+       facet_grid( river ~ season+isYOY, scales = "free")
 
     return(counts)
 }
@@ -66,6 +72,7 @@ getCountsAllFish <- function(drainage = "west", filteredAreas = c("inside","trib
 #'
 addxxxxN <- function(d){
 
+  d$isYOYN <- d$isYOY
   d$seasonN <- d$season
   d$yearN <- d$year - min(d$year) + 1
   d$riverN <- as.numeric(d$riverOrdered)

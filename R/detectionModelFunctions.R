@@ -8,7 +8,7 @@ runDetectionModel <- function(d, parallel = FALSE){   #iterToUse, firstNonBurnIt
 
   inits <- function(){
     list(#pBetaInt = array(rnorm(d$nSeasons*d$nRivers*d$nYears,0,2.25),c(d$nSeasons,d$nRivers,d$nYears)),
-      pBetaInt = array(runif(d$nSpecies*d$nSeasons*d$nRivers*d$nYears, -2.5, 2),c(d$nSpecies,d$nSeasons,d$nRivers,d$nYears)),
+      pBetaInt = array(runif(2*d$nSpecies*d$nSeasons*d$nRivers*d$nYears, -2.5, 2),c(2,d$nSpecies,d$nSeasons,d$nRivers,d$nYears)),
       z = d$zForInit
     )
   }
@@ -18,7 +18,7 @@ runDetectionModel <- function(d, parallel = FALSE){   #iterToUse, firstNonBurnIt
   outDet <- jags(data = d,
                  inits = inits,
                  parameters.to.save = params,
-                 model.file = "./jags/detModel.jags",
+                 model.file = "./jags/detModel_isYOY.jags",
                  n.chains = 3,
                  n.adapt = 200, #1000
                  n.iter = 200,
@@ -58,9 +58,13 @@ getDensities <- function(ddddDIn,ddDIn, meanOrIter = "mean", sampleToUse = sampl
   #   ) %>%
   #   ungroup()
 
+  # would need to recode the det model to group by isYOY if want spearate estimates for yoys
+  #ddddDIn$isYOY <- ifelse( ddddDIn$ageInSamples <= 3, 1, 2 )
+
   counts <- ddddDIn %>%
     addxxxxN() %>%
-    distinct(species,season,riverOrdered,year,speciesN,seasonN,riverN,yearN,nAllFishBySpecies,nAllFish,massAllFishBySpecies,massAllFish)
+    distinct(species,season,riverOrdered,year,isYOYN,speciesN,seasonN,riverN,yearN,
+             nAllFishBySpecies,nAllFish,massAllFishBySpecies,massAllFish)
 
   if ( meanOrIter == 'mean') dd <- ddDIn$q50$pBetaInt
   if ( meanOrIter == 'iter') dd <- ddDIn$sims.list$pBetaInt[ sampleToUse,,,, ]
@@ -70,26 +74,28 @@ getDensities <- function(ddddDIn,ddDIn, meanOrIter = "mean", sampleToUse = sampl
   #pBetaInt[ species,season,riverDATA,year ]
   # convert array to data frame
   p <- as.data.frame.table(dd) %>%
-    rename( speciesN = Var1,
-            seasonN = Var2,
-            riverN = Var3,
-            yearN = Var4,
+    rename( isYOYN = Var1,
+            speciesN = Var2,
+            seasonN = Var3,
+            riverN = Var4,
+            yearN = Var5,
             logitP = Freq
     ) %>%
-    mutate( speciesN = as.numeric(speciesN),
+    mutate( isYOYN = as.numeric(isYOYN),
+            speciesN = as.numeric(speciesN),
             seasonN = as.numeric(seasonN),
             riverN = as.numeric(riverN),
             yearN = as.numeric(yearN),
             p = invlogit( logitP )
     )
 
-  p <- left_join( p, counts, by = c('speciesN','seasonN','riverN','yearN') ) %>%
+  p <- left_join( p, counts, by = c('isYOYN','speciesN','seasonN','riverN','yearN') ) %>%
          mutate( nAllFishBySpeciesP = nAllFishBySpecies/p )
 
   # get counts of all species by summing nAllFishBySpeciesP across species
   p2 <- p %>%
  #   group_by(speciesN,seasonN,riverN,yearN) %>%
-    group_by(seasonN,riverN,yearN) %>%
+    group_by(isYOYN,seasonN,riverN,yearN) %>%
     summarize( nAllFishP = sum(nAllFishBySpeciesP, na.rm=T))
 
   p <- left_join(p,p2)
@@ -120,13 +126,15 @@ addSurvivals <- function(dddd,dd, meanOrIter = "mean", sampleToUse = sampleToUse
   #phiBetaInt[ species,season,riverDATA,year ]
   # convert array to data frame
   phi <- as.data.frame.table(ddIn) %>%
-    rename( speciesN = Var1,
-            seasonN = Var2,
-            riverN = Var3,
-            yearN = Var4,
+    rename( isYOYN = Var1,
+            speciesN = Var2,
+            seasonN = Var3,
+            riverN = Var4,
+            yearN = Var5,
             logitPhi = Freq
     ) %>%
-    mutate( speciesN = as.numeric(speciesN),
+    mutate( isYOYN = as.numeric(isYOYN),
+            speciesN = as.numeric(speciesN),
             seasonN = as.numeric(seasonN),
             riverN = as.numeric(riverN),
             yearN = as.numeric(yearN),
@@ -138,14 +146,15 @@ addSurvivals <- function(dddd,dd, meanOrIter = "mean", sampleToUse = sampleToUse
 
   # add temporary variables for merging
   dddd <- dddd %>%
-    mutate( speciesN = as.numeric(as.factor(species)),
+    mutate( isYOYN = as.numeric(isYOYN),
+            speciesN = as.numeric(as.factor(species)),
             seasonN = season,
             riverN = as.numeric(riverOrdered),
             yearN = year - min(year) + 1
     )
 
   dddd <- left_join( dddd, phi ) %>%
-    dplyr::select(-speciesN,-seasonN,-riverN,-yearN)
+    dplyr::select(-isYOYN,-speciesN,-seasonN,-riverN,-yearN)
 
   return(dddd)
 }

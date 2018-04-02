@@ -1,0 +1,87 @@
+var z[ nAllRows ];
+
+model{
+
+  ############################
+  ##### Recapture model#######
+  ############################
+
+  for(i in 1:nEvalRows){
+
+    logit( p[ evalRows[i] + 1 ] ) <- pBetaInt[ isYOYDATA[ evalRows[i] + 1 ],species[ evalRows[i] + 1 ],season[ evalRows[i] + 1 ],riverDATA[ evalRows[i] + 1 ],year[ evalRows[i] + 1 ] ]
+#                                   +    pBeta[ isYOYDATA[ evalRows[i] + 1 ],species[ evalRows[i] + 1 ],riverDATA[ evalRows[i] + 1 ] ] * ( nPasses[ evalRows[ i ] + 1 ] - 1 )
+
+  }
+  ############## Recapture priors ##################
+  for( yoy in 1:2 ){
+    for( spp in 1:nSpecies ){
+      for( r in 1:(nRivers) ){
+        for( s in 1:nSeasons ){
+          for(y in 1:nYears){
+
+          #  pBetaInt[ spp,s,r,y ] ~ dnorm( 0,0.667 )
+            pBetaInt[ yoy,spp,s,r,y ] ~ dnorm( pBetaIntMean[ yoy,spp,s ], pBetaIntTau[ yoy,spp,s ] )
+            phiBetaInt[ yoy,spp,s,r,y ] ~ dnorm( phiBetaIntMean[ yoy,spp,s ], phiBetaIntTau[ yoy,spp,s ] )
+
+          }
+        }
+      }
+    }
+  }
+
+  for( yoy in 1:2 ){
+    for( s in 1:nSeasons ){
+      for( spp in 1:nSpecies ){
+        pBetaIntMean[ yoy,spp,s ] ~ dnorm( 0,1.5 )T(-3.5,3.5)
+        pBetaIntSigma[ yoy,spp,s ] ~ dunif(0,10)
+        pBetaIntTau[ yoy,spp,s ] <- 1/(pow(pBetaIntSigma[ yoy,spp,s ],2))
+
+        phiBetaIntMean[ yoy,spp,s ] ~ dnorm( 0,1.5 )T(-3.5,3.5)
+        phiBetaIntSigma[ yoy,spp,s ] ~ dunif(0,10)
+        phiBetaIntTau[ yoy,spp,s ] <- 1/(pow(phiBetaIntSigma[ yoy,spp,s ],2))
+      }
+    }
+  }
+
+  ############################
+  ##### Survival model########
+  ############################
+
+  for(i in 1:nEvalRows){
+
+    logit( phi[ evalRows[i] ] ) <-
+      phiBetaInt[ isYOYDATA[ evalRows[i] ],species[ evalRows[i] ],season[ evalRows[i] ],riverDATA[ evalRows[i] ],year[ evalRows[i] ] ]
+
+  }
+
+  ############################
+  ##### Likelihoods ##########
+  ############################
+
+  # Initial conditions:
+  # Individuals enter the sample alive, with probability 1
+
+  for(i in 1:nFirstObsRows){
+    z[ firstObsRows[i] ] <- 1
+  }
+
+  for(i in 1:nEvalRows){
+
+    # State of alive (z)
+    z[ evalRows[i] + 1 ] ~ dbern( survProb[ evalRows[i] ] ) #Do or don't suvive to i + 1
+    survProb[evalRows[i]] <- phi[ evalRows[i] ] #^ ( sampleInterval[ evalRows[i] ] )
+                             * z[ evalRows[i] ]
+
+    # Observation of live encounters
+    encDATA[ evalRows[i] + 1 ] ~ dbern( obsProb[ evalRows[i] + 1 ] )
+
+    obsProb[ evalRows[i] + 1 ] <-
+      p[ evalRows[i] + 1 ]                 # Capture probability (calculated above).
+    * z[ evalRows[i] + 1 ]                 # Must be alive to be capturable.
+ #   * availableDATA[ evalRows[i] + 1 ]     # Must be on the study site to be capturable. Not needed - censored in createCmrData()
+# indexed by evaleRows now  #  * propSampledDATA[ season[ evalRows[i] + 1 ],riverDATA[ evalRows[i] + 1 ], year[ evalRows[i] + 1 ] ] # proportion of the stream section that was sampled for each season,river,year combination
+     * propSampledDATA[ evalRows[i] + 1 ] # proportion of the stream section that was sampled for each season,river,year combination
+
+  }
+
+} #model bracket

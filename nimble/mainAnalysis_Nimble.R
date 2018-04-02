@@ -107,8 +107,9 @@ ddddD <- cdBeforeDetMod %>%
            sampleInterval < maxSampleInterval) %>%  # this removes the later yearly samples. Want to stick with seasonal samples
            removeUnsampledRows(drainage, removeIncomplete = TRUE) # removes enc=0 rows for samples with no or very few() sections sampled (p=0 otherwise for those samples)
 
-dddD <- ddddD %>%
-  prepareDataForJags_Nimble('detection')
+ddddD$isYOY <- ifelse( ddddD$ageInSamples <= 3, 1, 2 )
+
+dddD <- ddddD %>% prepareDataForJags_Nimble('detection')
 
 if (runDetectionModelTF) {
   ddD <- dddD[[1]] %>% runDetectionModel(parallel = TRUE) ###################### currently for jags
@@ -119,7 +120,7 @@ if (runDetectionModelTF) {
   (elapsed <- done - start)
 
   # add counts derived from counts/p to cdBeforeDetMod. ddD and ddddD need to have all three spp to create spp-specific abundances
-  cd <- adjustCounts( cdBeforeDetMod,ddD,ddddD,meanOrIter,iter )
+  cd <- adjustCounts( cdBeforeDetMod,ddD,ddddD,meanOrIter,iter ) # function in growthModelFunctions.R
   cdFile <- paste0('./data/cd_',drainage,"_",minCohort,'.RData')
   save(cd, file = cdFile)
 
@@ -163,19 +164,9 @@ nSeasons <- n_distinct(ddddG$season, na.rm=T)
 # meanOrIter ="iter" uses the sample that is the combo of sampleToUse and chainToUse (ignored if meanOrIter="mean")
 #  for numOfItersToUse samples
 
-## quick fixes for models with spp-specific abundances
-# set abundances to average values for unsampled occasions
-ddddG$nAllFishBySpeciesPStdBKT <- ifelse( is.na(ddddG$nAllFishBySpeciesPStdBKT),0,ddddG$nAllFishBySpeciesPStdBKT)
-ddddG$nAllFishBySpeciesPStdBNT <- ifelse( is.na(ddddG$nAllFishBySpeciesPStdBNT),0,ddddG$nAllFishBySpeciesPStdBNT)
-ddddG$nAllFishBySpeciesPStdATS <- ifelse( is.na(ddddG$nAllFishBySpeciesPStdATS),0,ddddG$nAllFishBySpeciesPStdATS)
-
-# set ATS to very low number once they were gone, not to 0 as is done in adjustCounts()
-ddddG$nAllFishBySpeciesPStdATS <- ifelse( ddddG$sampleNumber >= 57,-2.5,ddddG$nAllFishBySpeciesPStdATS)
-ddddG$nAllFishBySpeciesPStdATS <- ifelse( ddddG$sampleNumber == 52,-1.5,ddddG$nAllFishBySpeciesPStdATS)
-ddddG$nAllFishBySpeciesPStdATS <- ifelse( ddddG$sampleNumber == 44,-1,ddddG$nAllFishBySpeciesPStdATS)
-
-#ggplot(ddddG, aes(sampleNumber,nAllFishBySpeciesPStdATS)) + geom_point() + facet_grid(river~season)
-#ggplot(ddddG, aes(sampleNumber,nAllFishBySpeciesPStdBNT)) + geom_point() + facet_grid(river~season)
+#ggplot(ddddG, aes(sampleNumber,nAllFishBySpeciesPStdATS)) + geom_point() + facet_grid(riverOrdered~season)
+#ggplot(ddddG, aes(sampleNumber,nAllFishBySpeciesPStdBNT)) + geom_point() + facet_grid(riverOrdered~season)
+#ggplot(ddddG, aes(sampleNumber,nAllFishBySpeciesPStdBKT)) + geom_point() + facet_grid(riverOrdered~season)
 
 ######################################
 ######################################
