@@ -43,14 +43,15 @@ speciesDet <- c("bkt", "bnt","ats") #keep as all three spp
 speciesInDet <- factor(speciesDet, levels = c('bkt','bnt','ats'), ordered = T)
 
 speciesGr <- "bkt"
+speciesGr = c("bkt", "bnt","ats")
 speciesInGr <- factor(speciesGr, levels = c('bkt','bnt','ats'), ordered = T)
 
 riverOrderedIn <- factor(c('west brook', 'wb jimmy', 'wb mitchell',"wb obear"),levels=c('west brook', 'wb jimmy', 'wb mitchell',"wb obear"),labels = c("west brook","wb jimmy","wb mitchell","wb obear"), ordered = T)
 
 minCohort <- 1997#1995 # >=
 maxSampleInterval <- 200 # <
-runDetectionModelTF <- F
-runCrossValidationTF <- F
+runDetectionModelTF <- FALSE
+runCrossValidationTF <- FALSE
 percentLeftOut <- 10
 
 meanOrIter <- "mean"; iter <- 1
@@ -88,6 +89,8 @@ if ( file.exists(cdFileBeforeDetMod) ) {
    # do this in detection model, removeUnsampledRows(drainage, removeIncomplete = T) %>% # removes enc=0 rows for samples with no or very few() sections sampled (p=0 otherwise for those samples)
     removeLowAbundanceRivers(drainage) # removes ats,jimmy fish and bnt,mitchell from drainage=='west' - too few fish for estimates
 
+  cdBeforeDetMod$isYOY <- ifelse( cdBeforeDetMod$ageInSamples <= 3, 1, 2 )
+
   save(cdBeforeDetMod, file = cdFileBeforeDetMod)
 }
 
@@ -106,8 +109,6 @@ ddddD <- cdBeforeDetMod %>%
            cohort >= minCohort,
            sampleInterval < maxSampleInterval) %>%  # this removes the later yearly samples. Want to stick with seasonal samples
            removeUnsampledRows(drainage, removeIncomplete = TRUE) # removes enc=0 rows for samples with no or very few() sections sampled (p=0 otherwise for those samples)
-
-ddddD$isYOY <- ifelse( ddddD$ageInSamples <= 3, 1, 2 )
 
 dddD <- ddddD %>% prepareDataForJags_Nimble('detection')
 
@@ -235,7 +236,7 @@ iter=1
   Cmcmc <- compileNimble(Rmcmc, project = Rmodel)
   mcmc <- runMCMC(Cmcmc, nburnin = mcmcInfo$nBurnIn, niter = mcmcInfo$nIter, nchains = mcmcInfo$nChains,
                   samples = TRUE, samplesAsCodaMCMC = TRUE,
-                  summary = TRUE, WAIC = TRUE)
+                  summary = TRUE)#, WAIC = TRUE)
 
 
   #########################################

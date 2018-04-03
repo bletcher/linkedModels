@@ -26,7 +26,7 @@ prepareDataForJags_Nimble <- function(d,modelType){
   # There are a few fish with observations with fOcc=1 and NA for oberservedLength (e.g. 4 for west/bkt). Filter those fish out here
   noLenFOcc <- d %>% dplyr::select(tagIndex,observedLength,fOcc) %>% filter( (is.na(observedLength) & fOcc == 1) )
   d <- d %>% filter( !(tagIndex %in% noLenFOcc$tagIndex ) )
-  print(paste("NA length for first observation", length(noLenFOcc$tagIndex)))
+  print(paste("NA length for first observation, # =", length(noLenFOcc$tagIndex)))
   print( noLenFOcc$tagIndex )
 
   d$leftOut <- FALSE #placeholder
@@ -86,6 +86,34 @@ prepareDataForJags_Nimble <- function(d,modelType){
             lengthDATAOriginalLnStd = (observedLengthOriginalLn - mean(observedLengthOriginalLn,na.rm = T)) / sd(observedLengthOriginalLn,na.rm = T)
     )
 
+  d$isYOYDATA <- ifelse( d$ageInSamples <= 3, 1, 2 )
+
+##########################################################
+# means within a sample - use for relative size at sample
+##########################################################
+  meansByYOY_Year <- d %>%
+    group_by( isYOYDATA,speciesN,season,year,riverN ) %>%
+    summarize( meanLen_ByYOY_Year = mean(observedLength, na.rm = T),
+               sdLen_ByYOY_Year = sd(observedLength, na.rm = T),
+               meanLenOriginal_ByYOY_Year = mean(observedLengthOriginal, na.rm = T),
+               sdLenOriginal_ByYOY_Year = sd(observedLengthOriginal, na.rm = T),
+               meanLenLn_ByYOY_Year = mean(observedLengthLn, na.rm = T),
+               sdLenLn_ByYOY_Year = sd(observedLengthLn, na.rm = T),
+               meanLenOriginalLn_ByYOY_Year = mean(observedLengthOriginalLn, na.rm = T),
+               sdLenOriginalLn_ByYOY_Year = sd(observedLengthOriginalLn, na.rm = T),
+               sampleIntervalMean_ByYOY_Year = mean(sampleInterval, na.rm = T)
+    )
+  d <- left_join( d, meansByYOY_Year )
+
+  d <- d %>%     #  # use original means so length and lengthOriginal have same std values
+    mutate( lengthDATAStd_ByYOY_Year = (observedLength -                 meanLenOriginal_ByYOY_Year) / sdLenOriginal_ByYOY_Year,
+            lengthDATAOriginalStd_ByYOY_Year = (observedLengthOriginal - meanLenOriginal_ByYOY_Year) / sdLenOriginal_ByYOY_Year,
+
+            lengthDATALnStd_ByYOY_Year = (observedLengthLn -                 meanLenOriginalLn_ByYOY_Year) / sdLenOriginalLn_ByYOY_Year,
+            lengthDATAOriginalLnStd_ByYOY_Year = (observedLengthOriginalLn - meanLenOriginalLn_ByYOY_Year) / sdLenOriginalLn_ByYOY_Year
+    )
+#############################################
+#############################################
 
   #done in addEnvironmental()
   #propSampled <- getPropSampled(nSeasons,nRivers,nYears,min(d$year))
@@ -113,7 +141,6 @@ prepareDataForJags_Nimble <- function(d,modelType){
 
   d$rowNumber <- 1:nrow(d)
 
-  d$isYOYDATA <- ifelse( d$ageInSamples <= 3, 1, 2 )
   d$proportionSampled <- ifelse( is.na(d$proportionSampled), 1, d$proportionSampled )
 
   speciesByInd <- d %>% distinct(tagIndexJags,speciesN) %>% arrange(tagIndexJags)
@@ -171,6 +198,7 @@ prepareDataForJags_Nimble <- function(d,modelType){
     data <- list( encDATA = d$enc,
                   lengthDATA = d$observedLength, #d$lengthDATAStd, #d$lengthDATALnStd,
                   lengthDATAStd = d$lengthDATALnStd,
+                  lengthDATAStd_ByYOY_Year = d$lengthDATALnStd_ByYOY_Year,
                   riverDATA = d$riverN,
                   ind = d$tagIndexJags,
                   nRivers = nRivers,
@@ -196,6 +224,12 @@ prepareDataForJags_Nimble <- function(d,modelType){
                   zForInit = d$zForInit, # z for firstObs gets set to zero in jags. Can't set values in inits for values assigned in jags
                   propSampledDATA = d$proportionSampled, # propSampled$propSampledDATA,
                   countPBySpeciesStd = d$nAllFishBySpeciesPStd,
+                  countPStdBKT_yoy1 = d$nAllFishBySpeciesPStdBKT_yoy1,
+                  countPStdBKT_yoy2 = d$nAllFishBySpeciesPStdBKT_yoy2,
+                  countPStdBNT_yoy1 = d$nAllFishBySpeciesPStdBNT_yoy1,
+                  countPStdBNT_yoy2 = d$nAllFishBySpeciesPStdBNT_yoy2,
+                  countPStdATS_yoy1 = d$nAllFishBySpeciesPStdATS_yoy1,
+                  countPStdATS_yoy2 = d$nAllFishBySpeciesPStdATS_yoy2,
                   countPStdBKT = d$nAllFishBySpeciesPStdBKT,
                   countPStdBNT = d$nAllFishBySpeciesPStdBNT,
                   countPStdATS = d$nAllFishBySpeciesPStdATS,

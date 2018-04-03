@@ -462,13 +462,33 @@ adjustCounts <- function( cdIn,ddDIn,ddddDIn,meanOrIterIn,sampleToUse ){
 
   cdIn <- left_join( cdIn,denForMerge_possibleOccasions, by = c("species", "year", "season", "riverOrdered") )
 
+
   #####
   # counts by species in separate columns
   nAllFishBySpeciesPStdBySpp <- denForMerge_possibleOccasions %>%
     dplyr::select(isYOYN,species, season, riverOrdered, year, nAllFishBySpeciesPStd) %>%
-    spread(species, nAllFishBySpeciesPStd, fill = -2.5) %>%
-    rename(nAllFishBySpeciesPStdBKT = bkt,nAllFishBySpeciesPStdBNT = bnt, nAllFishBySpeciesPStdATS = ats)
+    spread(key=species, value=nAllFishBySpeciesPStd, fill = -2.5) %>%
+    rename(nAllFishBySpeciesPStdBKT = bkt,
+           nAllFishBySpeciesPStdBNT = bnt,
+           nAllFishBySpeciesPStdATS = ats
+           )
+
   cdIn <- left_join( cdIn,nAllFishBySpeciesPStdBySpp )
+
+  #####
+  # counts by species in separate columns
+  nAllFishBySpeciesPStdBySppYOY <- denForMerge_possibleOccasions %>%
+    dplyr::select(isYOYN,species, season, riverOrdered, year, nAllFishBySpeciesPStd) %>%
+    unite(yoySpp, species, isYOYN, sep = "_") %>%
+    spread(key=yoySpp, value=nAllFishBySpeciesPStd, fill = -2.5) %>%
+    rename(nAllFishBySpeciesPStdBKT_yoy1 = bkt_1,
+           nAllFishBySpeciesPStdBKT_yoy2 = bkt_2,
+           nAllFishBySpeciesPStdBNT_yoy1 = bnt_1,
+           nAllFishBySpeciesPStdBNT_yoy2 = bnt_2,
+           nAllFishBySpeciesPStdATS_yoy1 = ats_1,
+           nAllFishBySpeciesPStdATS_yoy2 = ats_2)
+
+  cdIn <- left_join( cdIn,nAllFishBySpeciesPStdBySppYOY )
 
 
   return(cdIn)

@@ -1,4 +1,5 @@
 library(lme4)
+library(tidyverse)
 
 # lm to compare against the jags model
 # patterns generally match up well
@@ -12,11 +13,15 @@ d2 <- data.frame(
   season=ddG[[1]][[1]]$season,
   species=ddG[[1]][[1]]$species,
   isYOY=ddG[[1]][[1]]$isYOYDATA,
-  length=ddG[[1]][[1]]$lengthDATA,
+  length=ddG[[1]][[1]]$lengthDATAStd,
+  lengthByYear=ddG[[1]][[1]]$lengthDATAStd_ByYOY_Year,
   grLength=ddG[[1]][[1]]$grNotUse,
   tempStd=ddG[[1]][[1]]$tempStd,
   flowStd=ddG[[1]][[1]]$flowStd,
-  countPStd=ddG[[1]][[1]]$countPAllSppStd
+  countPStd=ddG[[1]][[1]]$countPAllSppStd,
+  countPStdBKT=ddG[[1]][[1]]$countPStdBKT,
+  countPStdBNT=ddG[[1]][[1]]$countPStdBNT,
+  countPStdATS=ddG[[1]][[1]]$countPStdATS
 )
 
 d <- d2 %>% filter(
@@ -26,39 +31,55 @@ d <- d2 %>% filter(
 d <- d %>% mutate( tempStd2 = tempStd^2, flowStd2 = flowStd^2, countPStd2 = countPStd^2, length2 = length^2,
                    isYOY = as.factor(isYOY), season = as.factor(season), river = as.factor(river), species = as.factor(species)
                  )
-d$grLength <- ifelse(d$species==2&d$river==3,NA,d$grLength)
+d$grLength <- ifelse(d$species == 2 & d$river == 3,NA,d$grLength)
+
+#################################################################
+# ?s use length std by sample# and isYOY?
+#    use abundance std by isYOY?
+
+# model with length is a lot better. Stick with that to start
+modl0 <- lmer( grLength ~ isYOY * species * river * season * length + (1|ind), data = d )
+modl1 <- lmer( grLength ~ isYOY * species * river * season * lengthByYear + (1|ind), data = d )
+ggplot(d,aes(length,lengthByYear,color=isYOY)) + geom_point()
+AIC(modl0,modl1)
+
+# model with spp-specific abundances is a lot better. Stick with that to start
+moda0 <- lmer( grLength ~ isYOY * species * river * season * countPStd + (1|ind), data = d )
+moda1 <- lmer( grLength ~ isYOY * species * river * season * countPStdBKT * countPStdBNT * countPStdATS + (1|ind), data = d )
+AIC(moda0,moda1)
+
 
 # model selection
 # main effects
 mod0 <- lmer( grLength ~ isYOY * species * river * season + (1|ind), data = d )
 mod1 <- lmer( grLength ~ isYOY * species * river * season * ( tempStd ) + (1|ind), data = d )
 mod2 <- lmer( grLength ~ isYOY * species * river * season * ( flowStd ) + (1|ind), data = d )
-mod3 <- lmer( grLength ~ isYOY * species * river * season * ( countPStd ) + (1|ind), data = d )
+mod3 <- lmer( grLength ~ isYOY * species * river * season * ( countPStdBKT * countPStdBNT * countPStdATS ) + (1|ind), data = d )
 mod4 <- lmer( grLength ~ isYOY * species * river * season * ( length ) + (1|ind), data = d )
 
-mod100 <- lmer( grLength ~ isYOY * species * river * season * ( tempStd * flowStd * countPStd * length ) + (1|ind), data = d )
-mod102 <- lmer( grLength ~ isYOY * species * river * season * ( tempStd * flowStd * countPStd ) + (1|ind), data = d )
+mod100 <- lmer( grLength ~ isYOY * species * river * season * ( tempStd * flowStd * countPStdBKT * countPStdBNT * countPStdATS * length ) + (1|ind), data = d )
+mod102 <- lmer( grLength ~ isYOY * species * river * season * ( tempStd * flowStd * countPStdBKT * countPStdBNT * countPStdATS ) + (1|ind), data = d )
 mod103 <- lmer( grLength ~ isYOY * species * river * season * ( tempStd * flowStd ) + (1|ind), data = d )
-mod104 <- lmer( grLength ~ isYOY * species * river * season * ( tempStd * countPStd ) + (1|ind), data = d )
-mod105 <- lmer( grLength ~ isYOY * species * river * season * ( flowStd * countPStd ) + (1|ind), data = d )
+mod104 <- lmer( grLength ~ isYOY * species * river * season * ( tempStd * countPStdBKT * countPStdBNT * countPStdATS ) + (1|ind), data = d )
+mod105 <- lmer( grLength ~ isYOY * species * river * season * ( flowStd * countPStdBKT * countPStdBNT * countPStdATS ) + (1|ind), data = d )
 
 #additive better?, no
-mod102a <- lmer( grLength ~ isYOY * species * river * season * ( tempStd + flowStd + countPStd ) + (1|ind), data = d )
+mod102a <- lmer( grLength ~ isYOY * species * river * season * ( tempStd + flowStd + countPStdBKT + countPStdBNT + countPStdATS ) + (1|ind), data = d )
 
 # length has clear effect on graphs. what structure is needed - full interactive (mod100) worse than model w/o length (mod102)
-mod102b <- lmer( grLength ~ isYOY * species * river * season * ( tempStd * flowStd * countPStd ) + isYOY * length + (1|ind), data = d )# bkt ats, best model #
-mod102c <- lmer( grLength ~ isYOY * species * river * season * ( tempStd * flowStd * countPStd ) + isYOY * species * length + (1|ind), data = d )# bkt ats, best model #
-mod102d <- lmer( grLength ~ isYOY * species * river * season * ( tempStd * flowStd * countPStd ) + isYOY * species * river * length + (1|ind), data = d )# bkt ats, best model #
-mod102e <- lmer( grLength ~ isYOY * species * river * season * ( tempStd * flowStd * countPStd ) + isYOY * species * river * season * length + (1|ind), data = d )# bkt ats, best model #
+mod102b <- lmer( grLength ~ isYOY * species * river * season * ( tempStd * flowStd * countPStdBKT * countPStdBNT * countPStdATS ) + isYOY * length + (1|ind), data = d )# bkt ats, best model #
+mod102c <- lmer( grLength ~ isYOY * species * river * season * ( tempStd * flowStd * countPStdBKT * countPStdBNT * countPStdATS ) + isYOY * species * length + (1|ind), data = d )# bkt ats, best model #
+mod102d <- lmer( grLength ~ isYOY * species * river * season * ( tempStd * flowStd * countPStdBKT * countPStdBNT * countPStdATS ) + isYOY * species * river * length + (1|ind), data = d )# bkt ats, best model #
+mod102e <- lmer( grLength ~ isYOY * species * river * season * ( tempStd * flowStd * countPStdBKT * countPStdBNT * countPStdATS ) + isYOY * species * river * season * length + (1|ind), data = d )# bkt ats, best model #
 
 # which interactions with length?
-mod102e1 <- lmer( grLength ~ isYOY * species * river * season * ( tempStd * flowStd * countPStd ) + isYOY * species * river * season * length * tempStd + (1|ind), data = d )# bkt ats, best model #
-mod102e2 <- lmer( grLength ~ isYOY * species * river * season * ( tempStd * flowStd * countPStd ) + isYOY * species * river * season * length * flowStd + (1|ind), data = d )# bkt ats, best model #
-mod102e3 <- lmer( grLength ~ isYOY * species * river * season * ( tempStd * flowStd * countPStd ) + isYOY * species * river * season * length * countPStd + (1|ind), data = d )# bkt ats, best model #
-
+mod102e1 <- lmer( grLength ~ isYOY * species * river * season * ( tempStd * flowStd * countPStdBKT * countPStdBNT * countPStdATS ) + isYOY * species * river * season * length * tempStd + (1|ind), data = d )# bkt ats, best model #
+mod102e2 <- lmer( grLength ~ isYOY * species * river * season * ( tempStd * flowStd * countPStdBKT * countPStdBNT * countPStdATS ) + isYOY * species * river * season * length * flowStd + (1|ind), data = d )# bkt ats, best model #
+mod102e3 <- lmer( grLength ~ isYOY * species * river * season * ( tempStd * flowStd * countPStdBKT * countPStdBNT * countPStdATS ) + isYOY * species * river * season * length * countPStdBKT * countPStdBNT * countPStdATS + (1|ind), data = d )# bkt ats, best model #
 
 aicLinear <- AIC(mod102e1,mod102e2,mod102e3,mod102a,mod102b,mod102c,mod102d,mod102e,mod0,mod1,mod2,mod3,mod4,mod100,mod102,mod103,mod104,mod105) %>% rownames_to_column() %>% arrange(AIC)
 
+##########################
 # add in squared terms
 
 mod2_1 <- lmer( grLength ~ isYOY * species * river * season * ( tempStd * flowStd * countPStd ) + isYOY * species * river * season * length +
