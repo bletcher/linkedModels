@@ -132,6 +132,29 @@ ggplot(allFishBySpecies, aes(sampleNumber,nAllFishBySpecies)) +
 
 ```
 
+```{r}
+# Correlation between age classes
+# justification for not using separate age class abundances
+# interesting that it is less for ATS
+# From the bottom of adjustCounts()
+# 
+#                               nAllFishBySpeciesPStdBKT_yoy1 nAllFishBySpeciesPStdBKT_yoy2 nAllFishBySpeciesPStdBNT_yoy1 nAllFishBySpeciesPStdBNT_yoy2
+# nAllFishBySpeciesPStdBKT_yoy1                          1.00                          0.96                         -0.46                         -0.43
+# nAllFishBySpeciesPStdBKT_yoy2                        **0.96**                        1.00                         -0.44                         -0.38
+# nAllFishBySpeciesPStdBNT_yoy1                         -0.46                         -0.44                          1.00                          0.94
+# nAllFishBySpeciesPStdBNT_yoy2                         -0.43                         -0.38                       * *0.94**                       1.00
+# nAllFishBySpeciesPStdATS_yoy1                         -0.13                         -0.17                         -0.21                          0.00
+# nAllFishBySpeciesPStdATS_yoy2                          0.06                         -0.03                         -0.05                          0.15
+#                               nAllFishBySpeciesPStdATS_yoy1 nAllFishBySpeciesPStdATS_yoy2
+# nAllFishBySpeciesPStdBKT_yoy1                         -0.13                          0.06
+# nAllFishBySpeciesPStdBKT_yoy2                         -0.17                         -0.03
+# nAllFishBySpeciesPStdBNT_yoy1                         -0.21                         -0.05
+# nAllFishBySpeciesPStdBNT_yoy2                          0.00                          0.15
+# nAllFishBySpeciesPStdATS_yoy1                          1.00                          0.47
+# nAllFishBySpeciesPStdATS_yoy2                         *0.47*                         1.00
+```
+
+
 
 ```{r p(detection)}
   # ggPInt <- array2df(ddD$sims.list$pBetaInt, label.x = "est")

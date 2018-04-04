@@ -451,14 +451,13 @@ adjustCounts <- function( cdIn,ddDIn,ddddDIn,meanOrIterIn,sampleToUse ){
             riverOrdered = factor(riverOrdered,levels=c('west brook', 'wb jimmy', 'wb mitchell',"wb obear"),labels = c("west brook","wb jimmy","wb mitchell","wb obear"), ordered = T)
           )
   # use this as merge template, then interpolate std values
-  # could break up by isYOY...
 
   denForMerge_possibleOccasions <- left_join( possibleOccasions,denForMerge2 ) %>%
     mutate( nAllFishBySpeciesPStd = zoo::na.approx(nAllFishBySpeciesPStd),
             nAllFishPStd = zoo::na.approx(nAllFishPStd),
             massAllFishBySpeciesStd = zoo::na.approx(massAllFishBySpeciesStd),
             massAllFishStd = zoo::na.approx(massAllFishStd)) %>%
-    select(-c(Freq,FreqUp,FreqDown))
+    dplyr::select(-c(Freq,FreqUp,FreqDown))
 
   cdIn <- left_join( cdIn,denForMerge_possibleOccasions, by = c("species", "year", "season", "riverOrdered") )
 
@@ -475,21 +474,26 @@ adjustCounts <- function( cdIn,ddDIn,ddddDIn,meanOrIterIn,sampleToUse ){
 
   cdIn <- left_join( cdIn,nAllFishBySpeciesPStdBySpp )
 
-  #####
-  # counts by species in separate columns
-  nAllFishBySpeciesPStdBySppYOY <- denForMerge_possibleOccasions %>%
-    dplyr::select(isYOYN,species, season, riverOrdered, year, nAllFishBySpeciesPStd) %>%
-    unite(yoySpp, species, isYOYN, sep = "_") %>%
-    spread(key=yoySpp, value=nAllFishBySpeciesPStd, fill = -2.5) %>%
-    rename(nAllFishBySpeciesPStdBKT_yoy1 = bkt_1,
-           nAllFishBySpeciesPStdBKT_yoy2 = bkt_2,
-           nAllFishBySpeciesPStdBNT_yoy1 = bnt_1,
-           nAllFishBySpeciesPStdBNT_yoy2 = bnt_2,
-           nAllFishBySpeciesPStdATS_yoy1 = ats_1,
-           nAllFishBySpeciesPStdATS_yoy2 = ats_2)
-
-  cdIn <- left_join( cdIn,nAllFishBySpeciesPStdBySppYOY )
-
+ #  #####
+ #  # counts by species and yoy in separate columns
+ #  # yoy1 and yoy2 are too highly correlated - don't use
+ #  nAllFishBySpeciesPStdBySppYOY <- denForMerge_possibleOccasions %>%
+ #    dplyr::select(isYOYN,species, season, riverOrdered, year, nAllFishBySpeciesPStd) %>%
+ #    unite(yoySpp, species, isYOYN, sep = "_") %>%
+ #    spread(key=yoySpp, value=nAllFishBySpeciesPStd, fill = -2.5) %>%
+ #    rename(nAllFishBySpeciesPStdBKT_yoy1 = bkt_1,
+ #           nAllFishBySpeciesPStdBKT_yoy2 = bkt_2,
+ #           nAllFishBySpeciesPStdBNT_yoy1 = bnt_1,
+ #           nAllFishBySpeciesPStdBNT_yoy2 = bnt_2,
+ #           nAllFishBySpeciesPStdATS_yoy1 = ats_1,
+ #           nAllFishBySpeciesPStdATS_yoy2 = ats_2)
+ #
+ #  cdIn <- left_join( cdIn,nAllFishBySpeciesPStdBySppYOY )
+ # # ggplot(nAllFishBySpeciesPStdBySppYOY , aes(nAllFishBySpeciesPStdBKT_yoy1,nAllFishBySpeciesPStdBKT_yoy2)) + geom_point()
+ # # ggplot(nAllFishBySpeciesPStdBySppYOY , aes(nAllFishBySpeciesPStdBNT_yoy1,nAllFishBySpeciesPStdBNT_yoy2)) + geom_point()
+ # #  ggplot(nAllFishBySpeciesPStdBySppYOY , aes(nAllFishBySpeciesPStdATS_yoy1,nAllFishBySpeciesPStdATS_yoy2)) + geom_point()
+ #  nAllFishBySpeciesPStdBySppYOY[nAllFishBySpeciesPStdBySppYOY == -2.5] <- NA
+ #  round(cor(nAllFishBySpeciesPStdBySppYOY[,c('nAllFishBySpeciesPStdBKT_yoy1','nAllFishBySpeciesPStdBKT_yoy2','nAllFishBySpeciesPStdBNT_yoy1','nAllFishBySpeciesPStdBNT_yoy2','nAllFishBySpeciesPStdATS_yoy1','nAllFishBySpeciesPStdATS_yoy2')], use="complete.obs"),2)
 
   return(cdIn)
 

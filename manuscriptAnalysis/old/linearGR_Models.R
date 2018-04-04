@@ -1,7 +1,7 @@
 library(lme4)
 library(tidyverse)
 
-# lm to compare against the jags model
+# lm for model selection, also to compare against the jags model
 # patterns generally match up well
 
 load(file = paste0('./data/out/dG_bktbntats1997_forLmer.RData')) # made by running mainAnalysis.R with speciesGr = c("bkt", "bnt","ats") through ddG[[ii]] <- dddG[[ii]] %>% prepareDataForJags("growth")
@@ -19,10 +19,21 @@ d2 <- data.frame(
   tempStd=ddG[[1]][[1]]$tempStd,
   flowStd=ddG[[1]][[1]]$flowStd,
   countPStd=ddG[[1]][[1]]$countPAllSppStd,
+
   countPStdBKT=ddG[[1]][[1]]$countPStdBKT,
   countPStdBNT=ddG[[1]][[1]]$countPStdBNT,
-  countPStdATS=ddG[[1]][[1]]$countPStdATS
-)
+  countPStdATS=ddG[[1]][[1]]$countPStdATS,
+
+  countPStdBKT_yoy1=ddG[[1]][[1]]$countPStdBKT_yoy1,
+  countPStdBKT_yoy2=ddG[[1]][[1]]$countPStdBKT_yoy2,
+
+  countPStdBNT_yoy1=ddG[[1]][[1]]$countPStdBKT_yoy1,
+  countPStdBNT_yoy2=ddG[[1]][[1]]$countPStdBKT_yoy2,
+
+  countPStdATS_yoy1=ddG[[1]][[1]]$countPStdATS_yoy1,
+  countPStdATS_yoy2=ddG[[1]][[1]]$countPStdATS_yoy2
+
+  )
 
 d <- d2 %>% filter(
   #  species == as.numeric(speciesInGr),
@@ -43,10 +54,14 @@ modl1 <- lmer( grLength ~ isYOY * species * river * season * lengthByYear + (1|i
 ggplot(d,aes(length,lengthByYear,color=isYOY)) + geom_point()
 AIC(modl0,modl1)
 
+
 # model with spp-specific abundances is a lot better. Stick with that to start
 moda0 <- lmer( grLength ~ isYOY * species * river * season * countPStd + (1|ind), data = d )
 moda1 <- lmer( grLength ~ isYOY * species * river * season * countPStdBKT * countPStdBNT * countPStdATS + (1|ind), data = d )
-AIC(moda0,moda1)
+AIC(moda0,moda1) %>% rownames_to_column() %>% arrange(AIC)
+
+
+
 
 
 # model selection
