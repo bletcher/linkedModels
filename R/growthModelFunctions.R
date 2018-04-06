@@ -413,21 +413,21 @@ adjustCounts <- function( cdIn,ddDIn,ddddDIn,meanOrIterIn,sampleToUse ){
   }
 
   denForMerge <- den %>%
-    dplyr::select(isYOYN,species, season, riverOrdered, year, nAllFishBySpeciesP, nAllFishP, massAllFishBySpecies, massAllFish, meanOrIter, iterIn) %>%
+    dplyr::select(species, season, riverOrdered, year, nAllFishBySpeciesP, nAllFishP, massAllFishBySpecies, massAllFish, meanOrIter, iterIn) %>%
   #  filter( !is.na(nAllFishBySpeciesP) ) %>%
     arrange(species,riverOrdered,year,season)
 
-  # counts by species
+  # stats for counts by species
   denForMergeSummaryBySpecies <- denForMerge %>%
-    group_by( isYOYN,species,season,riverOrdered ) %>%
+    group_by( species,season,riverOrdered ) %>%
     summarize( nAllFishBySpeciesPMean = mean( nAllFishBySpeciesP, na.rm = T ),
                nAllFishBySpeciesPSD =     sd( nAllFishBySpeciesP, na.rm = T),
                massAllFishBySpeciesMean = mean( massAllFishBySpecies, na.rm = T ),
                massAllFishBySpeciesSD =     sd( massAllFishBySpecies, na.rm = T))
 
-  # counts for all species
+  # stats for counts for all species
   denForMergeSummary <- denForMerge %>%
-    group_by( isYOYN,season,riverOrdered ) %>%
+    group_by( season,riverOrdered ) %>%
     summarize( nAllFishPMean = mean( nAllFishP, na.rm = T ),
                nAllFishPSD =     sd( nAllFishP, na.rm = T),
                massAllFishMean = mean( massAllFish, na.rm = T ),
@@ -465,7 +465,7 @@ adjustCounts <- function( cdIn,ddDIn,ddddDIn,meanOrIterIn,sampleToUse ){
   #####
   # counts by species in separate columns
   nAllFishBySpeciesPStdBySpp <- denForMerge_possibleOccasions %>%
-    dplyr::select(isYOYN,species, season, riverOrdered, year, nAllFishBySpeciesPStd) %>%
+    dplyr::select(species, season, riverOrdered, year, nAllFishBySpeciesPStd) %>%
     spread(key=species, value=nAllFishBySpeciesPStd, fill = -2.5) %>%
     rename(nAllFishBySpeciesPStdBKT = bkt,
            nAllFishBySpeciesPStdBNT = bnt,

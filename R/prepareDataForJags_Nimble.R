@@ -201,6 +201,7 @@ prepareDataForJags_Nimble <- function(d,modelType){
                   lengthDATAStd_ByYOY_Year = d$lengthDATALnStd_ByYOY_Year,
                   riverDATA = d$riverN,
                   ind = d$tagIndexJags,
+                  sampleNumber = d$sampleIndex,
                   nRivers = nRivers,
                   nSpecies = nSpecies,
                   nInd = nInd,

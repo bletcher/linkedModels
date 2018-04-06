@@ -46,19 +46,23 @@ d <- d %>% mutate( tempStd2 = tempStd^2, flowStd2 = flowStd^2, countPStd2 = coun
                  )
 d$grLength <- ifelse(d$species == 2 & d$river == 3,NA,d$grLength)
 
+mod <- list(list())
+dIn <- list()
+
+bySpecies <- d %>% group_by(species) %>% nest()
 ```
 
 Try new, more flexible model structure
 
 2a is best for BKT
 2 is best for BNT
-```{r}
+```{r bkt}
 
 #BKT
 sppMod <- 1
-dIn <- d %>% filter(species == sppMod)
+dIn[[sppMod]] <- d %>% filter(species == sppMod)
 
-mod1 <- lmer( grLength ~ isYOY * river * season * ( tempStd * flowStd * countPStdBKT ) +
+mod[[sppMod]][[1]] <- lmer( grLength ~ isYOY * river * season * ( tempStd * flowStd * countPStdBKT ) +
                          isYOY * river * season * ( tempStd * flowStd * countPStdBNT ) +
                          isYOY * river * season * ( tempStd * flowStd * countPStdATS ) +
                          isYOY * river * season * ( tempStd * flowStd * length ) +
@@ -74,10 +78,10 @@ mod1 <- lmer( grLength ~ isYOY * river * season * ( tempStd * flowStd * countPSt
                          isYOY * river * season * ( length2 * countPStdBNT2 ) +
                          isYOY * river * season * ( length2 * countPStdATS2 ) + 
 
-                         (1|ind), data = dIn )
+                         (1|ind), data = dIn[[sppMod]] )
 
 
-mod2 <- lmer( grLength ~ isYOY * river * season * ( tempStd * flowStd * countPStdBKT ) +
+mod[[sppMod]][[2]] <- lmer( grLength ~ isYOY * river * season * ( tempStd * flowStd * countPStdBKT ) +
                          isYOY * river * season * ( tempStd * flowStd * countPStdBNT ) +
                          isYOY * river * season * ( tempStd * flowStd * countPStdATS ) +
                          isYOY * river * season * ( tempStd * flowStd * length ) +
@@ -93,9 +97,9 @@ mod2 <- lmer( grLength ~ isYOY * river * season * ( tempStd * flowStd * countPSt
                          # isYOY * river * season * ( length2 * countPStdBNT2 ) +
                          # isYOY * river * season * ( length2 * countPStdATS2 ) + 
 
-                         (1|ind), data = dIn )
+                         (1|ind), data = dIn[[sppMod]] )
 
-mod2a <- lmer( grLength ~ isYOY * river * season * ( tempStd * flowStd * countPStdBKT ) +
+mod[[sppMod]][[3]] <- lmer( grLength ~ isYOY * river * season * ( tempStd * flowStd * countPStdBKT ) +
                          isYOY * river * season * ( tempStd * flowStd * countPStdBNT ) +
                          isYOY * river * season * ( tempStd * flowStd * countPStdATS ) +
                          isYOY * river * season * ( tempStd * flowStd * length ) +
@@ -111,9 +115,9 @@ mod2a <- lmer( grLength ~ isYOY * river * season * ( tempStd * flowStd * countPS
                          # isYOY * river * season * ( length2 * countPStdBNT2 ) +
                          # isYOY * river * season * ( length2 * countPStdATS2 ) + 
 
-                         (1|ind), data = dIn )
+                         (1|ind), data = dIn[[sppMod]] )
 
-mod2b <- lmer( grLength ~ isYOY * river * season * ( tempStd * flowStd * countPStdBKT ) +
+mod[[sppMod]][[4]] <- lmer( grLength ~ isYOY * river * season * ( tempStd * flowStd * countPStdBKT ) +
                          isYOY * river * season * ( tempStd * flowStd * countPStdBNT ) +
                          isYOY * river * season * ( tempStd * flowStd * countPStdATS ) +
                          isYOY * river * season * ( tempStd * flowStd * length ) +
@@ -130,9 +134,9 @@ mod2b <- lmer( grLength ~ isYOY * river * season * ( tempStd * flowStd * countPS
                          # isYOY * river * season * ( length2 * countPStdBNT2 ) +
                          # isYOY * river * season * ( length2 * countPStdATS2 ) + 
 
-                         (1|ind), data = dIn )
+                         (1|ind), data = dIn[[sppMod]] )
 
-mod2c <- lmer( grLength ~ isYOY * river * season * ( tempStd * flowStd * countPStdBKT ) +
+mod[[sppMod]][[5]] <- lmer( grLength ~ isYOY * river * season * ( tempStd * flowStd * countPStdBKT ) +
                          isYOY * river * season * ( tempStd * flowStd * countPStdBNT ) +
                          isYOY * river * season * ( tempStd * flowStd * countPStdATS ) +
                          isYOY * river * season * ( tempStd * flowStd * length ) +
@@ -148,9 +152,9 @@ mod2c <- lmer( grLength ~ isYOY * river * season * ( tempStd * flowStd * countPS
                          # isYOY * river * season * ( length2 * countPStdBNT2 ) +
                          # isYOY * river * season * ( length2 * countPStdATS2 ) + 
 
-                         (1|ind), data = dIn )
+                         (1|ind), data = dIn[[sppMod]] )
 
-mod3 <- lmer( grLength ~ isYOY * river * season * ( tempStd * flowStd * countPStdBKT ) +
+mod[[sppMod]][[6]] <- lmer( grLength ~ isYOY * river * season * ( tempStd * flowStd * countPStdBKT ) +
                          isYOY * river * season * ( tempStd * flowStd * countPStdBNT ) +
                          isYOY * river * season * ( tempStd * flowStd * countPStdATS ) +
                          isYOY * river * season * ( tempStd * flowStd * length ) +
@@ -166,9 +170,9 @@ mod3 <- lmer( grLength ~ isYOY * river * season * ( tempStd * flowStd * countPSt
                          # isYOY * river * season * ( length2 * countPStdBNT2 ) +
                          # isYOY * river * season * ( length2 * countPStdATS2 ) + 
 
-                         (1|ind), data = dIn )
+                         (1|ind), data = dIn[[sppMod]] )
 
-mod4 <- lmer( grLength ~ isYOY * river * season * ( tempStd * flowStd * countPStdBKT ) +
+mod[[sppMod]][[7]] <- lmer( grLength ~ isYOY * river * season * ( tempStd * flowStd * countPStdBKT ) +
                          isYOY * river * season * ( tempStd * flowStd * countPStdBNT ) +
                          isYOY * river * season * ( tempStd * flowStd * countPStdATS ) +
                          isYOY * river * season * ( tempStd * flowStd * length ) +
@@ -184,9 +188,9 @@ mod4 <- lmer( grLength ~ isYOY * river * season * ( tempStd * flowStd * countPSt
                          # isYOY * river * season * ( length2 * countPStdBNT2 ) +
                          # isYOY * river * season * ( length2 * countPStdATS2 ) + 
 
-                         (1|ind), data = dIn )
+                         (1|ind), data = dIn[[sppMod]] )
 
-mod4a <- lmer( grLength ~ isYOY * river * season * ( tempStd * flowStd * countPStdBKT ) +
+mod[[sppMod]][[8]] <- lmer( grLength ~ isYOY * river * season * ( tempStd * flowStd * countPStdBKT ) +
                          isYOY * river * season * ( tempStd * flowStd * countPStdBNT ) +
                          isYOY * river * season * ( tempStd * flowStd * countPStdATS ) +
                          isYOY * river * season * ( tempStd * flowStd * length ) +
@@ -202,10 +206,10 @@ mod4a <- lmer( grLength ~ isYOY * river * season * ( tempStd * flowStd * countPS
                          # isYOY * river * season * ( length2 * countPStdBNT2 ) +
                          # isYOY * river * season * ( length2 * countPStdATS2 ) + 
 
-                         (1|ind), data = dIn )
+                         (1|ind), data = dIn[[sppMod]] )
 
 
-mod5 <- lmer( grLength ~ isYOY * river * season * ( tempStd * flowStd * countPStdBKT ) +
+mod[[sppMod]][[9]] <- lmer( grLength ~ isYOY * river * season * ( tempStd * flowStd * countPStdBKT ) +
                          isYOY * river * season * ( tempStd * flowStd * countPStdBNT ) +
                          isYOY * river * season * ( tempStd * flowStd * countPStdATS ) +
                          isYOY * river * season * ( tempStd * flowStd * length ) +
@@ -221,19 +225,75 @@ mod5 <- lmer( grLength ~ isYOY * river * season * ( tempStd * flowStd * countPSt
                          # isYOY * river * season * ( length2 * countPStdBNT2 ) +
                          # isYOY * river * season * ( length2 * countPStdATS2 ) + 
 
-                         (1|ind), data = dIn )
+                         (1|ind), data = dIn[[sppMod]] )
 
-AIC(mod1,mod2,mod2a,mod2b,mod2c,mod3,mod4,mod4a,mod5) %>% rownames_to_column() %>% arrange(AIC)
+mod[[sppMod]][[10]] <- lmer( grLength ~ isYOY * season * ( tempStd * flowStd * countPStdBKT ) +
+                         isYOY * season * ( tempStd * flowStd * countPStdBNT ) +
+                         isYOY * season * ( tempStd * flowStd * countPStdATS ) +
+                         isYOY * season * ( tempStd * flowStd * length ) +
+                         # isYOY * season * ( length * countPStdBKT ) +
+                         # isYOY * season * ( length * countPStdBNT ) +
+                         # isYOY * season * ( length * countPStdATS ) +                
+                
+                         isYOY * season * ( tempStd2 * flowStd2 * countPStdBKT2 ) +
+                       #  isYOY * season * ( tempStd2 * flowStd2 * countPStdBNT2 ) +
+                      #   isYOY * season * ( tempStd2 * flowStd2 * countPStdATS2 ) +
+                         # # isYOY * season * ( tempStd2 * flowStd2 * length2 ) + # model error with this line in
+                         # isYOY * season * ( length2 * countPStdBKT2 ) +
+                         # isYOY * season * ( length2 * countPStdBNT2 ) +
+                         # isYOY * season * ( length2 * countPStdATS2 ) + 
+
+                         (1|ind), data = dIn[[sppMod]] )
+
+mod[[sppMod]][[11]] <- lmer( grLength ~ isYOY * season * ( tempStd * flowStd * countPStdBKT ) +
+                         isYOY * season * ( tempStd * flowStd * countPStdBNT ) +
+                         isYOY * season * ( tempStd * flowStd * countPStdATS ) +
+                         isYOY * season * ( tempStd * flowStd * length ) +
+                         # isYOY * season * ( length * countPStdBKT ) +
+                         # isYOY * season * ( length * countPStdBNT ) +
+                         # isYOY * season * ( length * countPStdATS ) +                
+                
+                       #  isYOY * season * ( tempStd2 * flowStd2 * countPStdBKT2 ) +
+                         isYOY * season * ( tempStd2 * flowStd2 * countPStdBNT2 ) +
+                       #  isYOY * season * ( tempStd2 * flowStd2 * countPStdATS2 ) +
+                         # # isYOY * season * ( tempStd2 * flowStd2 * length2 ) + # model error with this line in
+                         # isYOY * season * ( length2 * countPStdBKT2 ) +
+                         # isYOY * season * ( length2 * countPStdBNT2 ) +
+                         # isYOY * season * ( length2 * countPStdATS2 ) + 
+
+                         (1|ind), data = dIn[[sppMod]] )
+
+mod[[sppMod]][[12]] <- lmer( grLength ~ isYOY * season * ( tempStd * flowStd * countPStdBKT ) +
+                         isYOY * season * ( tempStd * flowStd * countPStdBNT ) +
+                         isYOY * season * ( tempStd * flowStd * countPStdATS ) +
+                         isYOY * season * ( tempStd * flowStd * length ) +
+                         # isYOY * season * ( length * countPStdBKT ) +
+                         # isYOY * season * ( length * countPStdBNT ) +
+                         # isYOY * season * ( length * countPStdATS ) +                
+                
+                       #  isYOY * season * ( tempStd2 * flowStd2 * countPStdBKT2 ) +
+                       #  isYOY * season * ( tempStd2 * flowStd2 * countPStdBNT2 ) +
+                         isYOY * season * ( tempStd2 * flowStd2 * countPStdATS2 ) +
+                         # # isYOY * season * ( tempStd2 * flowStd2 * length2 ) + # model error with this line in
+                         # isYOY * season * ( length2 * countPStdBKT2 ) +
+                         # isYOY * season * ( length2 * countPStdBNT2 ) +
+                         # isYOY * season * ( length2 * countPStdATS2 ) + 
+
+                         (1|ind), data = dIn[[sppMod]] )
+
+
+(aic[[sppMod]] <- AIC(mod1,mod2,mod2a,mod2b,mod2c,mod3,mod4,mod4a,mod5,mod5a,mod5b,mod5c) %>% rownames_to_column() %>% arrange(AIC))
 ```
+
 For salmon  - need to get rid of 'river'
 mod5 is best
 ```{r}
 
 #ATS
 sppMod <- 3
-dIn <- d %>% filter(species == sppMod)
+dIn[[3]] <- d %>% filter(species == sppMod)
 
-mod1 <- lmer( grLength ~ isYOY * season * ( tempStd * flowStd * countPStdBKT ) +
+mod[[3]][[1]] <- lmer( grLength ~ isYOY * season * ( tempStd * flowStd * countPStdBKT ) +
                          isYOY * season * ( tempStd * flowStd * countPStdBNT ) +
                          isYOY * season * ( tempStd * flowStd * countPStdATS ) +
                          isYOY * season * ( tempStd * flowStd * length ) +
@@ -249,10 +309,10 @@ mod1 <- lmer( grLength ~ isYOY * season * ( tempStd * flowStd * countPStdBKT ) +
                          isYOY * season * ( length2 * countPStdBNT2 ) +
                          isYOY * season * ( length2 * countPStdATS2 ) + 
 
-                         (1|ind), data = dIn )
+                         (1|ind), data = dIn[[3]] )
 
 
-mod2 <- lmer( grLength ~ isYOY * season * ( tempStd * flowStd * countPStdBKT ) +
+mod[[3]][[2]] <- lmer( grLength ~ isYOY * season * ( tempStd * flowStd * countPStdBKT ) +
                          isYOY * season * ( tempStd * flowStd * countPStdBNT ) +
                          isYOY * season * ( tempStd * flowStd * countPStdATS ) +
                          isYOY * season * ( tempStd * flowStd * length ) +
@@ -268,9 +328,9 @@ mod2 <- lmer( grLength ~ isYOY * season * ( tempStd * flowStd * countPStdBKT ) +
                          # isYOY * season * ( length2 * countPStdBNT2 ) +
                          # isYOY * season * ( length2 * countPStdATS2 ) + 
 
-                         (1|ind), data = dIn )
+                         (1|ind), data = dIn[[3]] )
 
-mod2a <- lmer( grLength ~ isYOY * season * ( tempStd * flowStd * countPStdBKT ) +
+mod[[3]][[3]] <- lmer( grLength ~ isYOY * season * ( tempStd * flowStd * countPStdBKT ) +
                          isYOY * season * ( tempStd * flowStd * countPStdBNT ) +
                          isYOY * season * ( tempStd * flowStd * countPStdATS ) +
                          isYOY * season * ( tempStd * flowStd * length ) +
@@ -286,9 +346,9 @@ mod2a <- lmer( grLength ~ isYOY * season * ( tempStd * flowStd * countPStdBKT ) 
                          # isYOY * season * ( length2 * countPStdBNT2 ) +
                          # isYOY * season * ( length2 * countPStdATS2 ) + 
 
-                         (1|ind), data = dIn )
+                         (1|ind), data = dIn[[3]] )
 
-mod2b <- lmer( grLength ~ isYOY * season * ( tempStd * flowStd * countPStdBKT ) +
+mod[[3]][[4]] <- lmer( grLength ~ isYOY * season * ( tempStd * flowStd * countPStdBKT ) +
                          isYOY * season * ( tempStd * flowStd * countPStdBNT ) +
                          isYOY * season * ( tempStd * flowStd * countPStdATS ) +
                          isYOY * season * ( tempStd * flowStd * length ) +
@@ -305,9 +365,9 @@ mod2b <- lmer( grLength ~ isYOY * season * ( tempStd * flowStd * countPStdBKT ) 
                          # isYOY * season * ( length2 * countPStdBNT2 ) +
                          # isYOY * season * ( length2 * countPStdATS2 ) + 
 
-                         (1|ind), data = dIn )
+                         (1|ind), data = dIn[[3]] )
 
-mod2c <- lmer( grLength ~ isYOY * season * ( tempStd * flowStd * countPStdBKT ) +
+mod[[3]][[5]] <- lmer( grLength ~ isYOY * season * ( tempStd * flowStd * countPStdBKT ) +
                          isYOY * season * ( tempStd * flowStd * countPStdBNT ) +
                          isYOY * season * ( tempStd * flowStd * countPStdATS ) +
                          isYOY * season * ( tempStd * flowStd * length ) +
@@ -323,9 +383,9 @@ mod2c <- lmer( grLength ~ isYOY * season * ( tempStd * flowStd * countPStdBKT ) 
                          # isYOY * season * ( length2 * countPStdBNT2 ) +
                          # isYOY * season * ( length2 * countPStdATS2 ) + 
 
-                         (1|ind), data = dIn )
+                         (1|ind), data = dIn[[3]] )
 
-mod3 <- lmer( grLength ~ isYOY * season * ( tempStd * flowStd * countPStdBKT ) +
+mod[[3]][[6]] <- lmer( grLength ~ isYOY * season * ( tempStd * flowStd * countPStdBKT ) +
                          isYOY * season * ( tempStd * flowStd * countPStdBNT ) +
                          isYOY * season * ( tempStd * flowStd * countPStdATS ) +
                          isYOY * season * ( tempStd * flowStd * length ) +
@@ -341,9 +401,9 @@ mod3 <- lmer( grLength ~ isYOY * season * ( tempStd * flowStd * countPStdBKT ) +
                          # isYOY * season * ( length2 * countPStdBNT2 ) +
                          # isYOY * season * ( length2 * countPStdATS2 ) + 
 
-                         (1|ind), data = dIn )
+                         (1|ind), data = dIn[[3]] )
 
-mod4 <- lmer( grLength ~ isYOY * season * ( tempStd * flowStd * countPStdBKT ) +
+mod[[3]][[7]] <- lmer( grLength ~ isYOY * season * ( tempStd * flowStd * countPStdBKT ) +
                          isYOY * season * ( tempStd * flowStd * countPStdBNT ) +
                          isYOY * season * ( tempStd * flowStd * countPStdATS ) +
                          isYOY * season * ( tempStd * flowStd * length ) +
@@ -359,9 +419,9 @@ mod4 <- lmer( grLength ~ isYOY * season * ( tempStd * flowStd * countPStdBKT ) +
                          # isYOY * season * ( length2 * countPStdBNT2 ) +
                          # isYOY * season * ( length2 * countPStdATS2 ) + 
 
-                         (1|ind), data = dIn )
+                         (1|ind), data = dIn[[3]] )
 
-mod4a <- lmer( grLength ~ isYOY * season * ( tempStd * flowStd * countPStdBKT ) +
+mod[[3]][[8]] <- lmer( grLength ~ isYOY * season * ( tempStd * flowStd * countPStdBKT ) +
                          isYOY * season * ( tempStd * flowStd * countPStdBNT ) +
                          isYOY * season * ( tempStd * flowStd * countPStdATS ) +
                          isYOY * season * ( tempStd * flowStd * length ) +
@@ -377,10 +437,10 @@ mod4a <- lmer( grLength ~ isYOY * season * ( tempStd * flowStd * countPStdBKT ) 
                          # isYOY * season * ( length2 * countPStdBNT2 ) +
                          # isYOY * season * ( length2 * countPStdATS2 ) + 
 
-                         (1|ind), data = dIn )
+                         (1|ind), data = dIn[[3]] )
 
 
-mod5 <- lmer( grLength ~ isYOY * season * ( tempStd * flowStd * countPStdBKT ) +
+mod[[3]][[9]] <- lmer( grLength ~ isYOY * season * ( tempStd * flowStd * countPStdBKT ) +
                          isYOY * season * ( tempStd * flowStd * countPStdBNT ) +
                          isYOY * season * ( tempStd * flowStd * countPStdATS ) +
                          isYOY * season * ( tempStd * flowStd * length ) +
@@ -396,9 +456,65 @@ mod5 <- lmer( grLength ~ isYOY * season * ( tempStd * flowStd * countPStdBKT ) +
                          # isYOY * season * ( length2 * countPStdBNT2 ) +
                          # isYOY * season * ( length2 * countPStdATS2 ) + 
 
-                         (1|ind), data = dIn )
+                         (1|ind), data = dIn[[3]] )
 
-AIC(mod1,mod2,mod2a,mod2b,mod2c,mod3,mod4,mod4a,mod5) %>% rownames_to_column() %>% arrange(AIC)
+mod[[3]][[10]] <- lmer( grLength ~ isYOY * season * ( tempStd * flowStd * countPStdBKT ) +
+                         isYOY * season * ( tempStd * flowStd * countPStdBNT ) +
+                         isYOY * season * ( tempStd * flowStd * countPStdATS ) +
+                         isYOY * season * ( tempStd * flowStd * length ) +
+                         # isYOY * season * ( length * countPStdBKT ) +
+                         # isYOY * season * ( length * countPStdBNT ) +
+                         # isYOY * season * ( length * countPStdATS ) +                
+                
+                         isYOY * season * ( tempStd2 * flowStd2 * countPStdBKT2 ) +
+                       #  isYOY * season * ( tempStd2 * flowStd2 * countPStdBNT2 ) +
+                      #   isYOY * season * ( tempStd2 * flowStd2 * countPStdATS2 ) +
+                         # # isYOY * season * ( tempStd2 * flowStd2 * length2 ) + # model error with this line in
+                         # isYOY * season * ( length2 * countPStdBKT2 ) +
+                         # isYOY * season * ( length2 * countPStdBNT2 ) +
+                         # isYOY * season * ( length2 * countPStdATS2 ) + 
+
+                         (1|ind), data = dIn[[3]] )
+
+mod[[3]][[11]] <- lmer( grLength ~ isYOY * season * ( tempStd * flowStd * countPStdBKT ) +
+                         isYOY * season * ( tempStd * flowStd * countPStdBNT ) +
+                         isYOY * season * ( tempStd * flowStd * countPStdATS ) +
+                         isYOY * season * ( tempStd * flowStd * length ) +
+                         # isYOY * season * ( length * countPStdBKT ) +
+                         # isYOY * season * ( length * countPStdBNT ) +
+                         # isYOY * season * ( length * countPStdATS ) +                
+                
+                       #  isYOY * season * ( tempStd2 * flowStd2 * countPStdBKT2 ) +
+                         isYOY * season * ( tempStd2 * flowStd2 * countPStdBNT2 ) +
+                       #  isYOY * season * ( tempStd2 * flowStd2 * countPStdATS2 ) +
+                         # # isYOY * season * ( tempStd2 * flowStd2 * length2 ) + # model error with this line in
+                         # isYOY * season * ( length2 * countPStdBKT2 ) +
+                         # isYOY * season * ( length2 * countPStdBNT2 ) +
+                         # isYOY * season * ( length2 * countPStdATS2 ) + 
+
+                         (1|ind), data = dIn[[3]] )
+
+mod[[3]][[12]] <- lmer( grLength ~ isYOY * season * ( tempStd * flowStd * countPStdBKT ) +
+                         isYOY * season * ( tempStd * flowStd * countPStdBNT ) +
+                         isYOY * season * ( tempStd * flowStd * countPStdATS ) +
+                         isYOY * season * ( tempStd * flowStd * length ) +
+                         # isYOY * season * ( length * countPStdBKT ) +
+                         # isYOY * season * ( length * countPStdBNT ) +
+                         # isYOY * season * ( length * countPStdATS ) +                
+                
+                       #  isYOY * season * ( tempStd2 * flowStd2 * countPStdBKT2 ) +
+                       #  isYOY * season * ( tempStd2 * flowStd2 * countPStdBNT2 ) +
+                         isYOY * season * ( tempStd2 * flowStd2 * countPStdATS2 ) +
+                         # # isYOY * season * ( tempStd2 * flowStd2 * length2 ) + # model error with this line in
+                         # isYOY * season * ( length2 * countPStdBKT2 ) +
+                         # isYOY * season * ( length2 * countPStdBNT2 ) +
+                         # isYOY * season * ( length2 * countPStdATS2 ) + 
+
+                         (1|ind), data = dIn[[3]] )
+
+
+
+(aic[[sppMod]] <- AIC(mod1,mod2,mod2a,mod2b,mod2c,mod3,mod4,mod4a,mod5,mod5a,mod5b,mod5c) %>% rownames_to_column() %>% arrange(AIC))
 ```
 
 

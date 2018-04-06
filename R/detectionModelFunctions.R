@@ -63,7 +63,7 @@ getDensities <- function(ddddDIn,ddDIn, meanOrIter = "mean", sampleToUse = sampl
 
   counts <- ddddDIn %>%
     addxxxxN() %>%
-    distinct(species,season,riverOrdered,year,isYOYN,speciesN,seasonN,riverN,yearN,
+    distinct(isYOYN,species,season,riverOrdered,year,speciesN,seasonN,riverN,yearN,
              nAllFishBySpecies,nAllFish,massAllFishBySpecies,massAllFish)
 
   if ( meanOrIter == 'mean') dd <- ddDIn$q50$pBetaInt
@@ -92,10 +92,11 @@ getDensities <- function(ddddDIn,ddDIn, meanOrIter = "mean", sampleToUse = sampl
   p <- left_join( p, counts, by = c('isYOYN','speciesN','seasonN','riverN','yearN') ) %>%
          mutate( nAllFishBySpeciesP = nAllFishBySpecies/p )
 
-  # get counts of all species by summing nAllFishBySpeciesP across species
+  # get counts of each species by summing nAllFishBySpeciesP for each species
+  # summing over isYOY
   p2 <- p %>%
- #   group_by(speciesN,seasonN,riverN,yearN) %>%
-    group_by(isYOYN,seasonN,riverN,yearN) %>%
+    group_by(speciesN,seasonN,riverN,yearN) %>%
+ #   group_by(seasonN,riverN,yearN) %>%
     summarize( nAllFishP = sum(nAllFishBySpeciesP, na.rm=T))
 
   p <- left_join(p,p2)

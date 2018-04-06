@@ -50,7 +50,7 @@ riverOrderedIn <- factor(c('west brook', 'wb jimmy', 'wb mitchell',"wb obear"),l
 
 minCohort <- 1997#1995 # >=
 maxSampleInterval <- 200 # <
-runDetectionModelTF <- FALSE
+runDetectionModelTF <- TRUE
 runCrossValidationTF <- FALSE
 percentLeftOut <- 10
 
