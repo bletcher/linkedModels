@@ -92,15 +92,6 @@ getDensities <- function(ddddDIn,ddDIn, meanOrIter = "mean", sampleToUse = sampl
   p <- left_join( p, counts, by = c('isYOYN','speciesN','seasonN','riverN','yearN') ) %>%
          mutate( nAllFishBySpeciesYOYP = nAllFishBySpeciesYOY/p )
 
-  # get counts of each species by summing nAllFishBySpeciesYOYP for each species
-  # summing over isYOY
-  p2 <- p %>%
-    group_by(speciesN,seasonN,riverN,yearN) %>%
- #   group_by(seasonN,riverN,yearN) %>%
-    summarize( nAllFishBySpeciesP = sum(nAllFishBySpeciesYOYP, na.rm=T))
-
-  p <- left_join(p,p2)
-
   return(p)
 }
 
@@ -147,7 +138,7 @@ addSurvivals <- function(dddd,dd, meanOrIter = "mean", sampleToUse = sampleToUse
 
   # add temporary variables for merging
   dddd <- dddd %>%
-    mutate( isYOYN = as.numeric(isYOYN),
+    mutate( isYOYN = as.numeric(isYOY),
             speciesN = as.numeric(as.factor(species)),
             seasonN = season,
             riverN = as.numeric(riverOrdered),

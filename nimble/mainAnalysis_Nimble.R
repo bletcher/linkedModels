@@ -115,9 +115,11 @@ ddddD <- cdBeforeDetMod %>%
 
 dddD <- ddddD %>% prepareDataForJags_Nimble('detection')
 
+save(ddddD,dddD, file = paste0('./data/out/ddddD_', dModelName,'.RData'))
+
 if (runDetectionModelTF) {
   ddD <- dddD[[1]] %>% runDetectionModel(parallel = TRUE) ###################### currently for jags
-  save(ddD,dddD,ddddD, file = paste0('./data/out/ddD_', dModelName,'.RData'))
+  save(ddD, file = paste0('./data/out/ddD_', dModelName,'.RData'))
   #whiskerplot(ddD, parameters="pBetaInt")
 
   done <- Sys.time()

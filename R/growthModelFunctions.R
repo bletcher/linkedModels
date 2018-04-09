@@ -413,60 +413,86 @@ adjustCounts <- function( cdIn,ddDIn,ddddDIn,meanOrIterIn,sampleToUse ){
   }
 
   denForMerge <- den %>%
-    dplyr::select(isYOYN,species, season, riverOrdered, year, nAllFishBySpeciesYOYP, nAllFishBySpeciesP, massAllFishBySpecies, massAllFish, meanOrIter, iterIn) %>%
+    dplyr::select(isYOYN,species, season, riverOrdered, year,
+                  nAllFishBySpeciesYOYP,
+                  nAllFishBySpeciesYOY
+                 # nAllFishP,
+                  # massAllFishBySpeciesYOY, massAllFish,
+                  #meanOrIter, iterIn
+                  ) %>%
   #  filter( !is.na(nAllFishBySpeciesP) ) %>%
-    arrange(species,riverOrdered,year,season)
+    arrange(species,riverOrdered,year,season) %>%
+    distinct(isYOYN,species,riverOrdered,year,season,nAllFishBySpeciesYOYP,nAllFishBySpeciesYOY)
 
-  # stats for counts by species, average over YOY, year
-  denForMergeSummaryBySpecies <- denForMerge %>%
-    group_by( species,season,riverOrdered ) %>%
-    summarize( nAllFishBySpeciesPMean = mean( nAllFishBySpeciesYOYP, na.rm = T ),
-               nAllFishBySpeciesPSD =     sd( nAllFishBySpeciesYOYP, na.rm = T),
-               massAllFishBySpeciesMean = mean( massAllFishBySpecies, na.rm = T ),
-               massAllFishBySpeciesSD =     sd( massAllFishBySpecies, na.rm = T))
+#######
 
-  # stats for counts for all species, average over species, yoy, year
-  denForMergeSummary <- denForMerge %>%
-    group_by( season,riverOrdered ) %>%
-    summarize( nAllFishPMean = mean( nAllFishBySpeciesP, na.rm = T ),
-               nAllFishPSD =     sd( nAllFishBySpeciesP, na.rm = T),
-               massAllFishMean = mean( massAllFish, na.rm = T ),
-               massAllFishSD =     sd( massAllFish, na.rm = T) )
+  # stats for counts by yoy, species, average over years
+  denForMergeSummaryBySpeciesYOY <- denForMerge %>%
+    group_by( isYOYN,species,season,riverOrdered ) %>%
+    summarize( nAllFishBySpeciesYOYPMean = mean( nAllFishBySpeciesYOYP, na.rm = T ),
+               nAllFishBySpeciesYOYPSD =     sd( nAllFishBySpeciesYOYP, na.rm = T)
+               #massAllFishBySpeciesMean = mean( massAllFishBySpecies, na.rm = T ),
+               #massAllFishBySpeciesSD =     sd( massAllFishBySpecies, na.rm = T)
+    )
 
-  denForMerge2 <- left_join( denForMerge, denForMergeSummaryBySpecies ) %>%
-                  left_join( denForMergeSummary ) %>%
-                  mutate( nAllFishBySpeciesPStd = ( nAllFishBySpeciesYOYP - nAllFishBySpeciesPMean )/nAllFishBySpeciesPSD,
-                          nAllFishPStd =          ( nAllFishBySpeciesP -          nAllFishPMean )         /nAllFishPSD,
-                          massAllFishBySpeciesStd = ( massAllFishBySpecies - massAllFishBySpeciesMean )/massAllFishBySpeciesSD,
-                          massAllFishStd =         ( massAllFish -          massAllFishMean )         /massAllFishSD
-                        )
+  denForMerge2 <- left_join( denForMerge, denForMergeSummaryBySpeciesYOY ) %>%
+    mutate( nAllFishBySpeciesYOYPStd = ( nAllFishBySpeciesYOYP - nAllFishBySpeciesYOYPMean ) / nAllFishBySpeciesYOYPSD )
 
   # create template for all possible occasions
-  possibleOccasions <- data.frame(table(denForMerge$season,denForMerge$year,denForMerge$species,denForMerge$riverOrdered)) %>%
+  possibleOccasions <- data.frame(table(denForMerge$season,denForMerge$year,denForMerge$species,denForMerge$riverOrdered,denForMerge$isYOYN)) %>%
     mutate( FreqUp = lead(Freq), FreqDown = lag(Freq),
             occFilled = ifelse(FreqUp * FreqDown + Freq > 0,1,0) ) %>%
     filter(occFilled == 1) %>%
-    rename( season=Var1, year=Var2, species=Var3, riverOrdered=Var4 ) %>%
+    rename( season=Var1, year=Var2, species=Var3, riverOrdered=Var4, isYOYN = Var5 ) %>%
     mutate( season = as.numeric(season), year = as.numeric(year) + min(denForMerge2$year, na.rm = TRUE) - 1, species = as.character(species),
-            riverOrdered = factor(riverOrdered,levels=c('west brook', 'wb jimmy', 'wb mitchell',"wb obear"),labels = c("west brook","wb jimmy","wb mitchell","wb obear"), ordered = T)
+            riverOrdered = factor(riverOrdered,levels=c('west brook', 'wb jimmy', 'wb mitchell',"wb obear"),labels = c("west brook","wb jimmy","wb mitchell","wb obear"), ordered = T),
+            isYOYN = as.numeric(isYOYN)
           )
+
   # use this as merge template, then interpolate std values
 
-  denForMerge_possibleOccasions <- left_join( possibleOccasions,denForMerge2 ) %>%
-    mutate( nAllFishBySpeciesPStd = zoo::na.approx(nAllFishBySpeciesPStd),
-            nAllFishPStd = zoo::na.approx(nAllFishPStd),
-            massAllFishBySpeciesStd = zoo::na.approx(massAllFishBySpeciesStd),
-            massAllFishStd = zoo::na.approx(massAllFishStd)) %>%
+  denForMerge_possibleOccasions <- left_join( possibleOccasions,denForMerge2, by = c("isYOYN","species","season", "year", "species", "riverOrdered") ) %>%
+    arrange( isYOYN,species,riverOrdered,year,season) %>%
+    mutate( nAllFishBySpeciesYOYPStd = zoo::na.approx(nAllFishBySpeciesYOYPStd),
+            nAllFishBySpeciesYOYP = zoo::na.approx(nAllFishBySpeciesYOYP)) %>%
     dplyr::select(-c(Freq,FreqUp,FreqDown))
 
-  cdIn <- left_join( cdIn,denForMerge_possibleOccasions, by = c("species", "year", "season", "riverOrdered") )
+### isYOYN==1 and season == 2 is getting interpolated now - set values where no fish were caught to NA
+  denForMerge_possibleOccasions$nAllFishBySpeciesYOYP <- ifelse(
+    denForMerge_possibleOccasions$season == 2 &
+    denForMerge_possibleOccasions$isYOYN == 1 &
+    is.na(denForMerge_possibleOccasions$nAllFishBySpeciesYOY), NA, denForMerge_possibleOccasions$nAllFishBySpeciesYOYP )
 
+  denForMerge_possibleOccasions$nAllFishBySpeciesYOYStd <- ifelse(
+    denForMerge_possibleOccasions$season == 2 &
+    denForMerge_possibleOccasions$isYOYN == 1 &
+    is.na(denForMerge_possibleOccasions$nAllFishBySpeciesYOY), NA, denForMerge_possibleOccasions$nAllFishBySpeciesYOYPStd )
+
+  cdIn <- left_join( cdIn,denForMerge_possibleOccasions, by = c("isYOY"="isYOYN","species", "year", "season", "riverOrdered") )
+
+   # get counts of each species by averaging over nAllFishBySpeciesYOYP for each species
+   # averaging over isYOY
+  denForMerge_possibleOccasions2 <- denForMerge_possibleOccasions %>%
+     group_by(species,season,riverOrdered,year) %>%
+     summarize( nAllFishBySpeciesPStd_Mean = mean(nAllFishBySpeciesYOYPStd, na.rm=T),
+                nAllFishBySpeciesPStd_SD = sd(nAllFishBySpeciesYOYPStd, na.rm=T))
+
+  cdIn <- left_join(cdIn,denForMerge_possibleOccasions2)
+
+   # Averaging over species
+  denForMerge_possibleOccasions3 <- denForMerge_possibleOccasions %>%
+    group_by(season,riverOrdered,year) %>%
+    summarize( nAllFishPStd_Mean = mean(nAllFishBySpeciesYOYPStd, na.rm=T),
+               nAllFishPStd_SD = sd(nAllFishBySpeciesYOYPStd, na.rm=T))
+
+  cdIn <- left_join(cdIn,denForMerge_possibleOccasions3)
 
   #####
   # counts by species in separate columns
-  nAllFishBySpeciesPStdBySpp <- denForMerge_possibleOccasions %>%
-    dplyr::select(species, season, riverOrdered, year, nAllFishBySpeciesPStd) %>%
-    spread(key=species, value=nAllFishBySpeciesPStd, fill = -2.5) %>%
+  nAllFishBySpeciesPStdBySpp <- denForMerge_possibleOccasions2 %>%
+    dplyr::select(species, season, riverOrdered, year, nAllFishBySpeciesPStd_Mean) %>%
+    distinct(species, season, riverOrdered, year, nAllFishBySpeciesPStd_Mean) %>%
+    spread(key=species, value=nAllFishBySpeciesPStd_Mean, fill = -2.5) %>%
     rename(nAllFishBySpeciesPStdBKT = bkt,
            nAllFishBySpeciesPStdBNT = bnt,
            nAllFishBySpeciesPStdATS = ats
