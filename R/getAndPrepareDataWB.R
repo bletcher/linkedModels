@@ -51,8 +51,8 @@ getCountsAllFish <- function(drainage = "west", filteredAreas = c("inside","trib
     counts <- cdWBAll2 %>%
       filter( area %in% filteredAreas ) %>%
       group_by( isYOY,species,river,season,year ) %>%
-      summarize( nAllFishBySpecies = n(),
-                 massAllFishBySpecies = sum(observedWeight,na.rm=T))
+      summarize( nAllFishBySpeciesYOY = n(),
+                 massAllFishBySpeciesYOY = sum(observedWeight,na.rm=T))
 
     ggplot(counts, aes(year,nAllFishBySpecies,color=species)) +
     # ggplot(counts, aes(year,massAllFishBySpecies,color=species)) +
@@ -90,16 +90,18 @@ addxxxxN <- function(d){
 #'
 addRawCounts <- function(cd,drainage,filteredAreas){
 
-  allFishBySpecies <- getCountsAllFish(drainage,filteredAreas)
-  cd <- left_join(cd,allFishBySpecies)
+  allFishBySpeciesYOY <- getCountsAllFish(drainage,filteredAreas)
+  cd <- left_join(cd,allFishBySpeciesYOY, by = c("isYOY","river", "species", "year", "season"))
 
-  allFish <- allFishBySpecies %>%
-    group_by(river,season,year) %>%
-    summarize( nAllFish = sum(nAllFishBySpecies, na.rm=T),
-               massAllFish = sum(massAllFishBySpecies, na.rm=T))
-  cd <- left_join(cd,allFish)
+  # allFish <- allFishBySpeciesYOY %>%
+  #   group_by(river,season,year) %>%
+  #   summarize( nAllFish = sum(nAllFishBySpecies, na.rm=T),
+  #              massAllFish = sum(massAllFishBySpecies, na.rm=T))
+  # cd <- left_join(cd,allFish)
 
-  save(allFishBySpecies,allFish, file = './data/out/countsAndMasses.RData')
+#  save(allFishBySpecies,allFish, file = './data/out/countsAndMasses.RData')
+  save(allFishBySpeciesYOY, file = './data/out/countsAndMasses.RData')
+
 
   return(cd)
 }

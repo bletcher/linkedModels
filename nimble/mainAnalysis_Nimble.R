@@ -50,7 +50,7 @@ riverOrderedIn <- factor(c('west brook', 'wb jimmy', 'wb mitchell',"wb obear"),l
 
 minCohort <- 1997#1995 # >=
 maxSampleInterval <- 200 # <
-runDetectionModelTF <- TRUE
+runDetectionModelTF <- FALSE
 runCrossValidationTF <- FALSE
 percentLeftOut <- 10
 
@@ -84,13 +84,16 @@ if ( file.exists(cdFileBeforeDetMod) ) {
     cleanData(drainage) %>%
     mergeSites(drainage) %>%
     mutate(drainage = drainage,
-           countP = NA) %>% # placeholder so prepareDataForJagsNimble() works for detection model
+           countP = NA)  # placeholder so prepareDataForJagsNimble() works for detection model
+
+  cdBeforeDetMod$isYOY <- ifelse( cdBeforeDetMod$ageInSamples <= 3, 1, 2 )
+
+  cdBeforeDetMod <- cdBeforeDetMod %>%
     addRawCounts(drainage, filteredAreas = c("inside","trib")) %>% # counts and summed masses of all fish, tagged and untagged. Not adjusted for P (happens in addDensities())
    # do this in detection model, removeUnsampledRows(drainage, removeIncomplete = T) %>% # removes enc=0 rows for samples with no or very few() sections sampled (p=0 otherwise for those samples)
     removeLowAbundanceRivers(drainage) # removes ats,jimmy fish and bnt,mitchell from drainage=='west' - too few fish for estimates
 
-  cdBeforeDetMod$isYOY <- ifelse( cdBeforeDetMod$ageInSamples <= 3, 1, 2 )
-
+  #
   save(cdBeforeDetMod, file = cdFileBeforeDetMod)
 }
 

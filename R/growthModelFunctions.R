@@ -413,30 +413,30 @@ adjustCounts <- function( cdIn,ddDIn,ddddDIn,meanOrIterIn,sampleToUse ){
   }
 
   denForMerge <- den %>%
-    dplyr::select(species, season, riverOrdered, year, nAllFishBySpeciesP, nAllFishP, massAllFishBySpecies, massAllFish, meanOrIter, iterIn) %>%
+    dplyr::select(isYOYN,species, season, riverOrdered, year, nAllFishBySpeciesYOYP, nAllFishBySpeciesP, massAllFishBySpecies, massAllFish, meanOrIter, iterIn) %>%
   #  filter( !is.na(nAllFishBySpeciesP) ) %>%
     arrange(species,riverOrdered,year,season)
 
-  # stats for counts by species
+  # stats for counts by species, average over YOY, year
   denForMergeSummaryBySpecies <- denForMerge %>%
     group_by( species,season,riverOrdered ) %>%
-    summarize( nAllFishBySpeciesPMean = mean( nAllFishBySpeciesP, na.rm = T ),
-               nAllFishBySpeciesPSD =     sd( nAllFishBySpeciesP, na.rm = T),
+    summarize( nAllFishBySpeciesPMean = mean( nAllFishBySpeciesYOYP, na.rm = T ),
+               nAllFishBySpeciesPSD =     sd( nAllFishBySpeciesYOYP, na.rm = T),
                massAllFishBySpeciesMean = mean( massAllFishBySpecies, na.rm = T ),
                massAllFishBySpeciesSD =     sd( massAllFishBySpecies, na.rm = T))
 
-  # stats for counts for all species
+  # stats for counts for all species, average over species, yoy, year
   denForMergeSummary <- denForMerge %>%
     group_by( season,riverOrdered ) %>%
-    summarize( nAllFishPMean = mean( nAllFishP, na.rm = T ),
-               nAllFishPSD =     sd( nAllFishP, na.rm = T),
+    summarize( nAllFishPMean = mean( nAllFishBySpeciesP, na.rm = T ),
+               nAllFishPSD =     sd( nAllFishBySpeciesP, na.rm = T),
                massAllFishMean = mean( massAllFish, na.rm = T ),
                massAllFishSD =     sd( massAllFish, na.rm = T) )
 
   denForMerge2 <- left_join( denForMerge, denForMergeSummaryBySpecies ) %>%
                   left_join( denForMergeSummary ) %>%
-                  mutate( nAllFishBySpeciesPStd = ( nAllFishBySpeciesP - nAllFishBySpeciesPMean )/nAllFishBySpeciesPSD,
-                          nAllFishPStd =          ( nAllFishP -          nAllFishPMean )         /nAllFishPSD,
+                  mutate( nAllFishBySpeciesPStd = ( nAllFishBySpeciesYOYP - nAllFishBySpeciesPMean )/nAllFishBySpeciesPSD,
+                          nAllFishPStd =          ( nAllFishBySpeciesP -          nAllFishPMean )         /nAllFishPSD,
                           massAllFishBySpeciesStd = ( massAllFishBySpecies - massAllFishBySpeciesMean )/massAllFishBySpeciesSD,
                           massAllFishStd =         ( massAllFish -          massAllFishMean )         /massAllFishSD
                         )
