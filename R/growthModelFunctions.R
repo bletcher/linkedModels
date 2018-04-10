@@ -391,6 +391,7 @@ runGrowthModel <- function(d, parallel = FALSE){
 #'@export
 #'
 
+
 adjustCounts <- function( cdIn,ddDIn,ddddDIn,meanOrIterIn,sampleToUse ){
 
   if ( meanOrIterIn == "mean") {
@@ -526,7 +527,6 @@ adjustCounts <- function( cdIn,ddDIn,ddddDIn,meanOrIterIn,sampleToUse ){
 }
 
 
-
 #'Turn observedLength values to NA for a percentage of the observations
 #'
 #'@param d a dataframe
@@ -534,9 +534,9 @@ adjustCounts <- function( cdIn,ddDIn,ddddDIn,meanOrIterIn,sampleToUse ){
 #'@return a data frame with observedLength set to NA for percentLeftOut observations
 #'@export
 #'
-crossValidate <- function(d, runCrossValidationTF){
+crossValidate <- function(d, runCrossValidation_TF){
   d$observedLengthOriginal <- d$observedLength
-  if ( runCrossValidationTF ) {
+  if ( runCrossValidation_TF ) {
     propFOcc <- sum(d$fOcc) / nrow(d)
     d$leftOut <- ifelse( (runif(nrow(d)) < percentLeftOut/propFOcc/100) & (d$fOcc == 0), T, F ) # adjust percentLeftOut higher to acct for the fOcc that can't be NA
     d$observedLength <- ifelse( d$leftOut, NA, d$observedLength )

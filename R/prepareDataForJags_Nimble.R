@@ -30,7 +30,7 @@ prepareDataForJags_Nimble <- function(d,modelType){
   print( noLenFOcc$tagIndex )
 
   d$leftOut <- FALSE #placeholder
-  d <- d %>% crossValidate( runCrossValidationTF )
+  d <- d %>% crossValidate( runCrossValidation_TF )
 
   evalRows <- which( d$lOcc == 0 )
   firstObsRows <- which( d$fOcc == 1 )

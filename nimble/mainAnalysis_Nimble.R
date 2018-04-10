@@ -50,8 +50,11 @@ riverOrderedIn <- factor(c('west brook', 'wb jimmy', 'wb mitchell',"wb obear"),l
 
 minCohort <- 1997#1995 # >=
 maxSampleInterval <- 200 # <
-runDetectionModelTF <- FALSE
-runCrossValidationTF <- FALSE
+
+reCreatecdFileBeforeDetMod_TF <- TRUE
+runDetectionModel_TF <- FALSE
+recreateCD_TF <- TRUE
+runCrossValidation_TF <- FALSE
 percentLeftOut <- 10
 
 meanOrIter <- "mean"; iter <- 1
@@ -74,11 +77,7 @@ meanOrIter <- "mean"; iter <- 1
 # or you want to change drainages
 
 cdFileBeforeDetMod <- paste0('./data/cd_',drainage,"_",minCohort,'_BeforeDetMod.RData')
-
-if ( file.exists(cdFileBeforeDetMod) ) {
-  load(cdFileBeforeDetMod)
-} else {
-
+if ( reCreatecdFileBeforeDetMod_TF ) {
   # core data
   cdBeforeDetMod <- getCoreData(drainage) %>%
     cleanData(drainage) %>%
@@ -92,11 +91,11 @@ if ( file.exists(cdFileBeforeDetMod) ) {
     addRawCounts(drainage, filteredAreas = c("inside","trib")) %>% # counts and summed masses of all fish, tagged and untagged. Not adjusted for P (happens in addDensities())
    # do this in detection model, removeUnsampledRows(drainage, removeIncomplete = T) %>% # removes enc=0 rows for samples with no or very few() sections sampled (p=0 otherwise for those samples)
     removeLowAbundanceRivers(drainage) # removes ats,jimmy fish and bnt,mitchell from drainage=='west' - too few fish for estimates
-
   #
   save(cdBeforeDetMod, file = cdFileBeforeDetMod)
+} else {
+  load(cdFileBeforeDetMod)
 }
-
 #################################
 # Detection model
 # all species at once
@@ -117,22 +116,21 @@ dddD <- ddddD %>% prepareDataForJags_Nimble('detection')
 
 save(ddddD,dddD, file = paste0('./data/out/ddddD_', dModelName,'.RData'))
 
-if (runDetectionModelTF) {
+if (runDetectionModel_TF) {
   ddD <- dddD[[1]] %>% runDetectionModel(parallel = TRUE) ###################### currently for jags
   save(ddD, file = paste0('./data/out/ddD_', dModelName,'.RData'))
   #whiskerplot(ddD, parameters="pBetaInt")
-
-  done <- Sys.time()
-  (elapsed <- done - start)
-
-  # add counts derived from counts/p to cdBeforeDetMod. ddD and ddddD need to have all three spp to create spp-specific abundances
-  cd <- adjustCounts( cdBeforeDetMod,ddD,ddddD,meanOrIter,iter ) # function in growthModelFunctions.R
-  cdFile <- paste0('./data/cd_',drainage,"_",minCohort,'.RData')
-  save(cd, file = cdFile)
-
 } else {
   load( file = paste0('./data/out/ddD_', dModelName,'.RData') )
-  load( file = paste0('./data/cd_',drainage,"_",minCohort,'.RData') )
+}
+
+cdFile <- paste0('./data/cd_',drainage,"_",minCohort,'.RData')
+if (recreateCD_TF) {
+  # add counts derived from counts/p to cdBeforeDetMod. ddD and ddddD need to have all three spp to create spp-specific abundances
+  cd <- adjustCounts( cdBeforeDetMod,ddD,ddddD,meanOrIter,iter ) # function in growthModelFunctions.R
+  save(cd, file = cdFile)
+} else {
+  load( file = cdFile )
 }
 
 
