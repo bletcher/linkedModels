@@ -95,6 +95,57 @@ getDensities <- function(ddddDIn,ddDIn, meanOrIter = "mean", sampleToUse = sampl
   return(p)
 }
 
+#'Get (estimate) densities by section, river, year based on num sammples and p from the density model
+#'
+#'@param dddd the input data frame for the detection model run that includes tagged and untagged fish
+#'@param dd the output data frame for the detection model run
+#'@param meanOrIter Whether model run output is the mean ('mean') of all iterations or a single iteration ('iter'). Default is 'mean'.
+#'@param sampleToUse if meanOrIter == 'iter', which iteration to use. Assumes use of chain 1.
+#'@param chainToUse if meanOrIter == 'iter', which chain to use. Default is chain 1.
+#'@return a data frame
+#'@export
+
+getDensities_allFish <- function(nAll, ddDIn, meanOrIter = "mean", sampleToUse = sampleToUse){
+
+  try( if (sampleToUse > ddDIn$mcmc.info$n.samples) stop("requested iteration beyond max # of iterations") )
+
+  counts <- nAll %>%
+    addxxxxN() %>%
+    distinct(isYOYN,species,season,riverOrdered,year,speciesN,seasonN,riverN,yearN,
+             nAllFishBySpeciesYOY)#,nAllFish,massAllFishBySpecies,massAllFish)
+
+  #ftable(counts$isYOY,counts$species,counts$river,counts$season,counts$year)
+
+  if ( meanOrIter == 'mean') dd <- ddDIn$q50$pBetaInt
+  if ( meanOrIter == 'iter') dd <- ddDIn$sims.list$pBetaInt[ sampleToUse,,,, ]
+
+  #print(c("in getDensities()",meanOrIter,ddIn))
+
+  #pBetaInt[ species,season,riverDATA,year ]
+  # convert array to data frame
+  p <- as.data.frame.table(dd) %>%
+    rename( isYOYN = Var1,
+            speciesN = Var2,
+            seasonN = Var3,
+            riverN = Var4,
+            yearN = Var5,
+            logitP = Freq
+    ) %>%
+    mutate( isYOYN = as.numeric(isYOYN),
+            speciesN = as.numeric(speciesN),
+            seasonN = as.numeric(seasonN),
+            riverN = as.numeric(riverN),
+            yearN = as.numeric(yearN),
+            p = invlogit( logitP )
+    )
+
+  p <- left_join( p, counts, by = c('isYOYN','speciesN','seasonN','riverN','yearN') ) %>%
+    mutate( nAllFishBySpeciesYOYP = nAllFishBySpeciesYOY/p )
+
+  return(p)
+}
+
+
 
 #'Add survival estimates from detection model by section, river, year b
 #'

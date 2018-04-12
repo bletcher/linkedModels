@@ -51,7 +51,7 @@ riverOrderedIn <- factor(c('west brook', 'wb jimmy', 'wb mitchell',"wb obear"),l
 minCohort <- 1997#1995 # >=
 maxSampleInterval <- 200 # <
 
-reCreatecdFileBeforeDetMod_TF <- TRUE
+recreatecdFileBeforeDetMod_TF <- TRUE
 runDetectionModel_TF <- FALSE
 recreateCD_TF <- TRUE
 runCrossValidation_TF <- FALSE
@@ -77,8 +77,8 @@ meanOrIter <- "mean"; iter <- 1
 # or you want to change drainages
 
 cdFileBeforeDetMod <- paste0('./data/cd_',drainage,"_",minCohort,'_BeforeDetMod.RData')
-if ( reCreatecdFileBeforeDetMod_TF ) {
-  # core data
+if ( recreatecdFileBeforeDetMod_TF ) {
+  # core data - tagged fish
   cdBeforeDetMod <- getCoreData(drainage) %>%
     cleanData(drainage) %>%
     mergeSites(drainage) %>%
@@ -88,10 +88,13 @@ if ( reCreatecdFileBeforeDetMod_TF ) {
   cdBeforeDetMod$isYOY <- ifelse( cdBeforeDetMod$ageInSamples <= 3, 1, 2 )
 
   cdBeforeDetMod <- cdBeforeDetMod %>%
-    addRawCounts(drainage, filteredAreas = c("inside","trib")) %>% # counts and summed masses of all fish, tagged and untagged. Not adjusted for P (happens in addDensities())
+
+   # addRawCounts(drainage, filteredAreas = c("inside","trib")) %>% # counts and summed masses of all fish, tagged and untagged. Not adjusted for P (happens in addDensities())
    # do this in detection model, removeUnsampledRows(drainage, removeIncomplete = T) %>% # removes enc=0 rows for samples with no or very few() sections sampled (p=0 otherwise for those samples)
     removeLowAbundanceRivers(drainage) # removes ats,jimmy fish and bnt,mitchell from drainage=='west' - too few fish for estimates
   #
+  ftable(cdBeforeDetMod$isYOY,cdBeforeDetMod$species,cdBeforeDetMod$river,cdBeforeDetMod$season,cdBeforeDetMod$year)
+
   save(cdBeforeDetMod, file = cdFileBeforeDetMod)
 } else {
   load(cdFileBeforeDetMod)
@@ -126,8 +129,23 @@ if (runDetectionModel_TF) {
 
 cdFile <- paste0('./data/cd_',drainage,"_",minCohort,'.RData')
 if (recreateCD_TF) {
+
+  ##########################################################################
+  # get counts of all fish, tagged and untagged
+
+  allFishBySpeciesYOY <- getRawCounts(drainage, filteredAreas = c("inside","trib"))
+  allFishBySpeciesYOY$riverOrdered <- factor(allFishBySpeciesYOY$river,levels=c('west brook', 'wb jimmy', 'wb mitchell',"wb obear"),labels = c("west brook","wb jimmy","wb mitchell","wb obear"), ordered=T)
+
+  allFishBySpeciesYOY <- adjustCounts_allFish( allFishBySpeciesYOY,ddD,ddddD,meanOrIter,iter )
+
+#  ftable(allFishBySpeciesYOY$isYOY,allFishBySpeciesYOY$species,allFishBySpeciesYOY$river,allFishBySpeciesYOY$season,allFishBySpeciesYOY$year)
+#  ggplot(tmp, aes(year,nAllFishBySpeciesPStdBKT)) + geom_point() + facet_grid(riverOrdered~season)
+  ###########################################################################
+
+  cd <- left_join( cdBeforeDetMod,allFishBySpeciesYOY )
+
   # add counts derived from counts/p to cdBeforeDetMod. ddD and ddddD need to have all three spp to create spp-specific abundances
-  cd <- adjustCounts( cdBeforeDetMod,ddD,ddddD,meanOrIter,iter ) # function in growthModelFunctions.R
+  #cd <- adjustCounts( cdBeforeDetMod,ddD,ddddD,meanOrIter,iter ) # function in growthModelFunctions.R
   save(cd, file = cdFile)
 } else {
   load( file = cdFile )

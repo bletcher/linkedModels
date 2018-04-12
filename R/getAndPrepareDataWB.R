@@ -24,7 +24,7 @@ getCoreData <- function(drainage = "west"){
 #'@return a data frame
 #'@export
 
-getCountsAllFish <- function(drainage = "west", filteredAreas = c("inside","trib")){
+getCounts_AllFish <- function(drainage = "west", filteredAreas = c("inside","trib")){
 
   cdWBAll <- createCoreData(sampleType = "electrofishing", #"stationaryAntenna","portableAntenna"),
                             whichDrainage = drainage,
@@ -54,7 +54,7 @@ getCountsAllFish <- function(drainage = "west", filteredAreas = c("inside","trib
       summarize( nAllFishBySpeciesYOY = n(),
                  massAllFishBySpeciesYOY = sum(observedWeight,na.rm=T))
 
-    ggplot(counts, aes(year,nAllFishBySpecies,color=species)) +
+    ggplot(counts, aes(year,nAllFishBySpeciesYOY,color=species)) +
     # ggplot(counts, aes(year,massAllFishBySpecies,color=species)) +
        geom_point() +
        geom_line() +
@@ -82,6 +82,22 @@ addxxxxN <- function(d){
 }
 
 
+#'get raw counts for all fish - tagged and untagged
+#'
+#'@param drainage Which drainage, "west" or "stanley", filtered areas (default = c('inside','trib'))
+#'@return a data frame with vars nAllFishBySpecies, massAllFishBySpecies and nAllFish, massAllFish
+#'@export
+#'
+getRawCounts <- function(drainage,filteredAreas){
+
+  allFishBySpeciesYOY <- getCounts_AllFish(drainage,filteredAreas)
+
+  save(allFishBySpeciesYOY, file = './data/out/rawCountsAndMasses.RData')
+
+  return(allFishBySpeciesYOY)
+}
+
+
 #'Add counts for all fish to cd
 #'
 #'@param drainage Which drainage, "west" or "stanley", filtered areas (default = c('inside','trib'))
@@ -90,7 +106,8 @@ addxxxxN <- function(d){
 #'
 addRawCounts <- function(cd,drainage,filteredAreas){
 
-  allFishBySpeciesYOY <- getCountsAllFish(drainage,filteredAreas)
+  allFishBySpeciesYOY <- getCounts_AllFish(drainage,filteredAreas)
+
   cd <- left_join(cd,allFishBySpeciesYOY, by = c("isYOY","river", "species", "year", "season"))
 
   # allFish <- allFishBySpeciesYOY %>%
