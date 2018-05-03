@@ -51,7 +51,7 @@ riverOrderedIn <- factor(c('west brook', 'wb jimmy', 'wb mitchell',"wb obear"),l
 minCohort <- 1997#1995 # >=
 maxSampleInterval <- 200 # <
 
-recreatecdFileBeforeDetMod_TF <- TRUE
+recreatecdFileBeforeDetMod_TF <- FALSE
 runDetectionModel_TF <- FALSE
 recreateCD_TF <- TRUE
 runCrossValidation_TF <- FALSE
@@ -93,7 +93,7 @@ if ( recreatecdFileBeforeDetMod_TF ) {
    # do this in detection model, removeUnsampledRows(drainage, removeIncomplete = T) %>% # removes enc=0 rows for samples with no or very few() sections sampled (p=0 otherwise for those samples)
     removeLowAbundanceRivers(drainage) # removes ats,jimmy fish and bnt,mitchell from drainage=='west' - too few fish for estimates
   #
-  ftable(cdBeforeDetMod$isYOY,cdBeforeDetMod$species,cdBeforeDetMod$river,cdBeforeDetMod$season,cdBeforeDetMod$year)
+  #ftable(cdBeforeDetMod$isYOY,cdBeforeDetMod$species,cdBeforeDetMod$river,cdBeforeDetMod$season,cdBeforeDetMod$year)
 
   save(cdBeforeDetMod, file = cdFileBeforeDetMod)
 } else {
@@ -119,6 +119,7 @@ dddD <- ddddD %>% prepareDataForJags_Nimble('detection')
 
 save(ddddD,dddD, file = paste0('./data/out/ddddD_', dModelName,'.RData'))
 
+#################################################################################################
 if (runDetectionModel_TF) {
   ddD <- dddD[[1]] %>% runDetectionModel(parallel = TRUE) ###################### currently for jags
   save(ddD, file = paste0('./data/out/ddD_', dModelName,'.RData'))
@@ -138,8 +139,13 @@ if (recreateCD_TF) {
 
   allFishBySpeciesYOY <- adjustCounts_allFish( allFishBySpeciesYOY,ddD,ddddD,meanOrIter,iter )
 
+  # nAllFishBySpeciesPATS (and other spp) have NA when no fish were caught in a river. Set to 0 for ATS in WB so we can test effect of 0 fish there
+  allFishBySpeciesYOY$nAllFishBySpeciesPATS <- ifelse( is.na(allFishBySpeciesYOY$nAllFishBySpeciesPATS) & allFishBySpeciesYOY$river == "west brook",
+                                                          0, allFishBySpeciesYOY$nAllFishBySpeciesPATS)
+
 #  ftable(allFishBySpeciesYOY$isYOY,allFishBySpeciesYOY$species,allFishBySpeciesYOY$river,allFishBySpeciesYOY$season,allFishBySpeciesYOY$year)
-#  ggplot(tmp, aes(year,nAllFishBySpeciesPStdBKT)) + geom_point() + facet_grid(riverOrdered~season)
+#  ggplot(allFishBySpeciesYOY, aes(year,nAllFishBySpeciesPATS)) + geom_point() + facet_grid(riverOrdered~season)
+#  ggplot(allFishBySpeciesYOY, aes(year,nAllFishBySpeciesPBNT)) + geom_point() + facet_grid(riverOrdered~season)
   ###########################################################################
 
   cd <- left_join( cdBeforeDetMod,allFishBySpeciesYOY )

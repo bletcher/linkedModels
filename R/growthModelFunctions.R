@@ -642,14 +642,16 @@ adjustCounts_allFish <- function( nAll,ddDIn,ddddDIn,meanOrIterIn,sampleToUse ){
       denForMerge_possibleOccasions$isYOYN == 1 &
       is.na(denForMerge_possibleOccasions$nAllFishBySpeciesYOY), NA, denForMerge_possibleOccasions$nAllFishBySpeciesYOYPStd )
 
-  nAll <- left_join( nAll,denForMerge_possibleOccasions, by = c("isYOY"="isYOYN","species", "year", "season", "riverOrdered") )
+  nAll <- left_join( nAll,denForMerge_possibleOccasions, by = c("isYOY"="isYOYN","species", "year", "season", "riverOrdered","nAllFishBySpeciesYOY") )
 
   # get counts of each species by averaging over nAllFishBySpeciesYOYP for each species
   # averaging over isYOY
   denForMerge_possibleOccasions2 <- denForMerge_possibleOccasions %>%
     group_by(species,season,riverOrdered,year) %>%
     summarize( nAllFishBySpeciesPStd_Mean = mean(nAllFishBySpeciesYOYPStd, na.rm=T),
-               nAllFishBySpeciesPStd_SD = sd(nAllFishBySpeciesYOYPStd, na.rm=T))
+               nAllFishBySpeciesPStd_SD = sd(nAllFishBySpeciesYOYPStd, na.rm=T),
+               nAllFishBySpeciesP_Mean = mean(nAllFishBySpeciesYOYP, na.rm=T),
+               nAllFishBySpeciesP_SD = sd(nAllFishBySpeciesYOYP, na.rm=T))
 
   nAll <- left_join(nAll,denForMerge_possibleOccasions2)
 
@@ -657,7 +659,9 @@ adjustCounts_allFish <- function( nAll,ddDIn,ddddDIn,meanOrIterIn,sampleToUse ){
   denForMerge_possibleOccasions3 <- denForMerge_possibleOccasions %>%
     group_by(season,riverOrdered,year) %>%
     summarize( nAllFishPStd_Mean = mean(nAllFishBySpeciesYOYPStd, na.rm=T),
-               nAllFishPStd_SD = sd(nAllFishBySpeciesYOYPStd, na.rm=T))
+               nAllFishPStd_SD = sd(nAllFishBySpeciesYOYPStd, na.rm=T),
+               nAllFishP_Mean = mean(nAllFishBySpeciesYOYP, na.rm=T),
+               nAllFishP_SD = sd(nAllFishBySpeciesYOYP, na.rm=T))
 
   nAll <- left_join(nAll,denForMerge_possibleOccasions3)
 
@@ -673,6 +677,23 @@ adjustCounts_allFish <- function( nAll,ddDIn,ddddDIn,meanOrIterIn,sampleToUse ){
     )
 
   nAll <- left_join( nAll,nAllFishBySpeciesPStdBySpp )
+
+  #####
+  # unstandardized counts by species in separate columns
+  # maybe better than above because fills in 0s for no data rather than arbitrary -2.5
+
+  # 05/03/2018 took out fill because don't want value entered when no fish possible, e.g. bnt in obear
+  nAllFishBySpeciesPBySpp <- denForMerge_possibleOccasions2 %>%
+    dplyr::select(species, season, riverOrdered, year, nAllFishBySpeciesP_Mean) %>%
+    distinct(species, season, riverOrdered, year, nAllFishBySpeciesP_Mean) %>%
+    spread(key=species, value=nAllFishBySpeciesP_Mean) %>%
+    rename(nAllFishBySpeciesPBKT = bkt,
+           nAllFishBySpeciesPBNT = bnt,
+           nAllFishBySpeciesPATS = ats
+    )
+
+  nAll <- left_join( nAll,nAllFishBySpeciesPBySpp )
+
 
   return(nAll)
 }
