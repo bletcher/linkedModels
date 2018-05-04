@@ -147,6 +147,19 @@ prepareDataForJags_Nimble <- function(d,modelType){
 
   print(paste0("Number of input rows = ",nrow(d),", Number of encounters = ",sum(d$enc,na.rm=T)))
 
+
+  ##############
+  # from linearGR_ModelsMap.Rmd
+
+  #d$grLength <- ifelse(d$species == 2 & d$river == 3, NA, d$grLength)
+  #d$grLength <- ifelse(d$species %in% c('2','3') & d$isYOY == 1 & d$season == "2", NA, d$grLength)
+  #d$grLength <- ifelse(d$grLength < -0.025, NA, d$grLength)
+
+
+  ##############
+
+
+
   if ( modelType == "detection" ){
     data <- list( encDATA = d$enc,
                   lengthDATA = d$lengthDATAStd,
@@ -195,6 +208,28 @@ prepareDataForJags_Nimble <- function(d,modelType){
 
 
   if ( modelType == "growth" ){
+
+    d <- d %>%
+      mutate(
+        cBKTStd = as.numeric(scale(nAllFishBySpeciesPBKT)),
+        cBNTStd = as.numeric(scale(nAllFishBySpeciesPBNT)),
+        cATSStd = as.numeric(scale(nAllFishBySpeciesPATS))
+        #   cBKTStd2 = cBKTStd^2,
+        #    cBNTStd2 = cBNTStd^2,
+        #    cATSStd2 = cATSStd^2
+      )
+
+    #To fill in missing obs (no fish in stream) with mean value
+    d$cBKTStd <- ifelse( is.na(d$cBKTStd), 0, d$cBKTStd )
+    d$cBNTStd <- ifelse( is.na(d$cBNTStd), 0, d$cBNTStd )
+    d$cATSStd <- ifelse( is.na(d$cATSStd), 0, d$cATSStd )
+
+    d$BKT01DATA <- 1
+    d$BNT01DATA <- ifelse( d$river == 'wb obear', 0,1 )
+    d$ATS01DATA <- ifelse( d$river == 'westbrook', 1,0 )
+
+
+
     data <- list( encDATA = d$enc,
                   lengthDATA = d$observedLength, #d$lengthDATAStd, #d$lengthDATALnStd,
                   lengthDATAStd = d$lengthDATALnStd,
@@ -234,9 +269,15 @@ prepareDataForJags_Nimble <- function(d,modelType){
                   countPStdBKT = d$nAllFishBySpeciesPStdBKT,
                   countPStdBNT = d$nAllFishBySpeciesPStdBNT,
                   countPStdATS = d$nAllFishBySpeciesPStdATS,
-                  countPBKT = d$nAllFishBySpeciesPBKT,
-                  countPBNT = d$nAllFishBySpeciesPBNT,
-                  countPATS = d$nAllFishBySpeciesPATS,
+
+                  cBKTStd = d$cBKTStd,
+                  cBNTStd = d$cBNTStd,
+                  cATSStd = d$cATSStd,
+
+                  BKT01DATA = d$BKT01DATA,
+                  BNT01DATA = d$BNT01DATA,
+                  ATS01DATA = d$ATS01DATA,
+
                   countPAllSppStd = d$nAllFishPStd_Mean,
                   countPAllSpp = d$nAllFishP_Mean,
                   tempStd = d$tempStd,

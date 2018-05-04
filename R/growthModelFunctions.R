@@ -20,30 +20,30 @@ runGrowthModel_Nimble <- function(d,mcmcInfo){
         grInt[         isYOYDATA[evalRows[i]], season[evalRows[i]], riverDATA[evalRows[i]] ] +
 
           grBeta[ 1, isYOYDATA[evalRows[i]], season[evalRows[i]], riverDATA[evalRows[i]] ] * lengthDATA[evalRows[i]] +
-          grBeta[ 2, isYOYDATA[evalRows[i]], season[evalRows[i]], riverDATA[evalRows[i]] ] * countPStdBKT[evalRows[i]] +
-          grBeta[ 3, isYOYDATA[evalRows[i]], season[evalRows[i]], riverDATA[evalRows[i]] ] * countPStdBNT[evalRows[i]] +
-          grBeta[ 4, isYOYDATA[evalRows[i]], season[evalRows[i]], riverDATA[evalRows[i]] ] * countPStdATS[evalRows[i]] +
+          grBeta[ 2, isYOYDATA[evalRows[i]], season[evalRows[i]], riverDATA[evalRows[i]] ] * cBKTStd[evalRows[i]] * BKT01DATA[evalRows[i]] +
+          grBeta[ 3, isYOYDATA[evalRows[i]], season[evalRows[i]], riverDATA[evalRows[i]] ] * cBNTStd[evalRows[i]] * BNT01DATA[evalRows[i]] +
+          grBeta[ 4, isYOYDATA[evalRows[i]], season[evalRows[i]], riverDATA[evalRows[i]] ] * cATSStd[evalRows[i]] * ATS01DATA[evalRows[i]] +
           grBeta[ 5, isYOYDATA[evalRows[i]], season[evalRows[i]], riverDATA[evalRows[i]] ] * tempStd[evalRows[i]] +
           grBeta[ 6, isYOYDATA[evalRows[i]], season[evalRows[i]], riverDATA[evalRows[i]] ] * flowStd[evalRows[i]] +
       # #
           grBeta[ 7, isYOYDATA[evalRows[i]], season[evalRows[i]], riverDATA[evalRows[i]] ] * lengthDATA[evalRows[i]]^2 +
-          grBeta[ 8, isYOYDATA[evalRows[i]], season[evalRows[i]], riverDATA[evalRows[i]] ] * countPStdBKT[evalRows[i]]^2 +
-          grBeta[ 9, isYOYDATA[evalRows[i]], season[evalRows[i]], riverDATA[evalRows[i]] ] * countPStdBNT[evalRows[i]]^2 +
-          grBeta[10, isYOYDATA[evalRows[i]], season[evalRows[i]], riverDATA[evalRows[i]] ] * countPStdATS[evalRows[i]]^2 +
+          grBeta[ 8, isYOYDATA[evalRows[i]], season[evalRows[i]], riverDATA[evalRows[i]] ] * cBKTStd[evalRows[i]]^2 * BKT01DATA[evalRows[i]] +
+          grBeta[ 9, isYOYDATA[evalRows[i]], season[evalRows[i]], riverDATA[evalRows[i]] ] * cBNTStd[evalRows[i]]^2 * BNT01DATA[evalRows[i]] +
+          grBeta[10, isYOYDATA[evalRows[i]], season[evalRows[i]], riverDATA[evalRows[i]] ] * cATSStd[evalRows[i]]^2 * ATS01DATA[evalRows[i]] +
           grBeta[11, isYOYDATA[evalRows[i]], season[evalRows[i]], riverDATA[evalRows[i]] ] * tempStd[evalRows[i]]^2 +
           grBeta[12, isYOYDATA[evalRows[i]], season[evalRows[i]], riverDATA[evalRows[i]] ] * flowStd[evalRows[i]]^2 +
       #
           grBeta[13, isYOYDATA[evalRows[i]], season[evalRows[i]], riverDATA[evalRows[i]] ] * tempStd[evalRows[i]] * flowStd[evalRows[i]] +
-          grBeta[14, isYOYDATA[evalRows[i]], season[evalRows[i]], riverDATA[evalRows[i]] ] * countPStdBKT[evalRows[i]] * flowStd[evalRows[i]] +
-          grBeta[15, isYOYDATA[evalRows[i]], season[evalRows[i]], riverDATA[evalRows[i]] ] * countPStdBNT[evalRows[i]] * flowStd[evalRows[i]] +
-          grBeta[16, isYOYDATA[evalRows[i]], season[evalRows[i]], riverDATA[evalRows[i]] ] * countPStdATS[evalRows[i]] * flowStd[evalRows[i]] +
-          grBeta[17, isYOYDATA[evalRows[i]], season[evalRows[i]], riverDATA[evalRows[i]] ] * tempStd[evalRows[i]] * countPStdBKT[evalRows[i]] +
-          grBeta[18, isYOYDATA[evalRows[i]], season[evalRows[i]], riverDATA[evalRows[i]] ] * tempStd[evalRows[i]] * countPStdBNT[evalRows[i]] +
-          grBeta[19, isYOYDATA[evalRows[i]], season[evalRows[i]], riverDATA[evalRows[i]] ] * tempStd[evalRows[i]] * countPStdATS[evalRows[i]] +
+          grBeta[14, isYOYDATA[evalRows[i]], season[evalRows[i]], riverDATA[evalRows[i]] ] * cBKTStd[evalRows[i]] * flowStd[evalRows[i]] * BKT01DATA[evalRows[i]] +
+          grBeta[15, isYOYDATA[evalRows[i]], season[evalRows[i]], riverDATA[evalRows[i]] ] * cBNTStd[evalRows[i]] * flowStd[evalRows[i]] * BNT01DATA[evalRows[i]] +
+          grBeta[16, isYOYDATA[evalRows[i]], season[evalRows[i]], riverDATA[evalRows[i]] ] * cATSStd[evalRows[i]] * flowStd[evalRows[i]] * ATS01DATA[evalRows[i]] +
+          grBeta[17, isYOYDATA[evalRows[i]], season[evalRows[i]], riverDATA[evalRows[i]] ] * tempStd[evalRows[i]] * cBKTStd[evalRows[i]] * BKT01DATA[evalRows[i]] +
+          grBeta[18, isYOYDATA[evalRows[i]], season[evalRows[i]], riverDATA[evalRows[i]] ] * tempStd[evalRows[i]] * cBNTStd[evalRows[i]] * BNT01DATA[evalRows[i]] +
+          grBeta[19, isYOYDATA[evalRows[i]], season[evalRows[i]], riverDATA[evalRows[i]] ] * tempStd[evalRows[i]] * cATSStd[evalRows[i]] * ATS01DATA[evalRows[i]] +
       #
-          grBeta[20, isYOYDATA[evalRows[i]], season[evalRows[i]], riverDATA[evalRows[i]] ] * countPStdBKT[evalRows[i]] * tempStd[evalRows[i]] * flowStd[evalRows[i]] +
-          grBeta[21, isYOYDATA[evalRows[i]], season[evalRows[i]], riverDATA[evalRows[i]] ] * countPStdBNT[evalRows[i]] * tempStd[evalRows[i]] * flowStd[evalRows[i]] +
-          grBeta[22, isYOYDATA[evalRows[i]], season[evalRows[i]], riverDATA[evalRows[i]] ] * countPStdATS[evalRows[i]] * tempStd[evalRows[i]] * flowStd[evalRows[i]] +
+          grBeta[20, isYOYDATA[evalRows[i]], season[evalRows[i]], riverDATA[evalRows[i]] ] * cBKTStd[evalRows[i]] * tempStd[evalRows[i]] * flowStd[evalRows[i]] * BKT01DATA[evalRows[i]] +
+          grBeta[21, isYOYDATA[evalRows[i]], season[evalRows[i]], riverDATA[evalRows[i]] ] * cBNTStd[evalRows[i]] * tempStd[evalRows[i]] * flowStd[evalRows[i]] * BNT01DATA[evalRows[i]] +
+          grBeta[22, isYOYDATA[evalRows[i]], season[evalRows[i]], riverDATA[evalRows[i]] ] * cATSStd[evalRows[i]] * tempStd[evalRows[i]] * flowStd[evalRows[i]] * ATS01DATA[evalRows[i]] +
 
           grIndRE[ ind[evalRows[i]] ]
 
@@ -72,18 +72,18 @@ runGrowthModel_Nimble <- function(d,mcmcInfo){
       ##
       log( expectedGRSigma[ evalRows[i] ] ) <- #grSigma
         sigmaInt[     isYOYDATA[evalRows[i]], season[evalRows[i]], riverDATA[evalRows[i]] ] +
-        sigmaBeta[ 1, isYOYDATA[evalRows[i]], season[evalRows[i]], riverDATA[evalRows[i]] ] * countPStdBKT[evalRows[i]] +
-        sigmaBeta[ 2, isYOYDATA[evalRows[i]], season[evalRows[i]], riverDATA[evalRows[i]] ] * countPStdBNT[evalRows[i]] +
-        sigmaBeta[ 3, isYOYDATA[evalRows[i]], season[evalRows[i]], riverDATA[evalRows[i]] ] * countPStdATS[evalRows[i]] +
+        sigmaBeta[ 1, isYOYDATA[evalRows[i]], season[evalRows[i]], riverDATA[evalRows[i]] ] * cBKTStd[evalRows[i]] * BKT01DATA[evalRows[i]] +
+        sigmaBeta[ 2, isYOYDATA[evalRows[i]], season[evalRows[i]], riverDATA[evalRows[i]] ] * cBNTStd[evalRows[i]] * BNT01DATA[evalRows[i]] +
+        sigmaBeta[ 3, isYOYDATA[evalRows[i]], season[evalRows[i]], riverDATA[evalRows[i]] ] * cATSStd[evalRows[i]] * ATS01DATA[evalRows[i]] +
         sigmaBeta[ 4, isYOYDATA[evalRows[i]], season[evalRows[i]], riverDATA[evalRows[i]] ] * tempStd[evalRows[i]] +
         sigmaBeta[ 5, isYOYDATA[evalRows[i]], season[evalRows[i]], riverDATA[evalRows[i]] ] * flowStd[evalRows[i]] +
-        sigmaBeta[ 6, isYOYDATA[evalRows[i]], season[evalRows[i]], riverDATA[evalRows[i]] ] * countPStdBKT[evalRows[i]] * tempStd[evalRows[i]] +
-        sigmaBeta[ 7, isYOYDATA[evalRows[i]], season[evalRows[i]], riverDATA[evalRows[i]] ] * countPStdBNT[evalRows[i]] * tempStd[evalRows[i]] +
-        sigmaBeta[ 8, isYOYDATA[evalRows[i]], season[evalRows[i]], riverDATA[evalRows[i]] ] * countPStdATS[evalRows[i]] * tempStd[evalRows[i]] +
+        sigmaBeta[ 6, isYOYDATA[evalRows[i]], season[evalRows[i]], riverDATA[evalRows[i]] ] * cBKTStd[evalRows[i]] * tempStd[evalRows[i]] * BKT01DATA[evalRows[i]] +
+        sigmaBeta[ 7, isYOYDATA[evalRows[i]], season[evalRows[i]], riverDATA[evalRows[i]] ] * cBNTStd[evalRows[i]] * tempStd[evalRows[i]] * BNT01DATA[evalRows[i]] +
+        sigmaBeta[ 8, isYOYDATA[evalRows[i]], season[evalRows[i]], riverDATA[evalRows[i]] ] * cATSStd[evalRows[i]] * tempStd[evalRows[i]] * ATS01DATA[evalRows[i]] +
         sigmaBeta[ 9, isYOYDATA[evalRows[i]], season[evalRows[i]], riverDATA[evalRows[i]] ] * tempStd[evalRows[i]] * flowStd[evalRows[i]] +
-        sigmaBeta[10, isYOYDATA[evalRows[i]], season[evalRows[i]], riverDATA[evalRows[i]] ] * countPStdBKT[evalRows[i]] * flowStd[evalRows[i]] +
-        sigmaBeta[11, isYOYDATA[evalRows[i]], season[evalRows[i]], riverDATA[evalRows[i]] ] * countPStdBNT[evalRows[i]] * flowStd[evalRows[i]] +
-        sigmaBeta[12, isYOYDATA[evalRows[i]], season[evalRows[i]], riverDATA[evalRows[i]] ] * countPStdATS[evalRows[i]] * flowStd[evalRows[i]]
+        sigmaBeta[10, isYOYDATA[evalRows[i]], season[evalRows[i]], riverDATA[evalRows[i]] ] * cBKTStd[evalRows[i]] * flowStd[evalRows[i]] * BKT01DATA[evalRows[i]] +
+        sigmaBeta[11, isYOYDATA[evalRows[i]], season[evalRows[i]], riverDATA[evalRows[i]] ] * cBNTStd[evalRows[i]] * flowStd[evalRows[i]] * BNT01DATA[evalRows[i]] +
+        sigmaBeta[12, isYOYDATA[evalRows[i]], season[evalRows[i]], riverDATA[evalRows[i]] ] * cATSStd[evalRows[i]] * flowStd[evalRows[i]] * ATS01DATA[evalRows[i]]
 
 
       # log( expectedGRSigma[ evalRows[i] ] ) <- #grSigma
@@ -140,41 +140,6 @@ runGrowthModel_Nimble <- function(d,mcmcInfo){
       lengthStd[ evalRows[i] ] <-  ( lengthDATA[ evalRows[i] ] - lengthMean ) / lengthSD
     }
 
-
-   # for(ii in 1:nEvalRows) {
-   #  grExp[ evalRows[ii] ] <- gr[ evalRows[ii] ] / sampleInterval[ evalRows[ii] ]
-  #  }
-
-    # for(y in 1:2) {
-    #   for(s in 1:nSeasons){
-    #     for(r in 1:nRivers){
-    #       for( len in 1:7 ){
-    #         for( count in 1:7 ){
-    #           for( temp in 1:7 ){
-    #             for( flow in 1:7 ){
-    #
-    #               predGR[ y, s, r, len,count,temp,flow ] <-
-    #                   grInt[ y,s,r ] +
-    #                   grBeta[ 1, y,s,r ] * (-2 + len*0.5) +
-    #                   grBeta[ 2, y,s,r ] * (-2 + count*0.5) +
-    #                   grBeta[ 3, y,s,r ] * (-2 + temp*0.5) +
-    #                   grBeta[ 4, y,s,r ] * (-2 + flow*0.5) +
-    #                   grBeta[ 5, y,s,r ] * (-2 + count*0.5)^2 +
-    #                   grBeta[ 6, y,s,r ] * (-2 + temp*0.5)^2 +
-    #                   grBeta[ 7, y,s,r ] * (-2 + flow*0.5)^2 +
-    #                   grBeta[ 8, y,s,r ] * (-2 + temp*0.5) * (-2 + flow*0.5) +
-    #                   grBeta[ 9, y,s,r ] * (-2 + temp*0.5) * (-2 + count*0.5) +
-    #                   grBeta[10, y,s,r ] * (-2 + count*0.5) * (-2 + flow*0.5) +
-    #                   grBeta[11, y,s,r ] * (-2 + count*0.5) * (-2 + temp*0.5) * (-2 + flow*0.5)
-    #
-    #             }
-    #           }
-    #         }
-    #       }
-    #     }
-    #   }
-    # }
-
     ##
     # including this messes up predictions
     # for(ii in 1:nFirstObsRows) {
@@ -216,9 +181,13 @@ runGrowthModel_Nimble <- function(d,mcmcInfo){
                     evalRows = d$evalRows,
                     nSeasons = d$nSeasons,
                   #  countPAllSppStd = d$countPAllSppStd,
-                    countPStdBKT = d$countPStdBKT,
-                    countPStdBNT = d$countPStdBNT,
-                    countPStdATS = d$countPStdATS,
+                    cBKTStd = d$cBKTStd,
+                    cBNTStd = d$cBNTStd,
+                    cATSStd = d$cATSStd,
+                    BKT01DATA = d$BKT01DATA,
+                    BNT01DATA = d$BNT01DATA,
+                    ATS01DATA = d$ATS01DATA,
+
                     isYOYDATA = d$isYOYDATA,
                     tempStd = d$tempStd,
                     flowStd = d$flowStd,

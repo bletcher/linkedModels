@@ -43,7 +43,7 @@ speciesDet <- c("bkt", "bnt","ats") #keep as all three spp
 speciesInDet <- factor(speciesDet, levels = c('bkt','bnt','ats'), ordered = T)
 
 speciesGr <- "bkt"
-speciesGr = c("bkt", "bnt","ats")
+#speciesGr = c("bkt", "bnt","ats")
 speciesInGr <- factor(speciesGr, levels = c('bkt','bnt','ats'), ordered = T)
 
 riverOrderedIn <- factor(c('west brook', 'wb jimmy', 'wb mitchell',"wb obear"),levels=c('west brook', 'wb jimmy', 'wb mitchell',"wb obear"),labels = c("west brook","wb jimmy","wb mitchell","wb obear"), ordered = T)
@@ -53,7 +53,7 @@ maxSampleInterval <- 200 # <
 
 recreatecdFileBeforeDetMod_TF <- FALSE
 runDetectionModel_TF <- FALSE
-recreateCD_TF <- TRUE
+recreateCD_TF <- FALSE
 runCrossValidation_TF <- FALSE
 percentLeftOut <- 10
 
@@ -261,9 +261,12 @@ iter=1
   Rmcmc <- buildMCMC(conf)
   Cmodel <- compileNimble(Rmodel)
   Cmcmc <- compileNimble(Rmcmc, project = Rmodel)
-  mcmc <- runMCMC(Cmcmc, nburnin = mcmcInfo$nBurnIn, niter = mcmcInfo$nIter, nchains = mcmcInfo$nChains,
+  mcmc <- runMCMC(Cmcmc,
+                  nburnin = 100, #mcmcInfo$nBurnIn,
+                  niter = 200,#mcmcInfo$nIter,
+                  nchains = 2,#mcmcInfo$nChains,
                   samples = TRUE, samplesAsCodaMCMC = TRUE,
-                  summary = TRUE)#, WAIC = TRUE)
+                  summary = FALSE)#, WAIC = TRUE)
 
 
   #########################################
