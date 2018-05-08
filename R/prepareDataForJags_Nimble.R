@@ -225,10 +225,11 @@ prepareDataForJags_Nimble <- function(d,modelType){
     d$cATSStd <- ifelse( is.na(d$cATSStd), 0, d$cATSStd )
 
     d$BKT01DATA <- 1
-    d$BNT01DATA <- ifelse( d$river == 'wb obear', 0,1 )
-    d$ATS01DATA <- ifelse( d$river == 'westbrook', 1,0 )
+    d$BNT01DATA <- ifelse( d$river %in% c('west brook','wb jimmy'), 1,0 )
 
-
+    d$ATS01DATA1 <- ifelse( d$river == 'west brook', 1,0 )
+    d$ATS01DATA2 <- ifelse( d$sampleIndex <= 46, 1,0 )
+    d$ATS01DATA <- d$ATS01DATA1 * d$ATS01DATA2
 
     data <- list( encDATA = d$enc,
                   lengthDATA = d$observedLength, #d$lengthDATAStd, #d$lengthDATALnStd,
@@ -282,6 +283,8 @@ prepareDataForJags_Nimble <- function(d,modelType){
                   countPAllSpp = d$nAllFishP_Mean,
                   tempStd = d$tempStd,
                   flowStd = d$flowStd,
+                  tempStd2 = d$tempStd^2,
+                  flowStd2 = d$flowStd^2,
                   #               biomassDeltaAllSpp = d$meanBiomassAllSppStdDelta,
                   #              biomassDelta = d$meanBiomassStdDelta,
                   #       logitPhiStd = d$logitPhiStd,

@@ -1,20 +1,3 @@
-# next -
-# lit review on soze-dep growth
-# take out phi
-
-# compare countPStd (by species) with countPAllSppStd (all spp in analysis)
-
-# species-, age, location-specific rates of size-dep growth
-# estimate spp-sp abundances for each river for each sample
-# size effect ~ 1/spp/river/season/year
-# run models:
-# size
-# size*spp
-# size*spp*river
-# size*spp*river*season
-# then add in variable for 'harshness', either production (biomass) over interval or abundance
-# (overall and spp-specific) or env (flow, temp). Test how size-dep gr varies across harshness for best model from moedl selection.
-
 
 #install.packages("devtools")
 # library(devtools)
@@ -233,18 +216,20 @@ iter=1
   dddG[[ii]] <- addSurvivals( ddddG,ddD,meanOrIter,iter ) %>% removeFishWithManyIntermediateNAs()
   ddG[[ii]] <- dddG[[ii]] %>% prepareDataForJags_Nimble("growth") # returns a list, list for running model in [[ii]][[1]], input df in [[ii]][[2]]
     #save(dG,ddG,dddG, file = paste0('./data/out/dG_', modelName, '_forLmer.RData')) # for Lmer model with all spp
-  #####
-  start <- Sys.time()
-  print(start)
-  print(c("in loop",meanOrIter,ii,iter))
+
 
   #########################################
   # mcmc run data
   mcmcInfo <- list()
-  mcmcInfo$nChains <- 3
-  mcmcInfo$nIter <- 2000
+  mcmcInfo$nChains <- 2
+  mcmcInfo$nIter <- 1750
   mcmcInfo$nBurnIn <- 1500
   mcmcInfo$nSamples <- (mcmcInfo$nIter - mcmcInfo$nBurnIn) * mcmcInfo$nChains
+
+  #####
+  start <- Sys.time()
+  print(start)
+  print(c("in loop",meanOrIter,ii,iter))
 
   #########################################
   # Get data for model run
@@ -254,38 +239,40 @@ iter=1
   #########################################
   # Nimble model run
 
+  rm(Rmodel); rm(conf); rm(Rmcmc); rm(Cmodel); rm(Cmcmc); rm(mcmc)
+
   Rmodel <- nimbleModel(dG[[ii]]$code, dG[[ii]]$constants, dG[[ii]]$data, dG[[ii]]$inits)
   Rmodel$lengthDATA <- zoo::na.approx(dG[[ii]]$data$lengthDATA)
 
-  conf <- configureMCMC(Rmodel); conf$addMonitors(dG[[ii]]$params)
+  conf <- configureMCMC(Rmodel)
+  conf$addMonitors(dG[[ii]]$params)
   Rmcmc <- buildMCMC(conf)
   Cmodel <- compileNimble(Rmodel)
   Cmcmc <- compileNimble(Rmcmc, project = Rmodel)
   mcmc <- runMCMC(Cmcmc,
-                  nburnin = 100, #mcmcInfo$nBurnIn,
-                  niter = 200,#mcmcInfo$nIter,
-                  nchains = 2,#mcmcInfo$nChains,
+                  nburnin = mcmcInfo$nBurnIn,
+                  niter = mcmcInfo$nIter,
+                  nchains = mcmcInfo$nChains,
                   samples = TRUE, samplesAsCodaMCMC = TRUE,
                   summary = FALSE)#, WAIC = TRUE)
 
+  done <- Sys.time()
+  elapsed[[ii]] <- done - start
+  print(paste("Elapsed =", round(elapsed)))
 
   #########################################
   # Use jagsUI functions to get output into jagsUI format for analysis functions
 
   source("./R/jagsUIFunctions.R")
-  mcmcProcessed <- process.output(mcmc$samples, DIC=FALSE, params.omit=FALSE)#,params.omit=("lengthExp")) #jagsUI function, DIC = FALSE because it requires 'deviance'
+  mcmcProcessed <- process.output(mcmc, DIC=FALSE, params.omit=FALSE)#,params.omit=("lengthExp")) #jagsUI function, DIC = FALSE because it requires 'deviance'
 
   obsPred <- getRMSE_Nimble(mcmcProcessed,20)
   obsPred$rmse
-  obsPred$outliers%>% as.data.frame()
+  #obsPred$outliers%>% as.data.frame()
 
   #########################################
   # save data to file
   save(mcmcInfo,mcmcProcessed,dG,ddG, file = paste0('./data/out/dG_', as.integer(Sys.time()),'_', modelName, '_Nimble.RData'))
-
-  done <- Sys.time()
-  elapsed[[ii]] <- done - start
-  print(paste("Elapsed =",elapsed))
 
   ######################
   # Plot traces
