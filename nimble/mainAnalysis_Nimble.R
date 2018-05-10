@@ -221,9 +221,9 @@ iter=1
   #########################################
   # mcmc run data
   mcmcInfo <- list()
-  mcmcInfo$nChains <- 2
-  mcmcInfo$nIter <- 1750
-  mcmcInfo$nBurnIn <- 1500
+  mcmcInfo$nChains <- 3
+  mcmcInfo$nIter <- 1000
+  mcmcInfo$nBurnIn <- 750
   mcmcInfo$nSamples <- (mcmcInfo$nIter - mcmcInfo$nBurnIn) * mcmcInfo$nChains
 
   #####
@@ -258,7 +258,7 @@ iter=1
 
   done <- Sys.time()
   elapsed[[ii]] <- done - start
-  print(paste("Elapsed =", round(elapsed)))
+  print(paste("Elapsed =", round(as.numeric(elapsed),2)))
 
   #########################################
   # Use jagsUI functions to get output into jagsUI format for analysis functions
@@ -281,11 +281,11 @@ iter=1
   plotInt_Nimble(mcmcProcessed)
   plotBetas_Nimble(mcmcProcessed,1:2)
   plotBetas_Nimble(mcmcProcessed,3:4)
-  plotBetas_Nimble(mcmcProcessed,5:18)
+  plotBetas_Nimble(mcmcProcessed,5:9)
 
   plotSigmaInt_Nimble(mcmcProcessed)
   plotSigmaBetas_Nimble(mcmcProcessed,1:2)
-  plotSigmaBetas_Nimble(mcmcProcessed,3:4)
+  plotSigmaBetas_Nimble(mcmcProcessed,3:5)
 
   #########################
   # Predictions

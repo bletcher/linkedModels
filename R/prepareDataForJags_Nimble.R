@@ -209,15 +209,36 @@ prepareDataForJags_Nimble <- function(d,modelType){
 
   if ( modelType == "growth" ){
 
-    d <- d %>%
-      mutate(
-        cBKTStd = as.numeric(scale(nAllFishBySpeciesPBKT)),
-        cBNTStd = as.numeric(scale(nAllFishBySpeciesPBNT)),
-        cATSStd = as.numeric(scale(nAllFishBySpeciesPATS))
-        #   cBKTStd2 = cBKTStd^2,
-        #    cBNTStd2 = cBNTStd^2,
-        #    cATSStd2 = cATSStd^2
+    # d <- d %>%
+    #   mutate(
+    #     cBKTStd = as.numeric(scale(nAllFishBySpeciesPBKT)),
+    #     cBNTStd = as.numeric(scale(nAllFishBySpeciesPBNT)),
+    #     cATSStd = as.numeric(scale(nAllFishBySpeciesPATS))
+    #     #   cBKTStd2 = cBKTStd^2,
+    #     #    cBNTStd2 = cBNTStd^2,
+    #     #    cATSStd2 = cATSStd^2
+    #   )
+
+    ## standardize abundances by river
+    nMeans <- d %>%
+      group_by( riverOrdered ) %>%
+      summarize( meanBKT = mean(nAllFishBySpeciesPBKT, na.rm = T),
+                 meanBNT = mean(nAllFishBySpeciesPBNT, na.rm = T),
+                 meanATS = mean(nAllFishBySpeciesPATS, na.rm = T),
+                 sdBKT = sd(nAllFishBySpeciesPBKT, na.rm = T),
+                 sdBNT = sd(nAllFishBySpeciesPBNT, na.rm = T),
+                 sdATS = sd(nAllFishBySpeciesPATS, na.rm = T)
+
       )
+#print(nMeans)
+    d <- left_join( d, nMeans ) %>%
+      mutate( cBKTStd = (nAllFishBySpeciesPBKT - meanBKT)/sdBKT,
+              cBNTStd = (nAllFishBySpeciesPBNT - meanBNT)/sdBNT,
+              cATSStd = (nAllFishBySpeciesPATS - meanATS)/sdATS
+      )
+
+
+
 
     #To fill in missing obs (no fish in stream) with mean value
     d$cBKTStd <- ifelse( is.na(d$cBKTStd), 0, d$cBKTStd )
