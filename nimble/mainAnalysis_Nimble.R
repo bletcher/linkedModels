@@ -25,7 +25,7 @@ drainage <- "west" # ==
 speciesDet <- c("bkt", "bnt","ats") #keep as all three spp
 speciesInDet <- factor(speciesDet, levels = c('bkt','bnt','ats'), ordered = T)
 
-speciesGr <- "bkt"
+speciesGr <- "ats"
 #speciesGr = c("bkt", "bnt","ats")
 speciesInGr <- factor(speciesGr, levels = c('bkt','bnt','ats'), ordered = T)
 
@@ -222,8 +222,8 @@ iter=1
   # mcmc run data
   mcmcInfo <- list()
   mcmcInfo$nChains <- 3
-  mcmcInfo$nIter <- 1000
-  mcmcInfo$nBurnIn <- 750
+  mcmcInfo$nIter <- 10000
+  mcmcInfo$nBurnIn <- 7500
   mcmcInfo$nSamples <- (mcmcInfo$nIter - mcmcInfo$nBurnIn) * mcmcInfo$nChains
 
   #####
@@ -281,11 +281,11 @@ iter=1
   plotInt_Nimble(mcmcProcessed)
   plotBetas_Nimble(mcmcProcessed,1:2)
   plotBetas_Nimble(mcmcProcessed,3:4)
-  plotBetas_Nimble(mcmcProcessed,5:9)
+  plotBetas_Nimble(mcmcProcessed,5:7)
 
   plotSigmaInt_Nimble(mcmcProcessed)
   plotSigmaBetas_Nimble(mcmcProcessed,1:2)
-  plotSigmaBetas_Nimble(mcmcProcessed,3:5)
+  plotSigmaBetas_Nimble(mcmcProcessed,3:4)
 
   #########################
   # Predictions
