@@ -11,7 +11,7 @@ runGrowthModel_Nimble <- function(d,mcmcInfo){
   nBetas <- 7
   nBetasSigma <- 4
   nBetasATS <- 1
-  nBetasBNT <- 2
+  nBetasBNT <- 1
 
   source("./R/growthModelFunctions_Code.R")
   code <- codeSpp[[as.numeric(speciesInGr)]]

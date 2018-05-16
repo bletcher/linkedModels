@@ -297,21 +297,21 @@ iter=1
   itersForPred <- sample( 1:mcmcInfo$nSamples, nItersForPred )
 
   # predictions across the grid
-  p <- getPrediction( mcmcProcessed, limits, nPoints, itersForPred, dG[[1]]$constants, ddG[[ii]][[1]]$sampleIntervalMean, c("len", "temp", "flow","count") )#######################
-  p$variable <- "mean"
+  p <- getPrediction( mcmcProcessed, limits, nPoints, itersForPred, dG[[1]]$constants, ddG[[ii]][[1]]$sampleIntervalMean, c("len", "temp", "flow","cBKT", "cBNT", "cATS") )#######################
+  #p$variable <- "mean"
   # predictions of sigma across the grid
-  pSigma <- getPredictionSigma( mcmcProcessed, limits, nPoints, itersForPred, dG[[1]]$constants, ddG[[ii]][[1]]$sampleIntervalMean, c("len", "temp", "flow","count") )
-  pSigma$variable <- "sd"
+  pSigma <- getPredictionSigma( mcmcProcessed, limits, nPoints, itersForPred, dG[[1]]$constants, ddG[[ii]][[1]]$sampleIntervalMean, c("len", "temp", "flow","cBKT", "cBNT", "cATS") )
+  #pSigma$variable <- "sd"
   # combine predicted growth rates and sigma in predicted growth rates to get cv in predicted growth rates
-  pBoth <- left_join( p,pSigma, by = c('len','count','flow','temp','iter','isYOY','season','river')) %>%
+  pBoth <- left_join( p,pSigma, by = c('len',"cBKT", "cBNT", "cATS",'flow','temp','iter','isYOY','season','river')) %>%
     mutate(predCV = predGrSigma/predGr)
-  pBoth$variable <- "cv"
+  #pBoth$variable <- "cv"
   pBoth$predCV <- ifelse(pBoth$predCV > 10, NA, pBoth$predCV) # to avoid very large CVs when gr is very small
   pBoth$predCV <- ifelse(pBoth$predCV < 0, NA, pBoth$predCV) # to avoid negative CVs when gr is very small and negative
 
   save(pBoth,file = paste0("./data/out/P_ForMike_",speciesGr,".RData"))
 
-     #
+  #
   # graph function, in analyzeOutputFunctions.R
 
   plotPred(p, "predGr", "len", 1, speciesGr)

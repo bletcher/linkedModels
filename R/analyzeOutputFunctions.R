@@ -16,14 +16,27 @@ getPrediction <- function(d, limits = 2, nPoints = 5, itersForPred, constants, s
   grInt <- array2df(d$sims.list$grInt, levels = list(iter=NA,isYOY=c(0,1),season=1:constants$nSeasons,river=riverOrderedIn[1:constants$nRivers]), label.x="int")
 
   # get grBeta in df format and merge in grInt
- # grBeta1 <- array2df(d$sims.list$grBeta, levels = list(iter=NA,beta=NA,isYOY=c(0,1),species=species,season=1:nSeasons,river=riverOrderedIn), label.x="est")
-  grBeta1 <- array2df(d$sims.list$grBeta, levels = list(iter=NA,beta=NA,isYOY=c(0,1),season=1:constants$nSeasons,river=riverOrderedIn[1:constants$nRivers]), label.x="est")
+  grBeta3 <- array2df(d$sims.list$grBeta, levels = list(iter=NA,beta=NA,isYOY=c(0,1),season=1:constants$nSeasons,river=riverOrderedIn[1:constants$nRivers]), label.x="est")
 
-  grBeta <- spread( grBeta1, key = beta, value = est, sep = "" ) %>%
+  grBeta2 <- spread( grBeta3, key = beta, value = est, sep = "" ) %>%
     left_join( .,grInt )
+
+  # grBetaBNT, 2 rivers only
+  grBetaBNT <- array2df(d$sims.list$grBetaBNT, levels = list(iter=NA,betaBNT=NA,isYOY=c(0,1),season=1:constants$nSeasons,river=riverOrderedIn[1:(4-(4-constants$nRivers))]), label.x="est")
+
+  grBeta1 <- spread( grBetaBNT, key = betaBNT, value = est, sep = "" ) %>%
+    left_join( .,grBeta2 )
+
+  # grBetaATS, no river
+  grBetaATS <- array2df(d$sims.list$grBetaATS, levels = list(iter=NA,betaATS=NA,isYOY=c(0,1),season=1:constants$nSeasons), label.x="est")
+
+  grBeta <- spread( grBetaATS, key = betaATS, value = est, sep = "" ) %>%
+    left_join( .,grBeta1 )
+
 
   sampleIntervalMean <- array2df(sampleIntervalMeanIn, levels = list( river=riverOrderedIn[1:constants$nRivers],season=1:constants$nSeasons,species=1:constants$nSpecies), label.x = "interval")
   grBeta <- left_join(grBeta,sampleIntervalMean)
+
   # prediction template
   x <- seq( -limits,limits,length.out = nPoints )
 
@@ -60,11 +73,32 @@ getPrediction <- function(d, limits = 2, nPoints = 5, itersForPred, constants, s
    }  else
    lenData <- 0
 
+  if ("cBKT" %in% varsToEstimate) {
+    cBKTData <- rep(x, each = nPoints ^ expIndex)
+    expIndex <- expIndex + 1
+  }  else
+    cBKTData <- 0
+
+  if ("cBNT" %in% varsToEstimate) {
+    cBNTData <- rep(x, each = nPoints ^ expIndex)
+    expIndex <- expIndex + 1
+  }  else
+    cBNTData <- 0
+
+  if ("cATS" %in% varsToEstimate) {
+    cATSData <- rep(x, each = nPoints ^ expIndex)
+    expIndex <- expIndex + 1
+  }  else
+    cATSData <- 0
+
   predTemplate <- data.frame(
                               len = lenData,
-                              count = countData,
+                             # count = countData,
                               flow =  flowData,
-                              temp =  tempData
+                              temp =  tempData,
+                              cBKT =  cBKTData,
+                              cBNT =  cBNTData,
+                              cATS =  cATSData
                             )
 
 
@@ -83,24 +117,20 @@ getPrediction <- function(d, limits = 2, nPoints = 5, itersForPred, constants, s
     mutate( predGr =
             ( int +
               beta1 * len +
-              beta2 * count +
+              beta2 * cBKT +
               beta3 * temp +
               beta4 * flow +
+              beta5 * temp * flow +
 
-          #    beta4 * len^2 +
-              beta5 * count^2 +
               beta6 * temp^2 +
               beta7 * flow^2 +
 
-              beta8 * temp * flow +
-              beta9 * temp * count +
-              beta10 * count * flow +
+              betaBNT1 * cBNT +
+              betaATS1 * cATS
 
-              beta11 * count * temp * flow
             ) #* interval
-
-
-    )
+    ) %>%
+    select( len,flow,temp,cBKT,cBNT,cATS,iter,isYOY,season,river,predGr )
 
   return(preds)
 }
@@ -117,6 +147,142 @@ getPrediction <- function(d, limits = 2, nPoints = 5, itersForPred, constants, s
 #'@export
 
 getPredictionSigma <- function(d, limits = 2, nPoints = 5, itersForPred, constants, sampleIntervalMeanIn, varsToEstimate, ii=1){
+
+  # get grInt in df format
+  #grInt <- array2df(d$sims.list$grInt, levels = list(iter=NA,isYOY=c(0,1),species=species,season=1:nSeasons,river=riverOrderedIn), label.x="int")
+  grInt <- array2df(d$sims.list$sigmaInt, levels = list(iter=NA,isYOY=c(0,1),season=1:constants$nSeasons,river=riverOrderedIn[1:constants$nRivers]), label.x="int")
+
+  # get grBeta in df format and merge in grInt
+  grBeta3 <- array2df(d$sims.list$sigmaBeta, levels = list(iter=NA,beta=NA,isYOY=c(0,1),season=1:constants$nSeasons,river=riverOrderedIn[1:constants$nRivers]), label.x="est")
+
+  grBeta2 <- spread( grBeta3, key = beta, value = est, sep = "" ) %>%
+    left_join( .,grInt )
+
+  # grBetaBNT, 2 rivers only
+  grBetaBNT <- array2df(d$sims.list$grBetaBNT, levels = list(iter=NA,betaBNT=NA,isYOY=c(0,1),season=1:constants$nSeasons,river=riverOrderedIn[1:(4-(4-constants$nRivers))]), label.x="est")
+
+  grBeta1 <- spread( grBetaBNT, key = betaBNT, value = est, sep = "" ) %>%
+    left_join( .,grBeta2 )
+
+  # grBetaATS, no river
+  grBetaATS <- array2df(d$sims.list$grBetaATS, levels = list(iter=NA,betaATS=NA,isYOY=c(0,1),season=1:constants$nSeasons), label.x="est")
+
+  grBeta <- spread( grBetaATS, key = betaATS, value = est, sep = "" ) %>%
+    left_join( .,grBeta1 )
+
+
+  sampleIntervalMean <- array2df(sampleIntervalMeanIn, levels = list( river=riverOrderedIn[1:constants$nRivers],season=1:constants$nSeasons,species=1:constants$nSpecies), label.x = "interval")
+  grBeta <- left_join(grBeta,sampleIntervalMean)
+
+  # prediction template
+  x <- seq( -limits,limits,length.out = nPoints )
+
+  # create inital template of standardized values to predict over
+  expIndex <- 0
+
+  if ("temp" %in% varsToEstimate) {
+    tempData <- rep(x, each = nPoints ^ expIndex)
+    expIndex <- expIndex + 1
+  }  else
+    tempData <- 0
+
+  if ("flow" %in% varsToEstimate) {
+    flowData <- rep(x, each = nPoints ^ expIndex)
+    expIndex <- expIndex + 1
+  }  else
+    flowData <- 0
+
+  if ("phi" %in% varsToEstimate) {
+    phiData <- rep(x, each = nPoints ^ expIndex)
+    expIndex <- expIndex + 1
+  }  else
+    phiData <- 0
+
+  if ("count" %in% varsToEstimate) {
+    countData <- rep(x, each = nPoints ^ expIndex)
+    expIndex <- expIndex + 1
+  }  else
+    countData <- 0
+
+  if ("len" %in% varsToEstimate) {
+    lenData <- rep(x, each = nPoints ^ expIndex)
+    expIndex <- expIndex + 1
+  }  else
+    lenData <- 0
+
+  if ("cBKT" %in% varsToEstimate) {
+    cBKTData <- rep(x, each = nPoints ^ expIndex)
+    expIndex <- expIndex + 1
+  }  else
+    cBKTData <- 0
+
+  if ("cBNT" %in% varsToEstimate) {
+    cBNTData <- rep(x, each = nPoints ^ expIndex)
+    expIndex <- expIndex + 1
+  }  else
+    cBNTData <- 0
+
+  if ("cATS" %in% varsToEstimate) {
+    cATSData <- rep(x, each = nPoints ^ expIndex)
+    expIndex <- expIndex + 1
+  }  else
+    cATSData <- 0
+
+  predTemplate <- data.frame(
+    len = lenData,
+    # count = countData,
+    flow =  flowData,
+    temp =  tempData,
+    cBKT =  cBKTData,
+    cBNT =  cBNTData,
+    cATS =  cATSData
+  )
+
+
+  # expand predTemplate across grBeta rows for a given set of iterations
+  grBetaIter <- grBeta %>% filter( iter %in% itersForPred )
+
+  # repeat predTemplate nrow( grBetaIter ) times
+  predTemplateLong <- do.call("rbind", replicate( nrow( grBetaIter ), predTemplate, simplify = FALSE) )
+  # repeat each row of grBetaIter nrow(predTemplate) times
+  grBetaLong <- grBetaIter[rep(seq_len(nrow(grBetaIter)), each = nrow(predTemplate)),]
+  # Put them together
+  preds <- cbind( predTemplateLong,grBetaLong )
+
+  # This model structure needs to match that in grModelx.jags
+  preds <- preds %>%
+    mutate( predGrSigma =
+              exp( int +
+
+                  beta1 * cBKT +
+                  beta2 * temp +
+                  beta3 * flow +
+                  beta4 * temp * flow +
+
+                  betaBNT1 * cBNT +
+                  betaATS1 * cATS
+
+              ) #* interval
+    ) %>%
+    select( len,flow,temp,cBKT,cBNT,cATS,iter,isYOY,season,river,predGrSigma )
+
+  return(preds)
+
+}
+
+
+
+
+#'Generate predictions of sigma the sd in growth from a set of iterations of a jags model run
+#'
+#'@param d a model run dataFrame
+#'@param limits symetrical lower and upper limit for the predictions
+#'@param nPoints the number of points between the limits. Use an odd # to ensure a value of 0
+#'@param itersForPred, the iterations from the model for prediction
+#'@return a data frame
+#'@export
+
+getPredictionSigma_Counts <- function(d, limits = 2, nPoints = 5, itersForPred, constants, sampleIntervalMeanIn, varsToEstimate, ii=1){
 
   # get grInt in df format
   #grInt <- array2df(d$sims.list$grInt, levels = list(iter=NA,isYOY=c(0,1),species=species,season=1:nSeasons,river=riverOrderedIn), label.x="int")
