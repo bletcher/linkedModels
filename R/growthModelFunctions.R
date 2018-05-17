@@ -8,10 +8,11 @@
 runGrowthModel_Nimble <- function(d,mcmcInfo){
 
   ##
-  nBetas <- 7
+  nBetas <- 8
   nBetasSigma <- 4
+  nBetasBNT <- 3
   nBetasATS <- 1
-  nBetasBNT <- 1
+
 
   source("./R/growthModelFunctions_Code.R")
   code <- codeSpp[[as.numeric(speciesInGr)]]
@@ -93,8 +94,8 @@ runGrowthModel_Nimble <- function(d,mcmcInfo){
               'grBetaSigma', 'sigmaInt', 'sigmaIntMu', 'sigmaIntSigma',
               'sigmaBeta', 'sigmaBetaMu', 'sigmaBetaSigma', 'grIndRE', 'sigmaIndRE',
               'lengthExp',
-              'grBetaATS','grBetaATSMu','grBetaATSSigma',
-              'grBetaBNT','grBetaBNTMu','grBetaBNTSigma')
+              'grBetaATS','grBetaATSMu','grBetaATSSigma','sigmaBetaATS',
+              'grBetaBNT','grBetaBNTMu','grBetaBNTSigma','sigmaBetaBNT')
 
 
 

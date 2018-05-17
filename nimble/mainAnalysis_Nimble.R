@@ -25,7 +25,7 @@ drainage <- "west" # ==
 speciesDet <- c("bkt", "bnt","ats") #keep as all three spp
 speciesInDet <- factor(speciesDet, levels = c('bkt','bnt','ats'), ordered = T)
 
-speciesGr <- "ats"
+speciesGr <- "bkt"
 #speciesGr = c("bkt", "bnt","ats")
 speciesInGr <- factor(speciesGr, levels = c('bkt','bnt','ats'), ordered = T)
 
@@ -222,9 +222,10 @@ iter=1
   # mcmc run data
   mcmcInfo <- list()
   mcmcInfo$nChains <- 3
-  mcmcInfo$nIter <- 10000
-  mcmcInfo$nBurnIn <- 7500
+  mcmcInfo$nIter <- 20000
+  mcmcInfo$nBurnIn <- 15000
   mcmcInfo$nSamples <- (mcmcInfo$nIter - mcmcInfo$nBurnIn) * mcmcInfo$nChains
+  mcmcInfo$thinRate <- 3
 
   #####
   start <- Sys.time()
@@ -245,6 +246,7 @@ iter=1
   Rmodel$lengthDATA <- zoo::na.approx(dG[[ii]]$data$lengthDATA)
 
   conf <- configureMCMC(Rmodel)
+  conf$setThin(mcmcInfo$thinRate)
   conf$addMonitors(dG[[ii]]$params)
   Rmcmc <- buildMCMC(conf)
   Cmodel <- compileNimble(Rmodel)
@@ -281,11 +283,17 @@ iter=1
   plotInt_Nimble(mcmcProcessed)
   plotBetas_Nimble(mcmcProcessed,1:2)
   plotBetas_Nimble(mcmcProcessed,3:4)
-  plotBetas_Nimble(mcmcProcessed,5:7)
+  plotBetas_Nimble(mcmcProcessed,5:8)
+
+  plotBetasBNT_Nimble(mcmcProcessed,1:3)
+  plotBetasATS_Nimble(mcmcProcessed,1)
 
   plotSigmaInt_Nimble(mcmcProcessed)
   plotSigmaBetas_Nimble(mcmcProcessed,1:2)
   plotSigmaBetas_Nimble(mcmcProcessed,3:4)
+
+  plotSigmaBetasBNT_Nimble(mcmcProcessed,1)
+  plotSigmaBetasATS_Nimble(mcmcProcessed,1)
 
   #########################
   # Predictions
