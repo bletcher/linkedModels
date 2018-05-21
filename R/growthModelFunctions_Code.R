@@ -28,10 +28,10 @@ codeSpp[[1]] <- nimbleCode({
       grBeta[ 8, isYOYDATA[evalRows[i]], season[evalRows[i]], riverDATA[evalRows[i]] ] * cBKTStd[evalRows[i]]^2 +
 
       grBetaBNT[1, isYOYDATA[evalRows[i]], season[evalRows[i]], riverDATA[evalRows[i]] ] * cBNTStd[evalRows[i]] +
-      grBetaBNT[2, isYOYDATA[evalRows[i]], season[evalRows[i]], riverDATA[evalRows[i]] ] * cBNTStd[evalRows[i]]^2 +
-      grBetaBNT[3, isYOYDATA[evalRows[i]], season[evalRows[i]], riverDATA[evalRows[i]] ] * cBNTStd[evalRows[i]] * cBKTStd[evalRows[i]] +
+  #    grBetaBNT[2, isYOYDATA[evalRows[i]], season[evalRows[i]], riverDATA[evalRows[i]] ] * cBNTStd[evalRows[i]]^2 +
+  #    grBetaBNT[3, isYOYDATA[evalRows[i]], season[evalRows[i]], riverDATA[evalRows[i]] ] * cBNTStd[evalRows[i]] * cBKTStd[evalRows[i]] +
 
-      grBetaATS[1, isYOYDATA[evalRows[i]], season[evalRows[i]] ] * cATSStd[evalRows[i]] +
+      grBetaATS[1, isYOYDATA[evalRows[i]], season[evalRows[i]], riverDATA[evalRows[i]] ] * cATSStd[evalRows[i]] +
 
       grIndRE[ ind[evalRows[i]] ]
 
@@ -45,7 +45,7 @@ codeSpp[[1]] <- nimbleCode({
 
       sigmaBetaBNT[1, isYOYDATA[evalRows[i]], season[evalRows[i]], riverDATA[evalRows[i]] ] * cBNTStd[evalRows[i]] +
       #      sigmaBetaBNT[2, isYOYDATA[evalRows[i]], season[evalRows[i]], riverDATA[evalRows[i]] ] * cBNTStd[evalRows[i]] * cBKTStd[evalRows[i]] +
-      sigmaBetaATS[1, isYOYDATA[evalRows[i]], season[evalRows[i]] ] * cATSStd[evalRows[i]]
+      sigmaBetaATS[1, isYOYDATA[evalRows[i]], season[evalRows[i]], riverDATA[evalRows[i]] ] * cATSStd[evalRows[i]]
     # sigmaBeta[ 6, isYOYDATA[evalRows[i]], season[evalRows[i]], riverDATA[evalRows[i]] ] * cBKTStd[evalRows[i]] * tempStd[evalRows[i]] * BKT01DATA[evalRows[i]] +
     # sigmaBeta[ 7, isYOYDATA[evalRows[i]], season[evalRows[i]], riverDATA[evalRows[i]] ] * cBNTStd[evalRows[i]] * tempStd[evalRows[i]] * BNT01DATA[evalRows[i]] +
     # sigmaBeta[ 8, isYOYDATA[evalRows[i]], season[evalRows[i]], riverDATA[evalRows[i]] ] * cATSStd[evalRows[i]] * tempStd[evalRows[i]] * ATS01DATA[evalRows[i]] +
@@ -88,12 +88,38 @@ codeSpp[[1]] <- nimbleCode({
     }
   }
 
-  # nATS priors
+  # # nATS priors
+  # for( b in 1:nBetasATS ) {
+  #   for( yoy in 1:2 ) {
+  #     for( s in 1:nSeasons ) {
+  #       grBetaATS[ b,yoy,s ] ~ dnorm( grBetaATSMu[ b,s ], sd = grBetaATSSigma[ b,s ] )
+  #       sigmaBetaATS[ b,yoy,s ] ~ dnorm( sigmaBetaATSMu[ b,s ], sd = sigmaBetaATSSigma[ b,s ] )
+  #     }
+  #   }
+  # }
+  # for( b in 1:nBetasATS ) {
+  #   for( s in 1:nSeasons ) {
+  #     grBetaATSMu[ b,s ] ~ dnorm( 0,sd = 30 )
+  #     grBetaATSSigma[ b,s ] ~ dunif( 0,100 )
+  #     sigmaBetaATSMu[ b,s ] ~ dnorm( 0,sd = 30 )
+  #     sigmaBetaATSSigma[ b,s ] ~ dunif( 0,100 )
+  #   }
+  # }
+
+  #nATS priors
   for( b in 1:nBetasATS ) {
     for( yoy in 1:2 ) {
       for( s in 1:nSeasons ) {
-        grBetaATS[ b,yoy,s ] ~ dnorm( grBetaATSMu[ b,s ], sd = grBetaATSSigma[ b,s ] )
-        sigmaBetaATS[ b,yoy,s ] ~ dnorm( sigmaBetaATSMu[ b,s ], sd = sigmaBetaATSSigma[ b,s ] )
+
+        grBetaATS[ b,yoy,s,1 ] ~ dnorm( grBetaATSMu[ b,s ], sd = grBetaATSSigma[ b,s ] )
+        grBetaATS[ b,yoy,s,2 ] <- 0
+        grBetaATS[ b,yoy,s,3 ] <- 0
+        grBetaATS[ b,yoy,s,4 ] <- 0
+
+        sigmaBetaATS[ b,yoy,s,1 ] ~ dnorm( sigmaBetaATSMu[ b,s ], sd = sigmaBetaATSSigma[ b,s ] )
+        sigmaBetaATS[ b,yoy,s,2 ] <- 0
+        sigmaBetaATS[ b,yoy,s,3 ] <- 0
+        sigmaBetaATS[ b,yoy,s,4 ] <- 0
       }
     }
   }
@@ -105,7 +131,6 @@ codeSpp[[1]] <- nimbleCode({
       sigmaBetaATSSigma[ b,s ] ~ dunif( 0,100 )
     }
   }
-
 
   #nBNT priors
   for( b in 1:nBetasBNT ) {

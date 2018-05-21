@@ -10,7 +10,7 @@ runGrowthModel_Nimble <- function(d,mcmcInfo){
   ##
   nBetas <- 8
   nBetasSigma <- 4
-  nBetasBNT <- 3
+  nBetasBNT <- 1
   nBetasATS <- 1
 
 

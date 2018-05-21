@@ -550,11 +550,11 @@ getRMSE_Nimble <- function(d,residLimit = 0.6, ii = 1){
   outlierFish <- ddGIn %>% filter(tag %in% outlierFish1$tag) %>%
     dplyr::select(tag,season,sampleName,observedLength,lengthDATALnStd,observedLength,estLen,resid,rowNumber,isOutlier,species)
 
-  gg <- ggplot( ddGIn, aes( observedLength, estLen, color = isOutlier ) ) +
-        geom_point( alpha = 0.2 ) +
+  gg <- ggplot( ddGIn, aes( observedLength, estLen, color = factor(year) ) ) +
+        geom_point( alpha = 0.8 ) +
         geom_abline(intercept = 0, slope = 1) +
  #   ylim(-2,4) +
-        facet_wrap(~leftOut)
+        facet_grid(isYOY+riverN~season+leftOut)
   print(gg)
 
   rmse <- ddGIn %>%

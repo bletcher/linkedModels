@@ -222,10 +222,11 @@ iter=1
   # mcmc run data
   mcmcInfo <- list()
   mcmcInfo$nChains <- 3
-  mcmcInfo$nIter <- 20000
-  mcmcInfo$nBurnIn <- 15000
-  mcmcInfo$nSamples <- (mcmcInfo$nIter - mcmcInfo$nBurnIn) * mcmcInfo$nChains
-  mcmcInfo$thinRate <- 3
+  mcmcInfo$nIter <- 1000
+  mcmcInfo$nBurnIn <- 750
+  mcmcInfo$thinRate <- 1 #fails with thinrate of 3 and 1000/750
+  mcmcInfo$nSamples <- round( (mcmcInfo$nIter - mcmcInfo$nBurnIn) * mcmcInfo$nChains / mcmcInfo$thinRate )
+
 
   #####
   start <- Sys.time()
@@ -240,7 +241,7 @@ iter=1
   #########################################
   # Nimble model run
 
-  rm(Rmodel); rm(conf); rm(Rmcmc); rm(Cmodel); rm(Cmcmc); rm(mcmc)
+  rm(Rmodel); rm(conf); rm(Rmcmc); rm(Cmodel); rm(Cmcmc); rm(mcmc); rm(obsPred)
 
   Rmodel <- nimbleModel(dG[[ii]]$code, dG[[ii]]$constants, dG[[ii]]$data, dG[[ii]]$inits)
   Rmodel$lengthDATA <- zoo::na.approx(dG[[ii]]$data$lengthDATA)
@@ -248,6 +249,7 @@ iter=1
   conf <- configureMCMC(Rmodel)
   conf$setThin(mcmcInfo$thinRate)
   conf$addMonitors(dG[[ii]]$params)
+
   Rmcmc <- buildMCMC(conf)
   Cmodel <- compileNimble(Rmodel)
   Cmcmc <- compileNimble(Rmcmc, project = Rmodel)
@@ -285,7 +287,7 @@ iter=1
   plotBetas_Nimble(mcmcProcessed,3:4)
   plotBetas_Nimble(mcmcProcessed,5:8)
 
-  plotBetasBNT_Nimble(mcmcProcessed,1:3)
+  plotBetasBNT_Nimble(mcmcProcessed,1)
   plotBetasATS_Nimble(mcmcProcessed,1)
 
   plotSigmaInt_Nimble(mcmcProcessed)
