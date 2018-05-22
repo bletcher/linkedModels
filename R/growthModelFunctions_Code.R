@@ -18,18 +18,17 @@ codeSpp[[1]] <- nimbleCode({
       grBeta[ 1, isYOYDATA[evalRows[i]], season[evalRows[i]], riverDATA[evalRows[i]] ] * lengthDATA[evalRows[i]] +
 
       grBeta[ 2, isYOYDATA[evalRows[i]], season[evalRows[i]], riverDATA[evalRows[i]] ] * cBKTStd[evalRows[i]] +
-      grBeta[ 3, isYOYDATA[evalRows[i]], season[evalRows[i]], riverDATA[evalRows[i]] ] * tempStd[evalRows[i]] +
-      grBeta[ 4, isYOYDATA[evalRows[i]], season[evalRows[i]], riverDATA[evalRows[i]] ] * flowStd[evalRows[i]] +
-      grBeta[ 5, isYOYDATA[evalRows[i]], season[evalRows[i]], riverDATA[evalRows[i]] ] * tempStd[evalRows[i]] * flowStd[evalRows[i]] +
+      grBeta[ 3, isYOYDATA[evalRows[i]], season[evalRows[i]], riverDATA[evalRows[i]] ] * cBKTStd[evalRows[i]]^2 +
+      grBeta[ 4, isYOYDATA[evalRows[i]], season[evalRows[i]], riverDATA[evalRows[i]] ] * tempStd[evalRows[i]] +
+      grBeta[ 5, isYOYDATA[evalRows[i]], season[evalRows[i]], riverDATA[evalRows[i]] ] * flowStd[evalRows[i]] +
+      grBeta[ 6, isYOYDATA[evalRows[i]], season[evalRows[i]], riverDATA[evalRows[i]] ] * tempStd[evalRows[i]] * flowStd[evalRows[i]] +
 
-      grBeta[ 6, isYOYDATA[evalRows[i]], season[evalRows[i]], riverDATA[evalRows[i]] ] * tempStd2[evalRows[i]] +
-      grBeta[ 7, isYOYDATA[evalRows[i]], season[evalRows[i]], riverDATA[evalRows[i]] ] * flowStd2[evalRows[i]] +
-
-      grBeta[ 8, isYOYDATA[evalRows[i]], season[evalRows[i]], riverDATA[evalRows[i]] ] * cBKTStd[evalRows[i]]^2 +
+      grBeta[ 7, isYOYDATA[evalRows[i]], season[evalRows[i]], riverDATA[evalRows[i]] ] * tempStd2[evalRows[i]] +
+      grBeta[ 8, isYOYDATA[evalRows[i]], season[evalRows[i]], riverDATA[evalRows[i]] ] * flowStd2[evalRows[i]] +
 
       grBetaBNT[1, isYOYDATA[evalRows[i]], season[evalRows[i]], riverDATA[evalRows[i]] ] * cBNTStd[evalRows[i]] +
-  #    grBetaBNT[2, isYOYDATA[evalRows[i]], season[evalRows[i]], riverDATA[evalRows[i]] ] * cBNTStd[evalRows[i]]^2 +
-  #    grBetaBNT[3, isYOYDATA[evalRows[i]], season[evalRows[i]], riverDATA[evalRows[i]] ] * cBNTStd[evalRows[i]] * cBKTStd[evalRows[i]] +
+      grBetaBNT[2, isYOYDATA[evalRows[i]], season[evalRows[i]], riverDATA[evalRows[i]] ] * cBNTStd[evalRows[i]]^2 +
+      grBetaBNT[3, isYOYDATA[evalRows[i]], season[evalRows[i]], riverDATA[evalRows[i]] ] * cBNTStd[evalRows[i]] * cBKTStd[evalRows[i]] +
 
       grBetaATS[1, isYOYDATA[evalRows[i]], season[evalRows[i]], riverDATA[evalRows[i]] ] * cATSStd[evalRows[i]] +
 
@@ -38,21 +37,10 @@ codeSpp[[1]] <- nimbleCode({
     ##
     log( expectedGRSigma[ evalRows[i] ] ) <- #grSigma
       sigmaInt[     isYOYDATA[evalRows[i]], season[evalRows[i]], riverDATA[evalRows[i]] ] +
-      sigmaBeta[ 1, isYOYDATA[evalRows[i]], season[evalRows[i]], riverDATA[evalRows[i]] ] * cBKTStd[evalRows[i]] +
-      sigmaBeta[ 2, isYOYDATA[evalRows[i]], season[evalRows[i]], riverDATA[evalRows[i]] ] * tempStd[evalRows[i]] +
-      sigmaBeta[ 3, isYOYDATA[evalRows[i]], season[evalRows[i]], riverDATA[evalRows[i]] ] * flowStd[evalRows[i]] +
-      sigmaBeta[ 4, isYOYDATA[evalRows[i]], season[evalRows[i]], riverDATA[evalRows[i]] ] * tempStd[evalRows[i]] * flowStd[evalRows[i]] +
-
-      sigmaBetaBNT[1, isYOYDATA[evalRows[i]], season[evalRows[i]], riverDATA[evalRows[i]] ] * cBNTStd[evalRows[i]] +
-      #      sigmaBetaBNT[2, isYOYDATA[evalRows[i]], season[evalRows[i]], riverDATA[evalRows[i]] ] * cBNTStd[evalRows[i]] * cBKTStd[evalRows[i]] +
-      sigmaBetaATS[1, isYOYDATA[evalRows[i]], season[evalRows[i]], riverDATA[evalRows[i]] ] * cATSStd[evalRows[i]]
-    # sigmaBeta[ 6, isYOYDATA[evalRows[i]], season[evalRows[i]], riverDATA[evalRows[i]] ] * cBKTStd[evalRows[i]] * tempStd[evalRows[i]] * BKT01DATA[evalRows[i]] +
-    # sigmaBeta[ 7, isYOYDATA[evalRows[i]], season[evalRows[i]], riverDATA[evalRows[i]] ] * cBNTStd[evalRows[i]] * tempStd[evalRows[i]] * BNT01DATA[evalRows[i]] +
-    # sigmaBeta[ 8, isYOYDATA[evalRows[i]], season[evalRows[i]], riverDATA[evalRows[i]] ] * cATSStd[evalRows[i]] * tempStd[evalRows[i]] * ATS01DATA[evalRows[i]] +
-    # sigmaBeta[ 9, isYOYDATA[evalRows[i]], season[evalRows[i]], riverDATA[evalRows[i]] ] * tempStd[evalRows[i]] * flowStd[evalRows[i]] +
-    # sigmaBeta[10, isYOYDATA[evalRows[i]], season[evalRows[i]], riverDATA[evalRows[i]] ] * cBKTStd[evalRows[i]] * flowStd[evalRows[i]] * BKT01DATA[evalRows[i]] +
-    # sigmaBeta[11, isYOYDATA[evalRows[i]], season[evalRows[i]], riverDATA[evalRows[i]] ] * cBNTStd[evalRows[i]] * flowStd[evalRows[i]] * BNT01DATA[evalRows[i]] +
-    # sigmaBeta[12, isYOYDATA[evalRows[i]], season[evalRows[i]], riverDATA[evalRows[i]] ] * cATSStd[evalRows[i]] * flowStd[evalRows[i]] * ATS01DATA[evalRows[i]]
+# poor mixing when included     sigmaBeta[ 1, isYOYDATA[evalRows[i]], season[evalRows[i]], riverDATA[evalRows[i]] ] * cBKTStd[evalRows[i]] +
+      sigmaBeta[ 1, isYOYDATA[evalRows[i]], season[evalRows[i]], riverDATA[evalRows[i]] ] * tempStd[evalRows[i]] +
+      sigmaBeta[ 2, isYOYDATA[evalRows[i]], season[evalRows[i]], riverDATA[evalRows[i]] ] * flowStd[evalRows[i]] +
+      sigmaBeta[ 3, isYOYDATA[evalRows[i]], season[evalRows[i]], riverDATA[evalRows[i]] ] * tempStd[evalRows[i]] * flowStd[evalRows[i]]
 
   }
   ##
@@ -88,24 +76,6 @@ codeSpp[[1]] <- nimbleCode({
     }
   }
 
-  # # nATS priors
-  # for( b in 1:nBetasATS ) {
-  #   for( yoy in 1:2 ) {
-  #     for( s in 1:nSeasons ) {
-  #       grBetaATS[ b,yoy,s ] ~ dnorm( grBetaATSMu[ b,s ], sd = grBetaATSSigma[ b,s ] )
-  #       sigmaBetaATS[ b,yoy,s ] ~ dnorm( sigmaBetaATSMu[ b,s ], sd = sigmaBetaATSSigma[ b,s ] )
-  #     }
-  #   }
-  # }
-  # for( b in 1:nBetasATS ) {
-  #   for( s in 1:nSeasons ) {
-  #     grBetaATSMu[ b,s ] ~ dnorm( 0,sd = 30 )
-  #     grBetaATSSigma[ b,s ] ~ dunif( 0,100 )
-  #     sigmaBetaATSMu[ b,s ] ~ dnorm( 0,sd = 30 )
-  #     sigmaBetaATSSigma[ b,s ] ~ dunif( 0,100 )
-  #   }
-  # }
-
   #nATS priors
   for( b in 1:nBetasATS ) {
     for( yoy in 1:2 ) {
@@ -116,10 +86,10 @@ codeSpp[[1]] <- nimbleCode({
         grBetaATS[ b,yoy,s,3 ] <- 0
         grBetaATS[ b,yoy,s,4 ] <- 0
 
-        sigmaBetaATS[ b,yoy,s,1 ] ~ dnorm( sigmaBetaATSMu[ b,s ], sd = sigmaBetaATSSigma[ b,s ] )
-        sigmaBetaATS[ b,yoy,s,2 ] <- 0
-        sigmaBetaATS[ b,yoy,s,3 ] <- 0
-        sigmaBetaATS[ b,yoy,s,4 ] <- 0
+        # sigmaBetaATS[ b,yoy,s,1 ] ~ dnorm( sigmaBetaATSMu[ b,s ], sd = sigmaBetaATSSigma[ b,s ] )
+        # sigmaBetaATS[ b,yoy,s,2 ] <- 0
+        # sigmaBetaATS[ b,yoy,s,3 ] <- 0
+        # sigmaBetaATS[ b,yoy,s,4 ] <- 0
       }
     }
   }
@@ -127,8 +97,8 @@ codeSpp[[1]] <- nimbleCode({
     for( s in 1:nSeasons ) {
       grBetaATSMu[ b,s ] ~ dnorm( 0,sd = 30 )
       grBetaATSSigma[ b,s ] ~ dunif( 0,100 )
-      sigmaBetaATSMu[ b,s ] ~ dnorm( 0,sd = 30 )
-      sigmaBetaATSSigma[ b,s ] ~ dunif( 0,100 )
+      # sigmaBetaATSMu[ b,s ] ~ dnorm( 0,sd = 30 )
+      # sigmaBetaATSSigma[ b,s ] ~ dunif( 0,100 )
     }
   }
 
@@ -142,10 +112,10 @@ codeSpp[[1]] <- nimbleCode({
                   grBetaBNT[ b,yoy,s,3 ] <- 0
                  grBetaBNT[ b,yoy,s,4 ] <- 0
 
-        sigmaBetaBNT[ b,yoy,s,1 ] ~ dnorm( sigmaBetaBNTMu[ b,s ], sd = sigmaBetaBNTSigma[ b,s ] )
-        sigmaBetaBNT[ b,yoy,s,2 ] ~ dnorm( sigmaBetaBNTMu[ b,s ], sd = sigmaBetaBNTSigma[ b,s ] )
-                  sigmaBetaBNT[ b,yoy,s,3 ] <- 0
-                  sigmaBetaBNT[ b,yoy,s,4 ] <- 0
+        # sigmaBetaBNT[ b,yoy,s,1 ] ~ dnorm( sigmaBetaBNTMu[ b,s ], sd = sigmaBetaBNTSigma[ b,s ] )
+        # sigmaBetaBNT[ b,yoy,s,2 ] ~ dnorm( sigmaBetaBNTMu[ b,s ], sd = sigmaBetaBNTSigma[ b,s ] )
+        #           sigmaBetaBNT[ b,yoy,s,3 ] <- 0
+        #           sigmaBetaBNT[ b,yoy,s,4 ] <- 0
       }
     }
   }
@@ -153,8 +123,8 @@ codeSpp[[1]] <- nimbleCode({
     for( s in 1:nSeasons ) {
       grBetaBNTMu[ b,s ] ~ dnorm( 0,sd = 30 )
       grBetaBNTSigma[ b,s ] ~ dunif( 0,100 )
-      sigmaBetaBNTMu[ b,s ] ~ dnorm( 0,sd = 30 )
-      sigmaBetaBNTSigma[ b,s ] ~ dunif( 0,100 )
+      # sigmaBetaBNTMu[ b,s ] ~ dnorm( 0,sd = 30 )
+      # sigmaBetaBNTSigma[ b,s ] ~ dunif( 0,100 )
     }
   }
 
@@ -199,38 +169,38 @@ codeSpp[[2]] <- nimbleCode({
     ##
 
     gr[ evalRows[i] ] <-
-      grInt[     isYOYDATA[evalRows[i]], season[evalRows[i]], riverDATA[evalRows[i]] ] +
+      grInt[        isYOYDATA[evalRows[i]], season[evalRows[i]], riverDATA[evalRows[i]] ] +
 
       grBeta[ 1, isYOYDATA[evalRows[i]], season[evalRows[i]], riverDATA[evalRows[i]] ] * lengthDATA[evalRows[i]] +
 
-      grBeta[ 2, isYOYDATA[evalRows[i]], season[evalRows[i]], riverDATA[evalRows[i]] ] * cBKTStd[evalRows[i]]+# * BKT01DATA[evalRows[i]] +
-      grBeta[ 3, isYOYDATA[evalRows[i]], season[evalRows[i]], riverDATA[evalRows[i]] ] * tempStd[evalRows[i]] +
-      grBeta[ 4, isYOYDATA[evalRows[i]], season[evalRows[i]], riverDATA[evalRows[i]] ] * flowStd[evalRows[i]] +
-      grBeta[ 5, isYOYDATA[evalRows[i]], season[evalRows[i]], riverDATA[evalRows[i]] ] * tempStd[evalRows[i]] * flowStd[evalRows[i]] +
+      grBeta[ 2, isYOYDATA[evalRows[i]], season[evalRows[i]], riverDATA[evalRows[i]] ] * cBKTStd[evalRows[i]] +
+      grBeta[ 3, isYOYDATA[evalRows[i]], season[evalRows[i]], riverDATA[evalRows[i]] ] * cBKTStd[evalRows[i]]^2 +
+      grBeta[ 4, isYOYDATA[evalRows[i]], season[evalRows[i]], riverDATA[evalRows[i]] ] * tempStd[evalRows[i]] +
+      grBeta[ 5, isYOYDATA[evalRows[i]], season[evalRows[i]], riverDATA[evalRows[i]] ] * flowStd[evalRows[i]] +
+      grBeta[ 6, isYOYDATA[evalRows[i]], season[evalRows[i]], riverDATA[evalRows[i]] ] * tempStd[evalRows[i]] * flowStd[evalRows[i]] +
 
-      grBeta[ 6, isYOYDATA[evalRows[i]], season[evalRows[i]], riverDATA[evalRows[i]] ] * tempStd2[evalRows[i]] +
-      grBeta[ 7, isYOYDATA[evalRows[i]], season[evalRows[i]], riverDATA[evalRows[i]] ] * flowStd2[evalRows[i]] +
-
-      #    grBeta[ 8, isYOYDATA[evalRows[i]], season[evalRows[i]], riverDATA[evalRows[i]] ] * cBKTStd[evalRows[i]] * cBNTStd[evalRows[i]] +
+      grBeta[ 7, isYOYDATA[evalRows[i]], season[evalRows[i]], riverDATA[evalRows[i]] ] * tempStd2[evalRows[i]] +
+      grBeta[ 8, isYOYDATA[evalRows[i]], season[evalRows[i]], riverDATA[evalRows[i]] ] * flowStd2[evalRows[i]] +
 
       grBetaBNT[1, isYOYDATA[evalRows[i]], season[evalRows[i]], riverDATA[evalRows[i]] ] * cBNTStd[evalRows[i]] +
-      #  grBetaBNT[2, isYOYDATA[evalRows[i]], season[evalRows[i]], riverDATA[evalRows[i]] ] * cBNTStd[evalRows[i]] * cBKTStd[evalRows[i]] +
+      grBetaBNT[2, isYOYDATA[evalRows[i]], season[evalRows[i]], riverDATA[evalRows[i]] ] * cBNTStd[evalRows[i]]^2 +
+      grBetaBNT[3, isYOYDATA[evalRows[i]], season[evalRows[i]], riverDATA[evalRows[i]] ] * cBNTStd[evalRows[i]] * cBKTStd[evalRows[i]] +
 
-      grBetaATS[1, isYOYDATA[evalRows[i]], season[evalRows[i]] ] * cATSStd[evalRows[i]] +
+      grBetaATS[1, isYOYDATA[evalRows[i]], season[evalRows[i]], riverDATA[evalRows[i]] ] * cATSStd[evalRows[i]] +
 
       grIndRE[ ind[evalRows[i]] ]
 
     ##
     log( expectedGRSigma[ evalRows[i] ] ) <- #grSigma
       sigmaInt[     isYOYDATA[evalRows[i]], season[evalRows[i]], riverDATA[evalRows[i]] ] +
-      sigmaBeta[ 1, isYOYDATA[evalRows[i]], season[evalRows[i]], riverDATA[evalRows[i]] ] * cBKTStd[evalRows[i]] +
-      sigmaBeta[ 2, isYOYDATA[evalRows[i]], season[evalRows[i]], riverDATA[evalRows[i]] ] * tempStd[evalRows[i]] +
-      sigmaBeta[ 3, isYOYDATA[evalRows[i]], season[evalRows[i]], riverDATA[evalRows[i]] ] * flowStd[evalRows[i]] +
-      sigmaBeta[ 4, isYOYDATA[evalRows[i]], season[evalRows[i]], riverDATA[evalRows[i]] ] * tempStd[evalRows[i]] * flowStd[evalRows[i]] +
+   #   sigmaBeta[ 1, isYOYDATA[evalRows[i]], season[evalRows[i]], riverDATA[evalRows[i]] ] * cBKTStd[evalRows[i]] +
+      sigmaBeta[ 1, isYOYDATA[evalRows[i]], season[evalRows[i]], riverDATA[evalRows[i]] ] * tempStd[evalRows[i]] +
+      sigmaBeta[ 2, isYOYDATA[evalRows[i]], season[evalRows[i]], riverDATA[evalRows[i]] ] * flowStd[evalRows[i]] +
+      sigmaBeta[ 3, isYOYDATA[evalRows[i]], season[evalRows[i]], riverDATA[evalRows[i]] ] * tempStd[evalRows[i]] * flowStd[evalRows[i]] +
 
-      sigmaBetaBNT[1, isYOYDATA[evalRows[i]], season[evalRows[i]], riverDATA[evalRows[i]] ] * cBNTStd[evalRows[i]] +
+   #   sigmaBetaBNT[1, isYOYDATA[evalRows[i]], season[evalRows[i]], riverDATA[evalRows[i]] ] * cBNTStd[evalRows[i]] +
       #      sigmaBetaBNT[2, isYOYDATA[evalRows[i]], season[evalRows[i]], riverDATA[evalRows[i]] ] * cBNTStd[evalRows[i]] * cBKTStd[evalRows[i]] +
-      sigmaBetaATS[1, isYOYDATA[evalRows[i]], season[evalRows[i]] ] * cATSStd[evalRows[i]]
+  #    sigmaBetaATS[1, isYOYDATA[evalRows[i]], season[evalRows[i]] ] * cATSStd[evalRows[i]]
     # sigmaBeta[ 6, isYOYDATA[evalRows[i]], season[evalRows[i]], riverDATA[evalRows[i]] ] * cBKTStd[evalRows[i]] * tempStd[evalRows[i]] * BKT01DATA[evalRows[i]] +
     # sigmaBeta[ 7, isYOYDATA[evalRows[i]], season[evalRows[i]], riverDATA[evalRows[i]] ] * cBNTStd[evalRows[i]] * tempStd[evalRows[i]] * BNT01DATA[evalRows[i]] +
     # sigmaBeta[ 8, isYOYDATA[evalRows[i]], season[evalRows[i]], riverDATA[evalRows[i]] ] * cATSStd[evalRows[i]] * tempStd[evalRows[i]] * ATS01DATA[evalRows[i]] +
@@ -278,7 +248,7 @@ codeSpp[[2]] <- nimbleCode({
     for( yoy in 1:2 ) {
       for( s in 1:nSeasons ) {
         grBetaATS[ b,yoy,s ] ~ dnorm( grBetaATSMu[ b,s ], sd = grBetaATSSigma[ b,s ] )
-        sigmaBetaATS[ b,yoy,s ] ~ dnorm( sigmaBetaATSMu[ b,s ], sd = sigmaBetaATSSigma[ b,s ] )
+    #    sigmaBetaATS[ b,yoy,s ] ~ dnorm( sigmaBetaATSMu[ b,s ], sd = sigmaBetaATSSigma[ b,s ] )
       }
     }
   }
@@ -286,8 +256,8 @@ codeSpp[[2]] <- nimbleCode({
     for( s in 1:nSeasons ) {
       grBetaATSMu[ b,s ] ~ dnorm( 0,sd = 30 )
       grBetaATSSigma[ b,s ] ~ dunif( 0,100 )
-      sigmaBetaATSMu[ b,s ] ~ dnorm( 0,sd = 30 )
-      sigmaBetaATSSigma[ b,s ] ~ dunif( 0,100 )
+    #  sigmaBetaATSMu[ b,s ] ~ dnorm( 0,sd = 30 )
+    #  sigmaBetaATSSigma[ b,s ] ~ dunif( 0,100 )
     }
   }
 
@@ -302,8 +272,8 @@ codeSpp[[2]] <- nimbleCode({
         #          grBetaBNT[ b,yoy,s,3 ] <- 0
         #         grBetaBNT[ b,yoy,s,4 ] <- 0
 
-        sigmaBetaBNT[ b,yoy,s,1 ] ~ dnorm( sigmaBetaBNTMu[ b,s ], sd = sigmaBetaBNTSigma[ b,s ] )
-        sigmaBetaBNT[ b,yoy,s,2 ] ~ dnorm( sigmaBetaBNTMu[ b,s ], sd = sigmaBetaBNTSigma[ b,s ] )
+     #   sigmaBetaBNT[ b,yoy,s,1 ] ~ dnorm( sigmaBetaBNTMu[ b,s ], sd = sigmaBetaBNTSigma[ b,s ] )
+    #    sigmaBetaBNT[ b,yoy,s,2 ] ~ dnorm( sigmaBetaBNTMu[ b,s ], sd = sigmaBetaBNTSigma[ b,s ] )
         #          sigmaBetaBNT[ b,yoy,s,3 ] <- 0
         #          sigmaBetaBNT[ b,yoy,s,4 ] <- 0
       }
@@ -313,8 +283,8 @@ codeSpp[[2]] <- nimbleCode({
     for( s in 1:nSeasons ) {
       grBetaBNTMu[ b,s ] ~ dnorm( 0,sd = 30 )
       grBetaBNTSigma[ b,s ] ~ dunif( 0,100 )
-      sigmaBetaBNTMu[ b,s ] ~ dnorm( 0,sd = 30 )
-      sigmaBetaBNTSigma[ b,s ] ~ dunif( 0,100 )
+    #  sigmaBetaBNTMu[ b,s ] ~ dnorm( 0,sd = 30 )
+    #  sigmaBetaBNTSigma[ b,s ] ~ dunif( 0,100 )
     }
   }
 
@@ -358,38 +328,38 @@ codeSpp[[3]] <- nimbleCode({
     ##
 
     gr[ evalRows[i] ] <-
-      grInt[     isYOYDATA[evalRows[i]], season[evalRows[i]], riverDATA[evalRows[i]] ] +
+      grInt[        isYOYDATA[evalRows[i]], season[evalRows[i]], riverDATA[evalRows[i]] ] +
 
       grBeta[ 1, isYOYDATA[evalRows[i]], season[evalRows[i]], riverDATA[evalRows[i]] ] * lengthDATA[evalRows[i]] +
 
-      grBeta[ 2, isYOYDATA[evalRows[i]], season[evalRows[i]], riverDATA[evalRows[i]] ] * cBKTStd[evalRows[i]]+# * BKT01DATA[evalRows[i]] +
-      grBeta[ 3, isYOYDATA[evalRows[i]], season[evalRows[i]], riverDATA[evalRows[i]] ] * tempStd[evalRows[i]] +
-      grBeta[ 4, isYOYDATA[evalRows[i]], season[evalRows[i]], riverDATA[evalRows[i]] ] * flowStd[evalRows[i]] +
-      grBeta[ 5, isYOYDATA[evalRows[i]], season[evalRows[i]], riverDATA[evalRows[i]] ] * tempStd[evalRows[i]] * flowStd[evalRows[i]] +
+      grBeta[ 2, isYOYDATA[evalRows[i]], season[evalRows[i]], riverDATA[evalRows[i]] ] * cBKTStd[evalRows[i]] +
+      grBeta[ 3, isYOYDATA[evalRows[i]], season[evalRows[i]], riverDATA[evalRows[i]] ] * cBKTStd[evalRows[i]]^2 +
+      grBeta[ 4, isYOYDATA[evalRows[i]], season[evalRows[i]], riverDATA[evalRows[i]] ] * tempStd[evalRows[i]] +
+      grBeta[ 5, isYOYDATA[evalRows[i]], season[evalRows[i]], riverDATA[evalRows[i]] ] * flowStd[evalRows[i]] +
+      grBeta[ 6, isYOYDATA[evalRows[i]], season[evalRows[i]], riverDATA[evalRows[i]] ] * tempStd[evalRows[i]] * flowStd[evalRows[i]] +
 
-      grBeta[ 6, isYOYDATA[evalRows[i]], season[evalRows[i]], riverDATA[evalRows[i]] ] * tempStd2[evalRows[i]] +
-      grBeta[ 7, isYOYDATA[evalRows[i]], season[evalRows[i]], riverDATA[evalRows[i]] ] * flowStd2[evalRows[i]] +
-
-      #    grBeta[ 8, isYOYDATA[evalRows[i]], season[evalRows[i]], riverDATA[evalRows[i]] ] * cBKTStd[evalRows[i]] * cBNTStd[evalRows[i]] +
+      grBeta[ 7, isYOYDATA[evalRows[i]], season[evalRows[i]], riverDATA[evalRows[i]] ] * tempStd2[evalRows[i]] +
+      grBeta[ 8, isYOYDATA[evalRows[i]], season[evalRows[i]], riverDATA[evalRows[i]] ] * flowStd2[evalRows[i]] +
 
       grBetaBNT[1, isYOYDATA[evalRows[i]], season[evalRows[i]], riverDATA[evalRows[i]] ] * cBNTStd[evalRows[i]] +
-      #  grBetaBNT[2, isYOYDATA[evalRows[i]], season[evalRows[i]], riverDATA[evalRows[i]] ] * cBNTStd[evalRows[i]] * cBKTStd[evalRows[i]] +
+      grBetaBNT[2, isYOYDATA[evalRows[i]], season[evalRows[i]], riverDATA[evalRows[i]] ] * cBNTStd[evalRows[i]]^2 +
+      grBetaBNT[3, isYOYDATA[evalRows[i]], season[evalRows[i]], riverDATA[evalRows[i]] ] * cBNTStd[evalRows[i]] * cBKTStd[evalRows[i]] +
 
-      grBetaATS[1, isYOYDATA[evalRows[i]], season[evalRows[i]] ] * cATSStd[evalRows[i]] +
+      grBetaATS[1, isYOYDATA[evalRows[i]], season[evalRows[i]], riverDATA[evalRows[i]] ] * cATSStd[evalRows[i]] +
 
       grIndRE[ ind[evalRows[i]] ]
 
     ##
     log( expectedGRSigma[ evalRows[i] ] ) <- #grSigma
       sigmaInt[     isYOYDATA[evalRows[i]], season[evalRows[i]], riverDATA[evalRows[i]] ] +
-      sigmaBeta[ 1, isYOYDATA[evalRows[i]], season[evalRows[i]], riverDATA[evalRows[i]] ] * cBKTStd[evalRows[i]] +
-      sigmaBeta[ 2, isYOYDATA[evalRows[i]], season[evalRows[i]], riverDATA[evalRows[i]] ] * tempStd[evalRows[i]] +
-      sigmaBeta[ 3, isYOYDATA[evalRows[i]], season[evalRows[i]], riverDATA[evalRows[i]] ] * flowStd[evalRows[i]] +
-      sigmaBeta[ 4, isYOYDATA[evalRows[i]], season[evalRows[i]], riverDATA[evalRows[i]] ] * tempStd[evalRows[i]] * flowStd[evalRows[i]] +
+   #   sigmaBeta[ 1, isYOYDATA[evalRows[i]], season[evalRows[i]], riverDATA[evalRows[i]] ] * cBKTStd[evalRows[i]] +
+      sigmaBeta[ 1, isYOYDATA[evalRows[i]], season[evalRows[i]], riverDATA[evalRows[i]] ] * tempStd[evalRows[i]] +
+      sigmaBeta[ 2, isYOYDATA[evalRows[i]], season[evalRows[i]], riverDATA[evalRows[i]] ] * flowStd[evalRows[i]] +
+      sigmaBeta[ 3, isYOYDATA[evalRows[i]], season[evalRows[i]], riverDATA[evalRows[i]] ] * tempStd[evalRows[i]] * flowStd[evalRows[i]] +
 
-      sigmaBetaBNT[1, isYOYDATA[evalRows[i]], season[evalRows[i]], riverDATA[evalRows[i]] ] * cBNTStd[evalRows[i]] +
+   #   sigmaBetaBNT[1, isYOYDATA[evalRows[i]], season[evalRows[i]], riverDATA[evalRows[i]] ] * cBNTStd[evalRows[i]] +
       #      sigmaBetaBNT[2, isYOYDATA[evalRows[i]], season[evalRows[i]], riverDATA[evalRows[i]] ] * cBNTStd[evalRows[i]] * cBKTStd[evalRows[i]] +
-      sigmaBetaATS[1, isYOYDATA[evalRows[i]], season[evalRows[i]] ] * cATSStd[evalRows[i]]
+  #    sigmaBetaATS[1, isYOYDATA[evalRows[i]], season[evalRows[i]] ] * cATSStd[evalRows[i]]
     # sigmaBeta[ 6, isYOYDATA[evalRows[i]], season[evalRows[i]], riverDATA[evalRows[i]] ] * cBKTStd[evalRows[i]] * tempStd[evalRows[i]] * BKT01DATA[evalRows[i]] +
     # sigmaBeta[ 7, isYOYDATA[evalRows[i]], season[evalRows[i]], riverDATA[evalRows[i]] ] * cBNTStd[evalRows[i]] * tempStd[evalRows[i]] * BNT01DATA[evalRows[i]] +
     # sigmaBeta[ 8, isYOYDATA[evalRows[i]], season[evalRows[i]], riverDATA[evalRows[i]] ] * cATSStd[evalRows[i]] * tempStd[evalRows[i]] * ATS01DATA[evalRows[i]] +
@@ -437,7 +407,7 @@ codeSpp[[3]] <- nimbleCode({
     for( yoy in 1:2 ) {
       for( s in 1:nSeasons ) {
         grBetaATS[ b,yoy,s ] ~ dnorm( grBetaATSMu[ b,s ], sd = grBetaATSSigma[ b,s ] )
-        sigmaBetaATS[ b,yoy,s ] ~ dnorm( sigmaBetaATSMu[ b,s ], sd = sigmaBetaATSSigma[ b,s ] )
+    #    sigmaBetaATS[ b,yoy,s ] ~ dnorm( sigmaBetaATSMu[ b,s ], sd = sigmaBetaATSSigma[ b,s ] )
       }
     }
   }
@@ -445,8 +415,8 @@ codeSpp[[3]] <- nimbleCode({
     for( s in 1:nSeasons ) {
       grBetaATSMu[ b,s ] ~ dnorm( 0,sd = 30 )
       grBetaATSSigma[ b,s ] ~ dunif( 0,100 )
-      sigmaBetaATSMu[ b,s ] ~ dnorm( 0,sd = 30 )
-      sigmaBetaATSSigma[ b,s ] ~ dunif( 0,100 )
+  #    sigmaBetaATSMu[ b,s ] ~ dnorm( 0,sd = 30 )
+  #    sigmaBetaATSSigma[ b,s ] ~ dunif( 0,100 )
     }
   }
 
@@ -461,7 +431,7 @@ codeSpp[[3]] <- nimbleCode({
         #          grBetaBNT[ b,yoy,s,3 ] <- 0
         #         grBetaBNT[ b,yoy,s,4 ] <- 0
 
-        sigmaBetaBNT[ b,yoy,s,1 ] ~ dnorm( sigmaBetaBNTMu[ b,s ], sd = sigmaBetaBNTSigma[ b,s ] )
+   #     sigmaBetaBNT[ b,yoy,s,1 ] ~ dnorm( sigmaBetaBNTMu[ b,s ], sd = sigmaBetaBNTSigma[ b,s ] )
         #sigmaBetaBNT[ b,yoy,s,2 ] ~ dnorm( sigmaBetaBNTMu[ b,s ], sd = sigmaBetaBNTSigma[ b,s ] )
         #          sigmaBetaBNT[ b,yoy,s,3 ] <- 0
         #          sigmaBetaBNT[ b,yoy,s,4 ] <- 0
@@ -472,8 +442,8 @@ codeSpp[[3]] <- nimbleCode({
     for( s in 1:nSeasons ) {
       grBetaBNTMu[ b,s ] ~ dnorm( 0,sd = 30 )
       grBetaBNTSigma[ b,s ] ~ dunif( 0,100 )
-      sigmaBetaBNTMu[ b,s ] ~ dnorm( 0,sd = 30 )
-      sigmaBetaBNTSigma[ b,s ] ~ dunif( 0,100 )
+    #  sigmaBetaBNTMu[ b,s ] ~ dnorm( 0,sd = 30 )
+    #  sigmaBetaBNTSigma[ b,s ] ~ dunif( 0,100 )
     }
   }
 

@@ -9,8 +9,8 @@ runGrowthModel_Nimble <- function(d,mcmcInfo){
 
   ##
   nBetas <- 8
-  nBetasSigma <- 4
-  nBetasBNT <- 1
+  nBetasSigma <- 3
+  nBetasBNT <- 3
   nBetasATS <- 1
 
 
@@ -75,27 +75,33 @@ runGrowthModel_Nimble <- function(d,mcmcInfo){
                 # expectedGRSigma = runif(max(constants$evalRows), 0, 1),
                 # lengthExp = runif(max(constants$evalRows) + 1, 60, 200),
                 # lengthStd = rnorm(max(constants$evalRows), 0, 1)
-                grBetaATS = array(rnorm( nBetasATS * 2 * constants$nSeasons, 0, 0.1), c(nBetasATS, 2, constants$nSeasons)),
+                #grBetaATS = array(rnorm( nBetasATS * 2 * constants$nSeasons, 0, 0.1), c(nBetasATS, 2, constants$nSeasons)),
+                #grBetaATSMu = array(0, c(nBetasATS, constants$nSeasons)),
+                #grBetaATSSigma = array(1, c(nBetasATS, constants$nSeasons)),
+                grBetaATS = array(rnorm( nBetasATS * 2 * constants$nSeasons * constants$nRivers, 0, 0.1), c(nBetasATS, 2, constants$nSeasons, constants$nRivers)),
                 grBetaATSMu = array(0, c(nBetasATS, constants$nSeasons)),
                 grBetaATSSigma = array(1, c(nBetasATS, constants$nSeasons)),
                 grBetaBNT = array(rnorm( nBetasBNT * 2 * constants$nSeasons * constants$nRivers, 0, 0.1), c(nBetasBNT, 2, constants$nSeasons, constants$nRivers)),
                 grBetaBNTMu = array(0, c(nBetasBNT, constants$nSeasons)),
-                grBetaBNTSigma = array(1, c(nBetasBNT, constants$nSeasons)),
+                grBetaBNTSigma = array(1, c(nBetasBNT, constants$nSeasons))
 
-                sigmaBetaATS = array(rnorm( nBetasATS * 2 * constants$nSeasons, 0, 0.1), c(nBetasATS, 2, constants$nSeasons)),
-                sigmaBetaATSMu = array(0, c(nBetasATS, constants$nSeasons)),
-                sigmaBetaATSSigma = array(1, c(nBetasATS, constants$nSeasons)),
-                sigmaBetaBNT = array(rnorm( nBetasBNT * 2 * constants$nSeasons * constants$nRivers, 0, 0.1), c(nBetasBNT, 2, constants$nSeasons, constants$nRivers)),
-                sigmaBetaBNTMu = array(0, c(nBetasBNT, constants$nSeasons)),
-                sigmaBetaBNTSigma = array(1, c(nBetasBNT, constants$nSeasons))
+                #sigmaBetaATS = array(rnorm( nBetasATS * 2 * constants$nSeasons, 0, 0.1), c(nBetasATS, 2, constants$nSeasons)),
+                #sigmaBetaATSMu = array(0, c(nBetasATS, constants$nSeasons)),
+                #sigmaBetaATSSigma = array(1, c(nBetasATS, constants$nSeasons)),
+                # sigmaBetaATS = array(rnorm( nBetasATS * 2 * constants$nSeasons * constants$nRivers, 0, 0.1), c(nBetasATS, 2, constants$nSeasons, constants$nRivers)),
+                # sigmaBetaATSMu = array(0, c(nBetasATS, constants$nSeasons)),
+                # sigmaBetaATSSigma = array(1, c(nBetasATS, constants$nSeasons)),
+                # sigmaBetaBNT = array(rnorm( nBetasBNT * 2 * constants$nSeasons * constants$nRivers, 0, 0.1), c(nBetasBNT, 2, constants$nSeasons, constants$nRivers)),
+                # sigmaBetaBNTMu = array(0, c(nBetasBNT, constants$nSeasons)),
+                # sigmaBetaBNTSigma = array(1, c(nBetasBNT, constants$nSeasons))
   )
   ##
   params <- c('grInt', 'grIntMu', 'grIntSigma', 'grBeta', 'grBetaMu',
               'grBetaSigma', 'sigmaInt', 'sigmaIntMu', 'sigmaIntSigma',
               'sigmaBeta', 'sigmaBetaMu', 'sigmaBetaSigma', 'grIndRE', 'sigmaIndRE',
               'lengthExp',
-              'grBetaATS','grBetaATSMu','grBetaATSSigma','sigmaBetaATS',
-              'grBetaBNT','grBetaBNTMu','grBetaBNTSigma','sigmaBetaBNT')
+              'grBetaATS','grBetaATSMu','grBetaATSSigma',
+              'grBetaBNT','grBetaBNTMu','grBetaBNTSigma')
 
 
 
