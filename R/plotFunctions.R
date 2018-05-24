@@ -9,7 +9,8 @@ plotInt_Nimble <- function(d){
   ggGrInt$chain <- rep(1:mcmcInfo$nChains, each = mcmcInfo$nSamples/mcmcInfo$nChains)
   ggGrInt$iter <- 1:as.numeric(mcmcInfo$nSamples/mcmcInfo$nChains)
 
-  gg <- ggplot(filter(ggGrInt), aes(iter,est)) + geom_point( aes(color=factor(chain)), size = 0.1 ) + #ylim(-1.5,1.5) +
+  gg <- ggplot(filter(ggGrInt), aes(iter,est)) + geom_point( aes(color=factor(chain)), size = 0.1 ) +
+    ylim(-.5,.5) +
     #   facet_grid(d2+d4~d5+d3)
     facet_grid(yoy + river ~ season )
   print(gg)
@@ -29,7 +30,7 @@ plotBetas_Nimble <- function(d,b){
     gg[[i]] <- ggplot(filter(ggGrBeta,d2 == i), aes(iter,est)) +
       geom_hline(yintercept = 0) +
       geom_point( aes(color = factor(chain)), size = 0.1 ) +
-   #   ylim(-1,1) +
+      ylim(-.5,.5) +
       facet_grid(d3+d5 ~ d4) +
       ggtitle(paste("beta =", i))
     if(i %in% b) print(gg[[i]])
@@ -48,7 +49,7 @@ plotBetasBNT_Nimble <- function(d,b){
     gg[[i]] <- ggplot(filter(ggGrBeta,d2 == i), aes(iter,est)) +
       geom_hline(yintercept = 0) +
       geom_point( aes(color = factor(chain)), size = 0.1 ) +
-      #   ylim(-1,1) +
+         ylim(-1,1) +
       facet_grid(d3+d5 ~ d4) +
       ggtitle(paste("beta =", i))
     if(i %in% b) print(gg[[i]])
@@ -67,7 +68,7 @@ plotBetasATS_Nimble <- function(d,b){
     gg[[i]] <- ggplot(filter(ggGrBeta,d2 == i), aes(iter,est)) +
       geom_hline(yintercept = 0) +
       geom_point( aes(color = factor(chain)), size = 0.1 ) +
-      #   ylim(-1,1) +
+         ylim(-1,1) +
       facet_grid(d3+d5 ~ d4) +
       ggtitle(paste("beta =", i))
     if(i %in% b) print(gg[[i]])

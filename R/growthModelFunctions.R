@@ -5,17 +5,13 @@
 #'@return a data frame
 #'@export
 
-runGrowthModel_Nimble <- function(d,mcmcInfo){
+runGrowthModel_Nimble <- function(d,mcmcInfo,code){
 
   ##
   nBetas <- 8
   nBetasSigma <- 3
   nBetasBNT <- 3
   nBetasATS <- 1
-
-
-  source("./R/growthModelFunctions_Code.R")
-  code <- codeSpp[[as.numeric(speciesInGr)]]
 
   constants <- list(riverDATA = d$riverDATA,
                     nRivers = d$nRivers,
@@ -102,66 +98,6 @@ runGrowthModel_Nimble <- function(d,mcmcInfo){
               'lengthExp',
               'grBetaATS','grBetaATSMu','grBetaATSSigma',
               'grBetaBNT','grBetaBNTMu','grBetaBNTSigma')
-
-
-
-  # Rmodel <- nimbleModel(code, constants, data, inits)
-  #
-  # #  Rmodel$lengthDATA <- zoo::na.approx(data$lengthDATA[1:33518]) ## length(data$lengthDATA) = 33519, last obs is a fish with a single obs - doesn't get an evalRow
-  # Rmodel$lengthDATA <- zoo::na.approx(data$lengthDATA[1:34701]) ## length(data$lengthDATA) = 33519, last obs is a fish with a single obs - doesn't get an evalRow
-  #   table(is.na(Rmodel$lengthDATA))
-  #
-  # #system.time(lp <- Rmodel$calculate())
-  # #lp
-  #
-  # ##Rmodel$getVarNames(nodes = Rmodel$getNodeNames(stochOnly = TRUE))
-  # ## [1] "lengthDATA"     "grIntMu"        "grIntSigma"     "sigmaIntMu"
-  # ## [5] "sigmaIntSigma"  "grBetaMu"       "grBetaSigma"    "sigmaBetaMu"
-  # ## [9] "sigmaBetaSigma" "sigmaIndRE"     "grInt"          "sigmaInt"
-  # ##[13] "grBeta"         "sigmaBeta"      "grIndRE"
-  #
-  #
-  # ##for(nn in Rmodel$getVarNames(nodes = Rmodel$getNodeNames(stochOnly = TRUE))) {
-  # ##    print(nn)
-  # ##    print(any(is.na(Rmodel[[paste0('logProb_', nn)]])))
-  # ##}
-  # ##
-  # ##Rmodel$logProb_lengthDATA
-  # ##Rmodel$lengthDATA
-  #
-  #
-  # conf <- configureMCMC(Rmodel)
-  # ##(conf <- configureMCMC(Rmodel, useConjugacy = FALSE))
-  #
-  # ##conf$printSamplers()
-  #
-  # #conf$removeSamplers('sigmaIntSigma')
-  #
-  # #for(nn in Rmodel$expandNodeNames('sigmaIntSigma'))
-  # #    conf$addSampler(nn, 'RW', control = list(log = TRUE))
-  #
-  # #conf$addSampler('sigmaIntSigma', 'RW_block')
-  #
-  # ##conf$printSamplers('sigmaIntSigma')
-  #
-  # conf$getMonitors()
-  # conf$addMonitors(params)
-  #
-  # ##setdiff(params, conf$getMonitors())
-  #
-  # Rmcmc <- buildMCMC(conf)
-  #
-  # Cmodel <- compileNimble(Rmodel)
-  #
-  # Cmcmc <- compileNimble(Rmcmc, project = Rmodel)
-  #
-  # ##args(runMCMC)
-  #
-  # mcmcInfo$nSamples <- (mcmcInfo$nIter - mcmcInfo$nBurnIn) * mcmcInfo$nChains
-  #
-  # mcmc <- runMCMC(Cmcmc, nburnin = mcmcInfo$nBurnIn, niter = mcmcInfo$nIter, nchains = mcmcInfo$nChains,
-  #                 samples = TRUE, samplesAsCodaMCMC = TRUE,
-  #                 summary = TRUE, WAIC = TRUE)
 
   return(list(code=code,data=data,constants=constants,inits=inits,params=params))
 }

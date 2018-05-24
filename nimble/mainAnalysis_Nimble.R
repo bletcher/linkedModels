@@ -25,7 +25,7 @@ drainage <- "west" # ==
 speciesDet <- c("bkt", "bnt","ats") #keep as all three spp
 speciesInDet <- factor(speciesDet, levels = c('bkt','bnt','ats'), ordered = T)
 
-speciesGr <- "bkt"
+speciesGr <- "ats"
 #speciesGr = c("bkt", "bnt","ats")
 speciesInGr <- factor(speciesGr, levels = c('bkt','bnt','ats'), ordered = T)
 
@@ -221,9 +221,9 @@ iter=1
   #########################################
   # mcmc run data
   mcmcInfo <- list()
-  mcmcInfo$nChains <- 3
-  mcmcInfo$nIter <- 5000
-  mcmcInfo$nBurnIn <- 4000
+  mcmcInfo$nChains <- 6
+  mcmcInfo$nIter <- 10000
+  mcmcInfo$nBurnIn <- 9000
   mcmcInfo$thinRate <- 1 #fails with thinRate of 3 and 1000/750
   mcmcInfo$nSamples <- round( (mcmcInfo$nIter - mcmcInfo$nBurnIn) * mcmcInfo$nChains / mcmcInfo$thinRate )
 
@@ -235,8 +235,10 @@ iter=1
 
   #########################################
   # Get data for model run
+  source('./R/growthModelFunctions_Code.R')
+  code <- codeSpp[[as.numeric(speciesInGr)]]
 
-  dG[[ii]] <- ddG[[ii]][[1]] %>% runGrowthModel_Nimble(mcmcInfo)
+  dG[[ii]] <- ddG[[ii]][[1]] %>% runGrowthModel_Nimble(mcmcInfo,code)
 
   #########################################
   # Nimble model run
@@ -293,10 +295,9 @@ iter=1
 
   plotSigmaInt_Nimble(mcmcProcessed)
   plotSigmaBetas_Nimble(mcmcProcessed,1:3)
-  plotSigmaBetas_Nimble(mcmcProcessed,3:4)
 
-  plotSigmaBetasBNT_Nimble(mcmcProcessed,1)
-  plotSigmaBetasATS_Nimble(mcmcProcessed,1)
+  #plotSigmaBetasBNT_Nimble(mcmcProcessed,1)
+  #plotSigmaBetasATS_Nimble(mcmcProcessed,1)
 
   #########################
   # Predictions
@@ -328,11 +329,13 @@ iter=1
   plotPred(p, "predGr", "len", 1, speciesGr)
   plotPred(p, "predGr", "temp", 1, speciesGr)
   plotPred(p, "predGr", "flow", 1, speciesGr)
-  plotPred(p, "predGr", "count", 1, speciesGr)
+  plotPred(p, "predGr", "cBKT", 1, speciesGr)
+  plotPred(p, "predGr", "cBNT", 1, speciesGr)
+  plotPred(p, "predGr", "cATS", 1, speciesGr)
   plotPred(p, "predGr", c("temp", "flow"), 1, speciesGr)
-  plotPred(p, "predGr", c("temp","count"), 1, speciesGr)
-  plotPred(p, "predGr", c("flow","count"), 1, speciesGr)
-  plotPred(p, "predGr", c("len","count"), 1, speciesGr)
+  plotPred(p, "predGr", c("temp","cBKT"), 1, speciesGr)
+  plotPred(p, "predGr", c("flow","cBKT"), 1, speciesGr)
+  plotPred(p, "predGr", c("cBKT","cBNT"), 1, speciesGr)
   plotPred(p, "predGr", c("flow","len"), 1, speciesGr)
 
   #######################
@@ -341,13 +344,11 @@ iter=1
   plotPred(pSigma, "predGrSigma", "len", 1, speciesGr) #shows means
   plotPred(pSigma, "predGrSigma", "temp", 1, speciesGr)
   plotPred(pSigma, "predGrSigma", "flow", 1, speciesGr)
-  plotPred(pSigma, "predGrSigma", "count", 1, speciesGr)
   plotPred(pSigma, "predGrSigma", c("temp", "flow"), 1, speciesGr)
 
   plotPred(pBoth, "predCV", "len", 1, speciesGr)
   plotPred(pBoth, "predCV", "temp", 1, speciesGr)
   plotPred(pBoth, "predCV", "flow", 1, speciesGr)
-  plotPred(pBoth, "predCV", "count", 1, speciesGr)
   plotPred(pBoth, "predCV", c("temp", "flow"), 1, speciesGr)
 
 
