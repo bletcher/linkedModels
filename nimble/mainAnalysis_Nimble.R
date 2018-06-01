@@ -19,13 +19,14 @@ library(tidyverse)
 # selection criteria
 
 reconnect()
+# run to here to start so can reconnect
 
 drainage <- "west" # ==
 
 speciesDet <- c("bkt", "bnt","ats") #keep as all three spp
 speciesInDet <- factor(speciesDet, levels = c('bkt','bnt','ats'), ordered = T)
 
-speciesGr <- "ats"
+speciesGr <- "bkt"
 #speciesGr = c("bkt", "bnt","ats")
 speciesInGr <- factor(speciesGr, levels = c('bkt','bnt','ats'), ordered = T)
 
@@ -221,7 +222,7 @@ iter=1
   #########################################
   # mcmc run data
   mcmcInfo <- list()
-  mcmcInfo$nChains <- 6
+  mcmcInfo$nChains <- 3
   mcmcInfo$nIter <- 10000
   mcmcInfo$nBurnIn <- 9000
   mcmcInfo$thinRate <- 1 #fails with thinRate of 3 and 1000/750
@@ -287,7 +288,7 @@ iter=1
   plotInt_Nimble(mcmcProcessed)
   plotBetas_Nimble(mcmcProcessed,1:2)
   plotBetas_Nimble(mcmcProcessed,3:4)
-  plotBetas_Nimble(mcmcProcessed,5:8)
+  plotBetas_Nimble(mcmcProcessed,5:6)
 
   plotBetasBNT_Nimble(mcmcProcessed,1:3)
   plotBetasATS_Nimble(mcmcProcessed,1)
@@ -309,13 +310,13 @@ iter=1
   itersForPred <- sample( 1:mcmcInfo$nSamples, nItersForPred )
 
   # predictions across the grid
-  p <- getPrediction( mcmcProcessed, limits, nPoints, itersForPred, dG[[1]]$constants, ddG[[ii]][[1]]$sampleIntervalMean, c("len", "temp", "flow","cBKT", "cBNT", "cATS") )#######################
+  p <- getPrediction( mcmcProcessed, limits, nPoints, itersForPred, dG[[1]]$constants, ddG[[ii]][[1]]$sampleIntervalMean, c("temp", "flow","cBKT", "cBNT", "cATS") )#######################
   #p$variable <- "mean"
   # predictions of sigma across the grid
-  pSigma <- getPredictionSigma( mcmcProcessed, limits, nPoints, itersForPred, dG[[1]]$constants, ddG[[ii]][[1]]$sampleIntervalMean, c("len", "temp", "flow","cBKT", "cBNT", "cATS") )
+  pSigma <- getPredictionSigma( mcmcProcessed, limits, nPoints, itersForPred, dG[[1]]$constants, ddG[[ii]][[1]]$sampleIntervalMean, c("temp", "flow") )
   #pSigma$variable <- "sd"
   # combine predicted growth rates and sigma in predicted growth rates to get cv in predicted growth rates
-  pBoth <- left_join( p,pSigma, by = c('len',"cBKT", "cBNT", "cATS",'flow','temp','iter','isYOY','season','river')) %>%
+  pBoth <- left_join( p,pSigma, by = c('flow','temp','iter','isYOY','season','river')) %>%
     mutate(predCV = predGrSigma/predGr)
   #pBoth$variable <- "cv"
   pBoth$predCV <- ifelse(pBoth$predCV > 10, NA, pBoth$predCV) # to avoid very large CVs when gr is very small
@@ -326,25 +327,25 @@ iter=1
   #
   # graph function, in analyzeOutputFunctions.R
 
-  plotPred(p, "predGr", "len", 1, speciesGr)
-  plotPred(p, "predGr", "temp", 1, speciesGr)
-  plotPred(p, "predGr", "flow", 1, speciesGr)
-  plotPred(p, "predGr", "cBKT", 1, speciesGr)
-  plotPred(p, "predGr", "cBNT", 1, speciesGr)
-  plotPred(p, "predGr", "cATS", 1, speciesGr)
-  plotPred(p, "predGr", c("temp", "flow"), 1, speciesGr)
-  plotPred(p, "predGr", c("temp","cBKT"), 1, speciesGr)
-  plotPred(p, "predGr", c("flow","cBKT"), 1, speciesGr)
-  plotPred(p, "predGr", c("cBKT","cBNT"), 1, speciesGr)
-  plotPred(p, "predGr", c("flow","len"), 1, speciesGr)
+
+  plotPred(pBoth, "predGr", "temp", 1, speciesGr)
+  plotPred(pBoth, "predGr", "flow", 1, speciesGr)
+  plotPred(pBoth, "predGr", "cBKT", 1, speciesGr)
+  plotPred(pBoth, "predGr", "cBNT", 1, speciesGr)
+  plotPred(pBoth, "predGr", "cATS", 1, speciesGr)
+  plotPred(pBoth, "predGr", c("temp", "flow"), 1, speciesGr)
+  plotPred(pBoth, "predGr", c("temp","cBKT"), 1, speciesGr)
+  plotPred(pBoth, "predGr", c("flow","cBKT"), 1, speciesGr)
+  plotPred(pBoth, "predGr", c("cBKT","cBNT"), 1, speciesGr)
+
 
   #######################
   # graph function, in analyzeOutputFunctions.R
 
-  plotPred(pSigma, "predGrSigma", "len", 1, speciesGr) #shows means
-  plotPred(pSigma, "predGrSigma", "temp", 1, speciesGr)
-  plotPred(pSigma, "predGrSigma", "flow", 1, speciesGr)
-  plotPred(pSigma, "predGrSigma", c("temp", "flow"), 1, speciesGr)
+#  plotPred(pBoth, "predGrSigma", "len", 1, speciesGr) #shows means
+  plotPred(pBoth, "predGrSigma", "temp", 1, speciesGr)
+  plotPred(pBoth, "predGrSigma", "flow", 1, speciesGr)
+  plotPred(pBoth, "predGrSigma", c("temp", "flow"), 1, speciesGr)
 
   plotPred(pBoth, "predCV", "len", 1, speciesGr)
   plotPred(pBoth, "predCV", "temp", 1, speciesGr)

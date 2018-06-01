@@ -92,7 +92,7 @@ getPrediction <- function(d, limits = 2, nPoints = 5, itersForPred, constants, s
     cATSData <- 0
 
   predTemplate <- data.frame(
-                              len = lenData,
+                            #  len = lenData,
                              # count = countData,
                               flow =  flowData,
                               temp =  tempData,
@@ -116,15 +116,16 @@ getPrediction <- function(d, limits = 2, nPoints = 5, itersForPred, constants, s
   preds <- preds %>%
     mutate( predGr =
             ( int +
-              beta1 * len +
-              beta2 * cBKT +
-              beta3 * cBKT^2 +
-              beta4 * temp +
-              beta5 * flow +
-              beta6 * temp * flow +
 
-              beta7 * temp^2 +
-              beta8 * flow^2 +
+              beta3 * cBKT^2 +
+              beta1 * temp +
+              beta2 * flow +
+              beta3 * temp * flow +
+
+              beta4 * temp^2 +
+              beta5 * flow^2 +
+
+              beta6 * cBKT +
 
               betaBNT1 * cBNT +
               betaBNT2 * cBNT^2 +
@@ -134,7 +135,7 @@ getPrediction <- function(d, limits = 2, nPoints = 5, itersForPred, constants, s
 
             ) #* interval
     ) %>%
-    select( len,flow,temp,cBKT,cBNT,cATS,iter,isYOY,season,river,predGr )
+    dplyr::select( flow,temp,cBKT,cBNT,cATS,iter,isYOY,season,river,predGr )
 
   return(preds)
 }
@@ -233,13 +234,13 @@ getPredictionSigma <- function(d, limits = 2, nPoints = 5, itersForPred, constan
     cATSData <- 0
 
   predTemplate <- data.frame(
-    len = lenData,
+  #  len = lenData,
     # count = countData,
     flow =  flowData,
-    temp =  tempData,
-    cBKT =  cBKTData,
-    cBNT =  cBNTData,
-    cATS =  cATSData
+    temp =  tempData
+  #  cBKT =  cBKTData,
+  #  cBNT =  cBNTData,
+  #  cATS =  cATSData
   )
 
 
@@ -264,7 +265,7 @@ getPredictionSigma <- function(d, limits = 2, nPoints = 5, itersForPred, constan
 
               ) #* interval
     ) %>%
-    select( len,flow,temp,cBKT,cBNT,cATS,iter,isYOY,season,river,predGrSigma )
+    dplyr::select( flow,temp,iter,isYOY,season,river,predGrSigma )
 
   return(preds)
 
@@ -431,7 +432,7 @@ getPredictionSigma_Counts <- function(d, limits = 2, nPoints = 5, itersForPred, 
 #'
 
 plotPred <- function(p, depVar, varsToPlot, isYOYGG, speciesGG) {
-  all = c('len','temp','flow','cBKT','cBNT','cATS')
+  all = c('temp','flow','cBKT','cBNT','cATS')
 
   #print(c(depVar,(as.name(depVar))))
 
@@ -441,12 +442,14 @@ plotPred <- function(p, depVar, varsToPlot, isYOYGG, speciesGG) {
     notPlot[2] <- all[!(all %in% varsToPlot)][2]
     notPlot[3] <- all[!(all %in% varsToPlot)][3]
     notPlot[4] <- all[!(all %in% varsToPlot)][4]
-    notPlot[5] <- all[!(all %in% varsToPlot)][5]
+ #   notPlot[5] <- all[!(all %in% varsToPlot)][5]
 
  #   pGG <- p %>% filter(isYOY == isYOYGG, species == speciesGG, eval(as.name(notPlot[1])) == 0, eval(as.name(notPlot[2])) == 0, eval(as.name(notPlot[3])) == 0 ) %>%
 #                 distinct(eval(as.name(varsToPlot[1])), iter, isYOY, river, species, season, .keep_all = TRUE)
     pGG <- p %>% filter(isYOY == isYOYGG, eval(as.name(notPlot[1])) == 0, eval(as.name(notPlot[2])) == 0, eval(as.name(notPlot[3])) == 0,
-                                          eval(as.name(notPlot[4])) == 0, eval(as.name(notPlot[5])) == 0) %>%
+                                          eval(as.name(notPlot[4])) == 0
+                                        #, eval(as.name(notPlot[5])) == 0
+                        ) %>%
       distinct(eval(as.name(varsToPlot[1])), iter, isYOY, river, season, .keep_all = TRUE)
 
     ggOut <- ggplot( pGG, aes( eval(as.name(varsToPlot[1])), eval(as.name(depVar)), group = iter,color=(iter) ) ) +
@@ -465,13 +468,15 @@ plotPred <- function(p, depVar, varsToPlot, isYOYGG, speciesGG) {
     notPlot[1] <- all[!(all %in% varsToPlot)][1]
     notPlot[2] <- all[!(all %in% varsToPlot)][2]
     notPlot[3] <- all[!(all %in% varsToPlot)][3]
-    notPlot[4] <- all[!(all %in% varsToPlot)][4]
+  #  notPlot[4] <- all[!(all %in% varsToPlot)][4]
 
 #    pGG <- p %>% filter(isYOY == isYOYGG, species == speciesGG, eval(as.name(notPlot[1])) == 0, eval(as.name(notPlot[2])) == 0 ) %>%
 #      distinct(eval(as.name(varsToPlot[1])), eval(as.name(varsToPlot[2])), iter, isYOY, river, species, season, .keep_all = TRUE)
 
     pGG <- p %>% filter(isYOY == isYOYGG, eval(as.name(notPlot[1])) == 0, eval(as.name(notPlot[2])) == 0,
-                                          eval(as.name(notPlot[3])) == 0, eval(as.name(notPlot[4])) == 0) %>%
+                                          eval(as.name(notPlot[3])) == 0
+                        #, eval(as.name(notPlot[4])) == 0
+                        ) %>%
       distinct(eval(as.name(varsToPlot[1])), eval(as.name(varsToPlot[2])), iter, isYOY, river, season, .keep_all = TRUE)
 
     pGG$iterGroup <- paste0(pGG$iter,pGG[[varsToPlot[2]]])
@@ -560,6 +565,7 @@ plotPredMeans <- function(p, depVar, varsToPlot, isYOYGG) {
       #    scale_fill_continuous(name=varsToPlot[2]) +
       facet_grid(riverGG~seasonGG)
   }
+  print(ggOut)
   return(ggOut)
 }
 
