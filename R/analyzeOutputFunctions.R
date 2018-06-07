@@ -113,11 +113,11 @@ getPrediction <- function(d, limits = 2, nPoints = 5, itersForPred, constants, s
     preds <- cbind( predTemplateLong,grBetaLong )
 
   # This model structure needs to match that in grModelx.jags
-  preds <- preds %>%
+  if(speciesGr == 'ats'){
+    preds <- preds %>%
     mutate( predGr =
             ( int +
 
-              beta3 * cBKT^2 +
               beta1 * temp +
               beta2 * flow +
               beta3 * temp * flow +
@@ -128,15 +128,40 @@ getPrediction <- function(d, limits = 2, nPoints = 5, itersForPred, constants, s
               beta6 * cBKT +
 
               betaBNT1 * cBNT +
-              betaBNT2 * cBNT^2 +
-              betaBNT3 * cBNT * cBKT +
+           #   betaBNT2 * cBNT^2 +
+          #    betaBNT3 * cBNT * cBKT +
 
               betaATS1 * cATS
+           #   betaATS2 * cATS^2
 
             ) #* interval
     ) %>%
     dplyr::select( flow,temp,cBKT,cBNT,cATS,iter,isYOY,season,river,predGr )
 
+  } else {
+  preds <- preds %>%
+    mutate( predGr =
+              ( int +
+
+                  beta1 * temp +
+                  beta2 * flow +
+                  beta3 * temp * flow +
+
+                  beta4 * temp^2 +
+                  beta5 * flow^2 +
+
+                  beta6 * cBKT +
+
+                  betaBNT1 * cBNT +
+                  betaBNT2 * cBNT^2 +
+                  betaBNT3 * cBNT * cBKT +
+
+                  betaATS1 * cATS
+
+              ) #* interval
+    ) %>%
+    dplyr::select( flow,temp,cBKT,cBNT,cATS,iter,isYOY,season,river,predGr )
+  }
   return(preds)
 }
 
@@ -255,17 +280,32 @@ getPredictionSigma <- function(d, limits = 2, nPoints = 5, itersForPred, constan
   preds <- cbind( predTemplateLong,grBetaLong )
 
   # This model structure needs to match that in grModelx.jags
+  if(speciesGr == 'ats'){
   preds <- preds %>%
     mutate( predGrSigma =
-              exp( int +
+              exp( int
 
-                  beta1 * temp +
-                  beta2 * flow +
-                  beta3 * temp * flow
+                #  beta1 * temp
+                 ## beta2 * flow +
+                #  beta3 * temp * flow
 
               ) #* interval
     ) %>%
     dplyr::select( flow,temp,iter,isYOY,season,river,predGrSigma )
+
+  } else {
+  preds <- preds %>%
+    mutate( predGrSigma =
+              exp( int +
+
+                     beta1 * temp +
+                     beta2 * flow +
+                     beta3 * temp * flow
+
+              ) #* interval
+    ) %>%
+    dplyr::select( flow,temp,iter,isYOY,season,river,predGrSigma )
+  }
 
   return(preds)
 
@@ -505,7 +545,7 @@ plotPred <- function(p, depVar, varsToPlot, isYOYGG, speciesGG) {
 #'@export
 #'
 plotPredMeans <- function(p, depVar, varsToPlot, isYOYGG) {
-  all = c('len','temp','flow','cBKT','cBNT','cATS')
+  all = c('temp','flow','cBKT','cBNT','cATS')
 
   #print(c(depVar,(as.name(depVar))))
 
@@ -515,13 +555,13 @@ plotPredMeans <- function(p, depVar, varsToPlot, isYOYGG) {
     notPlot[2] <- all[!(all %in% varsToPlot)][2]
     notPlot[3] <- all[!(all %in% varsToPlot)][3]
     notPlot[4] <- all[!(all %in% varsToPlot)][4]
-    notPlot[5] <- all[!(all %in% varsToPlot)][5]
+
 
     #   pGG <- p %>% filter(isYOY == isYOYGG, species == speciesGG, eval(as.name(notPlot[1])) == 0, eval(as.name(notPlot[2])) == 0, eval(as.name(notPlot[3])) == 0 ) %>%
     #                 distinct(eval(as.name(varsToPlot[1])), iter, isYOY, river, species, season, .keep_all = TRUE)
     pGG <- p %>% filter(isYOY == isYOYGG, eval(as.name(notPlot[1])) == 0, eval(as.name(notPlot[2])) == 0, eval(as.name(notPlot[3])) == 0,
-                        eval(as.name(notPlot[4])) == 0, eval(as.name(notPlot[5])) == 0) %>%
-      distinct(eval(as.name(varsToPlot[1])), speciesGG, iter, isYOY, riverGG, seasonGG, .keep_all = TRUE)
+                        eval(as.name(notPlot[4])) == 0) %>%
+      distinct(eval(as.name(varsToPlot[1])), speciesGG, isYOY, riverGG, seasonGG, .keep_all = TRUE)
 
     ggOut <- ggplot( pGG, aes( eval(as.name(varsToPlot[1])), eval(as.name(depVar)), color=(speciesGG) ) ) +
       geom_line( size = 1.2 ) +
@@ -541,13 +581,13 @@ plotPredMeans <- function(p, depVar, varsToPlot, isYOYGG) {
     notPlot[1] <- all[!(all %in% varsToPlot)][1]
     notPlot[2] <- all[!(all %in% varsToPlot)][2]
     notPlot[3] <- all[!(all %in% varsToPlot)][3]
-    notPlot[4] <- all[!(all %in% varsToPlot)][4]
+
 
     #    pGG <- p %>% filter(isYOY == isYOYGG, species == speciesGG, eval(as.name(notPlot[1])) == 0, eval(as.name(notPlot[2])) == 0 ) %>%
     #      distinct(eval(as.name(varsToPlot[1])), eval(as.name(varsToPlot[2])), iter, isYOY, riverGG, species, season, .keep_all = TRUE)
 
     pGG <- p %>% filter(isYOY == isYOYGG, eval(as.name(notPlot[1])) == 0, eval(as.name(notPlot[2])) == 0,
-                        eval(as.name(notPlot[3])) == 0, eval(as.name(notPlot[4])) == 0) %>%
+                        eval(as.name(notPlot[3])) == 0) %>%
       distinct(eval(as.name(varsToPlot[1])), eval(as.name(varsToPlot[2])), speciesGG, isYOY, riverGG, seasonGG, .keep_all = TRUE)
 
     pGG$speciesGroup <- paste0(pGG$speciesGG,pGG[[varsToPlot[2]]])

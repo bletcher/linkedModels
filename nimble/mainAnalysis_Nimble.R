@@ -19,6 +19,7 @@ library(tidyverse)
 # selection criteria
 
 reconnect()
+
 # run to here to start so can reconnect
 
 drainage <- "west" # ==
@@ -26,7 +27,7 @@ drainage <- "west" # ==
 speciesDet <- c("bkt", "bnt","ats") #keep as all three spp
 speciesInDet <- factor(speciesDet, levels = c('bkt','bnt','ats'), ordered = T)
 
-speciesGr <- "bkt"
+speciesGr <- "bnt"
 #speciesGr = c("bkt", "bnt","ats")
 speciesInGr <- factor(speciesGr, levels = c('bkt','bnt','ats'), ordered = T)
 
@@ -223,8 +224,8 @@ iter=1
   # mcmc run data
   mcmcInfo <- list()
   mcmcInfo$nChains <- 3
-  mcmcInfo$nIter <- 10000
-  mcmcInfo$nBurnIn <- 9000
+  mcmcInfo$nIter <- 1000#25000
+  mcmcInfo$nBurnIn <- 750#24000
   mcmcInfo$thinRate <- 1 #fails with thinRate of 3 and 1000/750
   mcmcInfo$nSamples <- round( (mcmcInfo$nIter - mcmcInfo$nBurnIn) * mcmcInfo$nChains / mcmcInfo$thinRate )
 
@@ -239,7 +240,30 @@ iter=1
   source('./R/growthModelFunctions_Code.R')
   code <- codeSpp[[as.numeric(speciesInGr)]]
 
-  dG[[ii]] <- ddG[[ii]][[1]] %>% runGrowthModel_Nimble(mcmcInfo,code)
+  nB <- list()
+
+  if(speciesGr == 'bkt'){
+    nB$nBetas <-5
+    nB$nBetasBNT <- 3
+    nB$nBetasATS <- 1
+    nB$nBetasSigma <- 3
+  }
+
+  if(speciesGr == 'bnt'){
+    nB$nBetas <- 5
+    nB$nBetasBNT <- 2
+    nB$nBetasATS <- 1
+    nB$nBetasSigma <- 3
+  }
+
+  if(speciesGr == 'ats'){
+    nB$nBetas <- 4
+    nB$nBetasBNT <- 1
+    nB$nBetasATS <- 2
+    nB$nBetasSigma <- 1
+  }
+
+  dG[[ii]] <- ddG[[ii]][[1]] %>% runGrowthModel_Nimble(mcmcInfo,code,speciesGr,nB)
 
   #########################################
   # Nimble model run
@@ -313,7 +337,10 @@ iter=1
   p <- getPrediction( mcmcProcessed, limits, nPoints, itersForPred, dG[[1]]$constants, ddG[[ii]][[1]]$sampleIntervalMean, c("temp", "flow","cBKT", "cBNT", "cATS") )#######################
   #p$variable <- "mean"
   # predictions of sigma across the grid
+
+  #### need to comment out betas for ATS
   pSigma <- getPredictionSigma( mcmcProcessed, limits, nPoints, itersForPred, dG[[1]]$constants, ddG[[ii]][[1]]$sampleIntervalMean, c("temp", "flow") )
+
   #pSigma$variable <- "sd"
   # combine predicted growth rates and sigma in predicted growth rates to get cv in predicted growth rates
   pBoth <- left_join( p,pSigma, by = c('flow','temp','iter','isYOY','season','river')) %>%

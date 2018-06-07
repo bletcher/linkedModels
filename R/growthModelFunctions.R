@@ -5,13 +5,14 @@
 #'@return a data frame
 #'@export
 
-runGrowthModel_Nimble <- function(d,mcmcInfo,code){
+runGrowthModel_Nimble <- function(d,mcmcInfo,code,speciesGr,nB){
 
   ##
-  nBetas <- 6
-  nBetasSigma <- 3
-  nBetasBNT <- 3
-  nBetasATS <- 1
+
+  nBetas <- nB$nBetas
+  nBetasSigma <- nB$nBetasSigma
+  nBetasBNT <- nB$nBetasBNT
+  nBetasATS <- nB$nBetasATS
 
   constants <- list(riverDATA = d$riverDATA,
                     nRivers = d$nRivers,
