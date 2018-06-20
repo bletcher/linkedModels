@@ -113,7 +113,31 @@ getPrediction <- function(d, limits = 2, nPoints = 5, itersForPred, constants, s
     preds <- cbind( predTemplateLong,grBetaLong )
 
   # This model structure needs to match that in grModelx.jags
-  if(speciesGr == 'ats'){
+    if(speciesGr == 'bkt'){
+      preds <- preds %>%
+        mutate( predGr =
+                  ( int +
+
+                      beta1 * temp +
+                      beta2 * flow +
+                      beta3 * temp * flow +
+
+                      beta4 * cBKT +
+                      beta5 * cBKT^2 +
+
+                      betaBNT1 * cBNT +
+                      betaBNT2 * cBNT^2 +
+                      betaBNT3 * cBNT * cBKT +
+
+                      betaATS1 * cATS
+
+                  ) #* interval
+        ) %>%
+        dplyr::select( flow,temp,cBKT,cBNT,cATS,iter,isYOY,season,river,predGr )
+    }
+
+
+  if(speciesGr == 'bnt'){
     preds <- preds %>%
     mutate( predGr =
             ( int +
@@ -122,46 +146,44 @@ getPrediction <- function(d, limits = 2, nPoints = 5, itersForPred, constants, s
               beta2 * flow +
               beta3 * temp * flow +
 
-              beta4 * temp^2 +
-              beta5 * flow^2 +
-
-              beta6 * cBKT +
+              beta4 * cBKT +
+              beta5 * cBKT^2 +
 
               betaBNT1 * cBNT +
-           #   betaBNT2 * cBNT^2 +
+              betaBNT2 * cBNT^2 +
           #    betaBNT3 * cBNT * cBKT +
 
               betaATS1 * cATS
-           #   betaATS2 * cATS^2
+          #    betaATS2 * cATS^2
 
             ) #* interval
     ) %>%
     dplyr::select( flow,temp,cBKT,cBNT,cATS,iter,isYOY,season,river,predGr )
 
-  } else {
-  preds <- preds %>%
-    mutate( predGr =
-              ( int +
-
-                  beta1 * temp +
-                  beta2 * flow +
-                  beta3 * temp * flow +
-
-                  beta4 * temp^2 +
-                  beta5 * flow^2 +
-
-                  beta6 * cBKT +
-
-                  betaBNT1 * cBNT +
-                  betaBNT2 * cBNT^2 +
-                  betaBNT3 * cBNT * cBKT +
-
-                  betaATS1 * cATS
-
-              ) #* interval
-    ) %>%
-    dplyr::select( flow,temp,cBKT,cBNT,cATS,iter,isYOY,season,river,predGr )
   }
+
+    if(speciesGr == 'ats'){
+      preds <- preds %>%
+        mutate( predGr =
+                  ( int +
+
+                      beta1 * temp +
+                      beta2 * flow +
+                      beta3 * temp * flow +
+
+                      beta4 * cBKT +
+
+                      betaBNT1 * cBNT +
+
+                      betaATS1 * cATS +
+                      betaATS2 * cATS^2
+
+                  ) #* interval
+        ) %>%
+        dplyr::select( flow,temp,cBKT,cBNT,cATS,iter,isYOY,season,river,predGr )
+
+    }
+
   return(preds)
 }
 

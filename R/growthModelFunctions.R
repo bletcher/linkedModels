@@ -57,7 +57,7 @@ runGrowthModel_Nimble <- function(d,mcmcInfo,code,speciesGr,nB){
                 sigmaBeta = array(rnorm(nBetasSigma * 2 * constants$nSeasons * constants$nRivers, 0, 0.05), c(nBetasSigma, 2, constants$nSeasons, constants$nRivers)),
                 #grATSOffset = array(rnorm( 2 * constants$nSeasons, 0, 0.1), c(2,constants$nSeasons) ),
                 grIndRE = rnorm(constants$nInd, 0, 0.1),
-                sigmaIndRE = 1,
+                sigmaIndRE = 0.1,
                 grIntMu = rep(0, constants$nSeasons),
                 grIntSigma = rep(1, constants$nSeasons),
                 grBetaMu = array(0, c(nBetas, constants$nSeasons)),
@@ -93,12 +93,22 @@ runGrowthModel_Nimble <- function(d,mcmcInfo,code,speciesGr,nB){
                 # sigmaBetaBNTSigma = array(1, c(nBetasBNT, constants$nSeasons))
   )
   ##
-  params <- c('grInt', 'grIntMu', 'grIntSigma', 'grBeta', 'grBetaMu',
-              'grBetaSigma', 'sigmaInt', 'sigmaIntMu', 'sigmaIntSigma',
-              'sigmaBeta', 'sigmaBetaMu', 'sigmaBetaSigma', 'grIndRE', 'sigmaIndRE',
+  params <- c('grInt',
+              'grIntMu',
+              'grIntSigma',
+              'grBeta', 'grBetaMu',
+              'grBetaSigma',
+              'sigmaInt',
+              'sigmaIntMu',
+             'sigmaIntSigma',
+              'sigmaBeta', 'sigmaBetaMu',
+              'sigmaBetaSigma',
+              'grIndRE',
+              'sigmaIndRE',
               'lengthExp',
               'grBetaATS','grBetaATSMu','grBetaATSSigma',
-              'grBetaBNT','grBetaBNTMu','grBetaBNTSigma')
+              'grBetaBNT','grBetaBNTMu','grBetaBNTSigma'
+             )
 
   return(list(code=code,data=data,constants=constants,inits=inits,params=params))
 }

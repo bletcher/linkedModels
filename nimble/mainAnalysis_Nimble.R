@@ -27,7 +27,7 @@ drainage <- "west" # ==
 speciesDet <- c("bkt", "bnt","ats") #keep as all three spp
 speciesInDet <- factor(speciesDet, levels = c('bkt','bnt','ats'), ordered = T)
 
-speciesGr <- "bnt"
+speciesGr <- "bkt"
 #speciesGr = c("bkt", "bnt","ats")
 speciesInGr <- factor(speciesGr, levels = c('bkt','bnt','ats'), ordered = T)
 
@@ -224,26 +224,27 @@ iter=1
   # mcmc run data
   mcmcInfo <- list()
   mcmcInfo$nChains <- 3
-  mcmcInfo$nIter <- 1000#25000
-  mcmcInfo$nBurnIn <- 750#24000
+  mcmcInfo$nIter <- 2000 #25000
+  mcmcInfo$nBurnIn <- 1750 #24000
   mcmcInfo$thinRate <- 1 #fails with thinRate of 3 and 1000/750
   mcmcInfo$nSamples <- round( (mcmcInfo$nIter - mcmcInfo$nBurnIn) * mcmcInfo$nChains / mcmcInfo$thinRate )
 
+
+
+
+  #########################################
+  # Get data for model run
+  source('./R/growthModelFunctions_Code.R') #################################################
+  code <- codeSpp[[as.numeric(speciesInGr)]]
 
   #####
   start <- Sys.time()
   print(start)
   print(c("in loop",meanOrIter,ii,iter))
-
-  #########################################
-  # Get data for model run
-  source('./R/growthModelFunctions_Code.R')
-  code <- codeSpp[[as.numeric(speciesInGr)]]
-
   nB <- list()
 
   if(speciesGr == 'bkt'){
-    nB$nBetas <-5
+    nB$nBetas <- 4
     nB$nBetasBNT <- 3
     nB$nBetasATS <- 1
     nB$nBetasSigma <- 3
@@ -301,18 +302,41 @@ iter=1
   obsPred$rmse
   #obsPred$outliers%>% as.data.frame()
 
+  #hist(mcmcProcessed$mean$grIndRE,breaks=1000)
+  mcmcProcessed$mean$sigmaIndRE
+
+  mcmcProcessed$Rhat$grIntMu
+  mcmcProcessed$Rhat$grIntSigma
+  mcmcProcessed$Rhat$grInt
+
+  mcmcProcessed$Rhat$grBetaMu
+  mcmcProcessed$Rhat$grBetaSigma
+  mcmcProcessed$Rhat$grBeta
+##
+  mcmcProcessed$Rhat$sigmaIntMu
+  mcmcProcessed$Rhat$sigmaIntSigma
+  mcmcProcessed$Rhat$sigmaInt
+
+  mcmcProcessed$Rhat$sigmaBetaMu
+  mcmcProcessed$Rhat$sigmaBetaSigma
+  mcmcProcessed$Rhat$sigmaBeta
+##
+  mcmcProcessed$Rhat$sigmaIndRE
+  plot(mcmcProcessed$sims.list$sigmaIndRE)
+
   #########################################
   # save data to file
-  save(mcmcInfo,mcmcProcessed,dG,ddG, file = paste0('./data/out/dG_', as.integer(Sys.time()),'_', modelName, '_Nimble.RData'))
+  save(mcmcInfo,mcmcProcessed,dG,ddG,nB, file = paste0('./data/out/dG_', as.integer(Sys.time()),'_', modelName, '_Nimble.RData'))
 
   ######################
   # Plot traces
 
   source("./R/plotFunctions.R") #will put into functions later
   plotInt_Nimble(mcmcProcessed)
-  plotBetas_Nimble(mcmcProcessed,1:2)
-  plotBetas_Nimble(mcmcProcessed,3:4)
-  plotBetas_Nimble(mcmcProcessed,5:6)
+
+  plotBetas_Nimble(mcmcProcessed,1:3)
+  plotBetas_Nimble(mcmcProcessed,4:5)
+  plotBetas_Nimble(mcmcProcessed,5:5)
 
   plotBetasBNT_Nimble(mcmcProcessed,1:3)
   plotBetasATS_Nimble(mcmcProcessed,1)

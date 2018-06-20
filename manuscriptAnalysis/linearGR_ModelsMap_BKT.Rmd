@@ -453,40 +453,120 @@ mod[[23]] <- function(df) {
 22  o$model4[[1]] 226 -23856.48  o$model3[[2]]   87 -11011.79  o$model1[[3]]   31 -26673.04
 23  o$model3[[1]] 195 -23825.07  o$model4[[2]]  101 -10916.61  o$model2[[3]]   32 -26662.86
 
+```{r}
+# add squared terms back in to good model for ats? NO
 
+mod[[24]] <- function(df) {
+    print(c('mod = 24' ))
+  lmer( grLength ~ isYOY * river * season * tempStd * flowStd  +
+                   isYOY * river * season * cBKTStd +
+                   isYOY * river * season * cBNTStd +
+                   isYOY *         season * cATSStd +
+                   isYOY * river * season * cATSStd2 +
+                   isYOY * river * season * tempStd2 +
+
+                   (1|ind) + (1|season), data = df ) }
+
+mod[[25]] <- function(df) {
+    print(c('mod = 25' ))
+  lmer( grLength ~ isYOY * river * season * tempStd * flowStd  +
+                   isYOY * river * season * cBKTStd +
+                   isYOY * river * season * cBNTStd +
+                   isYOY *         season * cATSStd +
+                   isYOY * river * season * cATSStd2 +
+
+                   isYOY * river * season * flowStd2 +
+                   (1|ind) + (1|season), data = df ) }
+
+mod[[26]] <- function(df) {
+    print(c('mod = 26' ))
+  lmer( grLength ~ isYOY * river * season * tempStd * flowStd  +
+                   isYOY * river * season * cBKTStd +
+                   isYOY * river * season * cBNTStd +
+                   isYOY *         season * cATSStd +
+                   isYOY * river * season * cATSStd2 +
+                   isYOY * river * season * tempStd2 +
+                   isYOY * river * season * flowStd2 +
+                   (1|ind) + (1|season), data = df ) }
+```
+
+          rowname  df       AIC      rowname.1 df.1     AIC.1      rowname.2 df.2     AIC.2
+1  o$model17[[1]] 272 -24796.58 o$model18[[2]]  122 -11217.98 o$model11[[3]]   80 -29379.29
+2  o$model18[[1]] 241 -24795.12 o$model16[[2]]  122 -11211.56 o$model15[[3]]   59 -28755.46
+3  o$model16[[1]] 249 -24778.30 o$model17[[2]]  136 -11207.54 o$model24[[3]]   66 -28732.88
+4  o$model14[[1]] 218 -24767.67 o$model12[[2]]   80 -11203.21 o$model26[[3]]   73 -28728.16
+5  o$model19[[1]] 249 -24730.67 o$model22[[2]]  136 -11193.90 o$model25[[3]]   66 -28722.50
+6  o$model20[[1]] 218 -24727.16 o$model20[[2]]  108 -11169.43 o$model22[[3]]   73 -28459.70
+7  o$model21[[1]] 272 -24699.83 o$model13[[2]]  108 -11167.05 o$model23[[3]]   80 -28405.91
+8  o$model13[[1]] 226 -24689.16  o$model8[[2]]   66 -11166.73 o$model16[[3]]   66 -28318.31
+9  o$model10[[1]] 195 -24650.05 o$model21[[2]]  136 -11152.36 o$model17[[3]]   73 -28313.67
+10 o$model22[[1]] 272 -24608.90 o$model19[[2]]  122 -11146.57 o$model14[[3]]   59 -28310.73
+11 o$model15[[1]] 210 -24589.74 o$model14[[2]]  108 -11140.80 o$model13[[3]]   59 -28306.10
+12 o$model23[[1]] 303 -24567.09 o$model23[[2]]  149 -11139.31 o$model19[[3]]   66 -28282.69
+13 o$model25[[1]] 241 -24463.80  o$model7[[2]]   66 -11129.29 o$model18[[3]]   66 -28267.13
+14 o$model24[[1]] 241 -24462.46 o$model10[[2]]   94 -11119.43 o$model21[[3]]   73 -28244.31
+15 o$model26[[1]] 272 -24413.64  o$model9[[2]]   66 -11108.18 o$model10[[3]]   52 -28077.66
+16  o$model7[[1]] 139 -24336.63  o$model1[[2]]   59 -11091.02 o$model20[[3]]   59 -28017.53
+17 o$model12[[1]] 155 -24316.48  o$model6[[2]]   73 -11085.12 o$model12[[3]]   52 -27717.41
+18 o$model11[[1]] 187 -24259.03  o$model2[[2]]   60 -11074.95  o$model7[[3]]   38 -27339.65
+19  o$model1[[1]] 131 -24064.23 o$model11[[2]]  108 -11049.99  o$model3[[3]]   45 -27221.73
+20  o$model2[[1]] 132 -24049.02  o$model5[[2]]   73 -11045.37  o$model4[[3]]   52 -27214.79
+21  o$model8[[1]] 139 -24045.93 o$model25[[2]]  122 -11045.32  o$model6[[3]]   38 -26849.65
+22  o$model9[[1]] 139 -24007.57 o$model15[[2]]  108 -11030.68  o$model8[[3]]   38 -26845.97
+23  o$model5[[1]] 163 -23950.60  o$model3[[2]]   87 -11011.79  o$model5[[3]]   38 -26825.20
+24  o$model6[[1]] 163 -23862.94 o$model26[[2]]  136 -10980.93  o$model9[[3]]   38 -26695.14
+25  o$model4[[1]] 226 -23856.48 o$model24[[2]]  122 -10963.97  o$model1[[3]]   31 -26673.04
+26  o$model3[[1]] 195 -23825.07  o$model4[[2]]  101 -10916.61  o$model2[[3]]   32 -26662.86
 
 
 ```{r}
 
 
 bySpecies <- bySpecies %>%
-     #  mutate( model1 =  map(data, mod[[1]]) ) %>%
-     #  mutate( model2 =  map(data, mod[[2]]) ) %>%
-     #  mutate( model3 =  map(data, mod[[3]]) ) %>%
-     #  mutate( model4 =  map(data, mod[[4]]) ) %>%
-     #  mutate( model5 =  map(data, mod[[5]]) ) %>%
-     #  mutate( model6 =  map(data, mod[[6]]) ) %>%
-     #  mutate( model7 =  map(data, mod[[7]]) ) %>%
-     # mutate( model8 =  map(data, mod[[8]]) ) %>%
-     # mutate( model9 =  map(data, mod[[9]]) ) %>%
-     # mutate( model10 = map(data, mod[[10]]) ) %>%
-     # mutate( model11 = map(data, mod[[11]]) ) %>%
-     # mutate( model12 = map(data, mod[[12]]) ) %>%
-     # mutate( model13 = map(data, mod[[13]]) ) %>%
-     #  mutate( model14 = map(data, mod[[14]]) ) %>%
-     #  mutate( model15 = map(data, mod[[15]]) ) %>%
-     #  mutate( model16 = map(data, mod[[16]]) ) %>%
-     #  mutate( model17 = map(data, mod[[17]]) ) %>%
-     #  mutate( model18 = map(data, mod[[18]]) ) %>%
-     # mutate( model19 = map(data, mod[[19]]) ) %>%
-     #  mutate( model20 = map(data, mod[[20]]) )# %>%
-      mutate( model21 = map(data, mod[[21]])) %>%
-      mutate( model22 = map(data, mod[[22]])) #%>%
-    #  mutate( model23 = map(data, mod[[23]]))
+       mutate( model1 =  map(data, mod[[1]]) ) %>%
+       mutate( model2 =  map(data, mod[[2]]) ) %>%
+       mutate( model3 =  map(data, mod[[3]]) ) %>%
+       mutate( model4 =  map(data, mod[[4]]) ) %>%
+       mutate( model5 =  map(data, mod[[5]]) ) %>%
+       mutate( model6 =  map(data, mod[[6]]) ) %>%
+       mutate( model7 =  map(data, mod[[7]]) ) %>%
+       mutate( model8 =  map(data, mod[[8]]) ) %>%
+       mutate( model9 =  map(data, mod[[9]]) ) %>%
+       mutate( model10 = map(data, mod[[10]]) ) %>%
+       mutate( model11 = map(data, mod[[11]]) ) %>%
+       mutate( model12 = map(data, mod[[12]]) ) %>%
+       mutate( model13 = map(data, mod[[13]]) ) %>%
+       mutate( model14 = map(data, mod[[14]]) ) %>%
+       mutate( model15 = map(data, mod[[15]]) ) %>%
+       mutate( model16 = map(data, mod[[16]]) ) %>%
+       mutate( model17 = map(data, mod[[17]]) ) %>%
+       mutate( model18 = map(data, mod[[18]]) ) %>%
+       mutate( model19 = map(data, mod[[19]]) ) %>%
+       mutate( model20 = map(data, mod[[20]]) ) %>%
+       mutate( model21 = map(data, mod[[21]]) ) %>%
+       mutate( model22 = map(data, mod[[22]]) ) %>%
+       mutate( model23 = map(data, mod[[23]]) ) %>%
+       mutate( model24 = map(data, mod[[24]]) ) %>%
+       mutate( model25 = map(data, mod[[25]]) ) %>%
+       mutate( model26 = map(data, mod[[26]]) )
 ```               
          
+> bySpecies$model18[[1]]
+Linear mixed model fit by REML ['lmerMod']
+Formula: grLength ~ isYOY * river * season * tempStd * flowStd + isYOY *  
+    river * season * cBKTStd + isYOY * river * season * cBNTStd +      isYOY * season * cATSStd + isYOY * river * season * cBNTStd2 +  
+    isYOY * river * season * cBNTStd * cBKTStd + (1 | ind) +      (1 | season)
+   Data: df
+REML criterion at convergence: -25277.12
+Random effects:
+ Groups   Name        Std.Dev.
+ ind      (Intercept) 0.02184 
+ season   (Intercept) 0.04763 
+ Residual             0.06008 
+Number of obs: 9967, groups:  ind, 5731; season, 4
+         
 ```{r}
-#2 or 5 fish have lengthByYear = NA whcih gives warining of diff # of observations when include mod with lengthByYear
+#2 or 5 fish have lengthByYear = NA whcih gives warning of diff # of observations when include mod with lengthByYear
 
 o <- bySpecies
 b <- AIC(o$model1[[1]],
@@ -511,7 +591,10 @@ b <- AIC(o$model1[[1]],
            o$model20[[1]],
            o$model21[[1]],
            o$model22[[1]],
-          o$model23[[1]]
+          o$model23[[1]],
+           o$model24[[1]],
+           o$model25[[1]],
+          o$model26[[1]]
          ) %>% rownames_to_column() %>% arrange(AIC) #bkt
 n <- AIC(o$model1[[2]],
          o$model2[[2]],
@@ -535,7 +618,10 @@ n <- AIC(o$model1[[2]],
            o$model20[[2]],
            o$model21[[2]],
            o$model22[[2]],
-           o$model23[[2]]
+           o$model23[[2]],
+           o$model24[[2]],
+           o$model25[[2]],
+          o$model26[[2]]
          ) %>% rownames_to_column() %>% arrange(AIC)#bnt
 a <- AIC(o$model1[[3]],
          o$model2[[3]],
@@ -559,10 +645,89 @@ a <- AIC(o$model1[[3]],
            o$model20[[3]],
            o$model21[[3]],
            o$model22[[3]],
-          o$model23[[3]]
+          o$model23[[3]],
+           o$model24[[3]],
+           o$model25[[3]],
+           o$model26[[3]]
           ) %>% rownames_to_column() %>% arrange(AIC)#ats
 
 (all <- data.frame(b,n,a))
+
+```
+
+#mod18
+  lmer( grLength ~ isYOY * river * season * tempStd * flowStd  +
+                   isYOY * river * season * cBKTStd +
+                   isYOY * river * season * cBNTStd +
+                   isYOY *         season * cATSStd +
+                   isYOY * river * season * cBKTStd2 +
+                   isYOY * river * season * cBNTStd2 +
+                   isYOY * river * season * cBNTStd * cBKTStd +
+                   (1|ind) + (1|season), data = df ) }
+
+```{r predict}
+
+x <- seq(-1.5,1.5, by = 0.5)
+
+xGrid <- expand.grid( isYOY=unique(d$isYOY), river=unique(d$river), season=unique(d$season), 
+                      tempStd=x, flowStd=x, cBKTStd=x, cBNTStd=x, cATSStd=x,
+                      ind=1867) %>%
+                    mutate(cBKTStd2=cBKTStd^2, cBNTStd2=cBNTStd^2)
+
+p <- predict( bySpecies$model18[[1]], xGrid )
+xGridP <- cbind(xGrid,p)
+
+tmp <- 
+xGridP %>%
+  group_by(isYOY,river,season) %>%
+  summarize( meanP = round(mean(p),2) )
+
+ 
+d %>%
+  group_by(isYOY,river,season) %>%
+#  summarize( meanP = round(mean(grLength, na.rm=T),2) )
+  summarize( meanP = round(mean(flowStd, na.rm=T),2) ) %>%
+  data.frame()
+
+varsToPlot='flowStd'
+isYOYGG=2
+speciesGG='bkt'
+
+#plotPredGrid <- function(xGridP, depVar, varsToPlot, isYOYGG, speciesGG) {
+  all = c('tempStd','flowStd','cBKTStd','cBNTStd','cATSStd')
+
+  #print(c(depVar,(as.name(depVar))))
+
+ # if(length(varsToPlot) == 1) {
+    notPlot <- NA
+    notPlot[1] <- all[!(all %in% varsToPlot)][1]
+    notPlot[2] <- all[!(all %in% varsToPlot)][2]
+    notPlot[3] <- all[!(all %in% varsToPlot)][3]
+    notPlot[4] <- all[!(all %in% varsToPlot)][4]
+ #   notPlot[5] <- all[!(all %in% varsToPlot)][5]
+
+ #   pGG <- p %>% filter(isYOY == isYOYGG, species == speciesGG, eval(as.name(notPlot[1])) == 0, eval(as.name(notPlot[2])) == 0, eval(as.name(notPlot[3])) == 0 ) %>%
+#                 distinct(eval(as.name(varsToPlot[1])), iter, isYOY, river, species, season, .keep_all = TRUE)
+    pGG <- xGridP %>% filter(isYOY == isYOYGG, eval(as.name(notPlot[1])) == 0, eval(as.name(notPlot[2])) == 0, eval(as.name(notPlot[3])) == 0,
+                                          eval(as.name(notPlot[4])) == 0
+                                        #, eval(as.name(notPlot[5])) == 0
+                        ) %>%
+      distinct(eval(as.name(varsToPlot[1])), isYOY, river, season, .keep_all = TRUE)
+
+    ggOut <- 
+      ggplot( pGG, aes( eval(as.name(varsToPlot[1])), p ) ) +
+      geom_line( alpha=0.25 ) +
+      theme_bw() +
+      theme(panel.grid.minor = element_blank(), panel.grid.major = element_blank()) +
+      ggtitle(paste0('isYOY = ',isYOYGG,', species = ',speciesGG)) +
+      geom_hline(yintercept = 0) +
+    #  ylim(-0.25,1.33) +
+      scale_x_continuous(varsToPlot[1]) +
+      facet_grid(river~season)
+ggOut  
+
+
+
 
 ```
 

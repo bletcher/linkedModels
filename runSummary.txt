@@ -119,3 +119,61 @@ sigmaInt + linear sigmaBetas + count*temp + count*flow, not work, does work with
 ggplot(d2, aes(flow,temp)) + geom_point() + facet_grid(~season)
 SO, flow interactions do not work for sigmaBeta with bnt. Not sure why not
 Also, seem to need length^2 to avoid indRE errors for large fish
+
+#################################
+Coming back to this doc after adding in 3 species counts
+Models don't converge well for some params
+Now using Rhat to assess convergence of all variables
+
+BKT:
+Seem to have problems with sigmaBetas
+season 4 has high Rhat with hierarch structure on sigmaInt (dnorm( sigmaIntMu[ s ], sd = sigmaIntSigma[ s ] ) ). Try no hier.
+
+Went back to grInt and sigmaInt only models
+ -get some high Rhats for sigmaInt in winter
+ -take out indRE and get good mixing for both ints, but higher rmse (3.97 vs. 3.62)
+ - try including indRE with sd=1 instead of estimating sigmaIndRE - get reasonable estimates (rmse=2.9) but poor mixing (actually the chains are very close to each other they are just mostly flat)
+
+Taking out indRE and building up
+1) nBetas=3, nSigmaBetas=3, mix= , rmse=3.36
+  grIntSigma[ s ] and grBetaSigma[ s ] have high rHats
+
+2) nBetas=3, nSigmaBetas=3, grIntSigma[ s ] and grBetaSigma[ s ] set to 1, mix= problems with sigmaInt, rmse= 3.36
+
+3) nBetas=3, nSigmaBetas=3, grIntSigma[ s ] and grBetaSigma[ s ] sigmaIntSigma, sigmaBetaSigma set to 1, mix= problems with sigmaInt, rmse= 3.37
+
+3) nBetas=3, nSigmaBetas=3, take out hier structure for ints and betas, mix=good a couple of high rHats here and there , rmse= 3.37
+
+4) add indRE back in. rmse=2.4, but rHats are high for grInt and sigmaInt (even though the traces look good)
+  4a) try small sd (0.01) for sigmaIndRE, rmse=2.4, but high rHats and -1,1 grIndRE values (too big)
+  4b) try small truncated (-0.05,0.05), sd (0.01), rmse = 3.34, good mixing, good rHats. Truncating is KEY. Otherwise get quite large values for grInRE which mess up estimates - makes sense that we would have biggest estimation problems in winter when gr is smallest so ratio grIndRE/grInt is big.
+  4c) try small truncated (-0.05,0.05), sd (0.022) from lmer, rmse = 3.15, good mixing
+  4d) try small truncated (-0.05,0.05), sd (estimated, unif[.12,.32]), rmse = 2.87, good mixing, sigmaInRE=0.123
+  4e) try small truncated (-0.05,0.05), sd (estimated, unif[0,0.5]), rmse = 3.19, good mixing, sigmaInRE=0.013
+
+  changed init for sigmaIndRE from 1 to 0.1
+  4e) try small truncated (-0.05,0.05), sd (estimated, unif[0,0.5]), rmse = 3.19, good mixing, sigmaInRE=0.013
+
+  to avoid small init value error
+  4f) try small truncated (-0.05,0.05), sd (estimated, unif[0.01,0.5]), rmse = 3.2, good mixing, sigmaInRE=0.013
+
+5) Add hier structure back to sigmaInt (least good rhats in model 4f)
+small truncated (-0.05,0.05), sd (estimated, unif[0.01,0.5]), rmse = 3.2, good mixing, sigmaInRE=0.013, looks fine
+
+6) Add hier structure back to betaInt
+small truncated (-0.05,0.05), sd (estimated, unif[0.01,0.5]), rmse = 3.2, good mixing, sigmaInRE=0.014, looks fine
+
+7) Add hier structure back to sigmaBeta
+small truncated (-0.05,0.05), sd (estimated, unif[0.01,0.5]), rmse = 3.2, good mixing, sigmaInRE=0.013, looks fine
+
+8) Add hier structure back to grBeta
+small truncated (-0.05,0.05), sd (estimated, unif[0.01,0.5]), rmse = 3.2, good mixing, sigmaInRE=0.014, looks fine
+
+9) Add bkt to grBeta
+small truncated (-0.05,0.05), sd (estimated, unif[0.01,0.5]), rmse = 3.00, good mixing, sigmaInRE=0.014, looks fine
+
+10) Add bkt and bkt2 to grBeta
+small truncated (-0.05,0.05), sd (estimated, unif[0.01,0.5]), rmse = 3.04, good mixing, sigmaInRE=0.014, looks fine, except bkt and bkt2 have some mixing issues for some season/river combos - DONT use bkt2
+
+11) Add bkt and bnt bnt2 bnt*bkt to grBeta
+small truncated (-0.05,0.05), sd (estimated, unif[0.01,0.5]), rmse = , good mixing, sigmaInRE=, looks fine

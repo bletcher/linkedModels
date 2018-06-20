@@ -10,7 +10,7 @@ plotInt_Nimble <- function(d){
   ggGrInt$iter <- 1:as.numeric(mcmcInfo$nSamples/mcmcInfo$nChains)
 
   gg <- ggplot(filter(ggGrInt), aes(iter,est)) + geom_point( aes(color=factor(chain)), size = 0.1 ) +
-    ylim(-.5,.5) +
+#    ylim(-.5,.5) +
     #   facet_grid(d2+d4~d5+d3)
     facet_grid(yoy + river ~ season )
   print(gg)
@@ -83,7 +83,9 @@ plotSigmaInt_Nimble <- function(d){
   ggSigmaInt$chain <- rep(1:mcmcInfo$nChains, each = mcmcInfo$nSamples/mcmcInfo$nChains)
   ggSigmaInt$iter <- 1:as.numeric(mcmcInfo$nSamples/mcmcInfo$nChains)
 
-  gg <- ggplot(filter(ggSigmaInt), aes(iter,est)) + geom_point( aes(color=factor(chain)), size = 0.1 ) + ylim(-5,5) + facet_grid(d2+d4~d3)
+  gg <- ggplot(filter(ggSigmaInt), aes(iter,est)) + geom_point( aes(color=factor(chain)), size = 0.1 ) +
+#    ylim(-4,-2.25) +
+    facet_grid(d2+d4~d3)
   print(gg)
 }
 
