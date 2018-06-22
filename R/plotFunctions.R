@@ -6,11 +6,11 @@ plotInt_Nimble <- function(d){
     #  rename(yoy=d2,species=d3,season=d4,river=d5)
     rename(yoy=d2,season=d3,river=d4)
 
-  ggGrInt$chain <- rep(1:mcmcInfo$nChains, each = mcmcInfo$nSamples/mcmcInfo$nChains)
-  ggGrInt$iter <- 1:as.numeric(mcmcInfo$nSamples/mcmcInfo$nChains)
+  ggGrInt$chain <- rep(1:mcmcInfo$nChains, each = mcmcInfo$nSamples)
+  ggGrInt$iter <- 1:as.numeric(mcmcInfo$nSamples)#/mcmcInfo$nChains)
 
   gg <- ggplot(filter(ggGrInt), aes(iter,est)) + geom_point( aes(color=factor(chain)), size = 0.1 ) +
-#    ylim(-.5,.5) +
+    ylim(-.5,.5) +
     #   facet_grid(d2+d4~d5+d3)
     facet_grid(yoy + river ~ season )
   print(gg)
@@ -21,8 +21,8 @@ plotInt_Nimble <- function(d){
 plotBetas_Nimble <- function(d,b){
   ggGrBeta <- array2df(d$sims.list$grBeta, label.x = "est")
 
-  ggGrBeta$chain <- rep(1:mcmcInfo$nChains, each = mcmcInfo$nSamples/mcmcInfo$nChains)
-  ggGrBeta$iter <- 1:as.numeric(mcmcInfo$nSamples/mcmcInfo$nChains)
+  ggGrBeta$chain <- rep(1:mcmcInfo$nChains, each = mcmcInfo$nSamples)#/mcmcInfo$nChains)
+  ggGrBeta$iter <- 1:as.numeric(mcmcInfo$nSamples)#/mcmcInfo$nChains)
 
   gg <- list()
   numBetas <- 18
@@ -40,8 +40,8 @@ plotBetas_Nimble <- function(d,b){
 plotBetasBNT_Nimble <- function(d,b){
   ggGrBeta <- array2df(d$sims.list$grBetaBNT, label.x = "est")
 
-  ggGrBeta$chain <- rep(1:mcmcInfo$nChains, each = mcmcInfo$nSamples/mcmcInfo$nChains)
-  ggGrBeta$iter <- 1:as.numeric(mcmcInfo$nSamples/mcmcInfo$nChains)
+  ggGrBeta$chain <- rep(1:mcmcInfo$nChains, each = mcmcInfo$nSamples)#/mcmcInfo$nChains)
+  ggGrBeta$iter <- 1:as.numeric(mcmcInfo$nSamples)#/mcmcInfo$nChains)
 
   gg <- list()
   numBetas <- 8
@@ -59,8 +59,8 @@ plotBetasBNT_Nimble <- function(d,b){
 plotBetasATS_Nimble <- function(d,b){
   ggGrBeta <- array2df(d$sims.list$grBetaATS, label.x = "est")
 
-  ggGrBeta$chain <- rep(1:mcmcInfo$nChains, each = mcmcInfo$nSamples/mcmcInfo$nChains)
-  ggGrBeta$iter <- 1:as.numeric(mcmcInfo$nSamples/mcmcInfo$nChains)
+  ggGrBeta$chain <- rep(1:mcmcInfo$nChains, each = mcmcInfo$nSamples)#/mcmcInfo$nChains)
+  ggGrBeta$iter <- 1:as.numeric(mcmcInfo$nSamples)#/mcmcInfo$nChains)
 
   gg <- list()
   numBetas <- 8
@@ -80,11 +80,11 @@ plotBetasATS_Nimble <- function(d,b){
 plotSigmaInt_Nimble <- function(d){
   ggSigmaInt <- array2df(d$sims.list$sigmaInt, label.x = "est")
 
-  ggSigmaInt$chain <- rep(1:mcmcInfo$nChains, each = mcmcInfo$nSamples/mcmcInfo$nChains)
-  ggSigmaInt$iter <- 1:as.numeric(mcmcInfo$nSamples/mcmcInfo$nChains)
+  ggSigmaInt$chain <- rep(1:mcmcInfo$nChains, each = mcmcInfo$nSamples)#/mcmcInfo$nChains)
+  ggSigmaInt$iter <- 1:as.numeric(mcmcInfo$nSamples)#/mcmcInfo$nChains)
 
   gg <- ggplot(filter(ggSigmaInt), aes(iter,est)) + geom_point( aes(color=factor(chain)), size = 0.1 ) +
-#    ylim(-4,-2.25) +
+    ylim(-4,-2.25) +
     facet_grid(d2+d4~d3)
   print(gg)
 }
@@ -94,8 +94,8 @@ plotSigmaInt_Nimble <- function(d){
 plotSigmaBetas_Nimble <- function(d,b){
   ggSigmaBeta <- array2df(d$sims.list$sigmaBeta, label.x = "est")
 
-  ggSigmaBeta$chain <- rep(1:mcmcInfo$nChains, each = mcmcInfo$nSamples/mcmcInfo$nChains)
-  ggSigmaBeta$iter <- 1:as.numeric(mcmcInfo$nSamples/mcmcInfo$nChains)
+  ggSigmaBeta$chain <- rep(1:mcmcInfo$nChains, each = mcmcInfo$nSamples)#/mcmcInfo$nChains)
+  ggSigmaBeta$iter <- 1:as.numeric(mcmcInfo$nSamples)#/mcmcInfo$nChains)
 
   gg <- list()
   numBetas <- 6
@@ -109,8 +109,8 @@ plotSigmaBetas_Nimble <- function(d,b){
 plotSigmaBetasBNT_Nimble <- function(d,b){
   ggSigmaBeta <- array2df(d$sims.list$sigmaBetaBNT, label.x = "est")
 
-  ggSigmaBeta$chain <- rep(1:mcmcInfo$nChains, each = mcmcInfo$nSamples/mcmcInfo$nChains)
-  ggSigmaBeta$iter <- 1:as.numeric(mcmcInfo$nSamples/mcmcInfo$nChains)
+  ggSigmaBeta$chain <- rep(1:mcmcInfo$nChains, each = mcmcInfo$nSamples)#/mcmcInfo$nChains)
+  ggSigmaBeta$iter <- 1:as.numeric(mcmcInfo$nSamples)#/mcmcInfo$nChains)
 
   gg <- list()
   numBetas <- 6
@@ -125,8 +125,8 @@ plotSigmaBetasBNT_Nimble <- function(d,b){
 plotSigmaBetasATS_Nimble <- function(d,b){
   ggSigmaBeta <- array2df(d$sims.list$sigmaBetaATS, label.x = "est")
 
-  ggSigmaBeta$chain <- rep(1:mcmcInfo$nChains, each = mcmcInfo$nSamples/mcmcInfo$nChains)
-  ggSigmaBeta$iter <- 1:as.numeric(mcmcInfo$nSamples/mcmcInfo$nChains)
+  ggSigmaBeta$chain <- rep(1:mcmcInfo$nChains, each = mcmcInfo$nSamples)#/mcmcInfo$nChains)
+  ggSigmaBeta$iter <- 1:as.numeric(mcmcInfo$nSamples)#/mcmcInfo$nChains)
 
   gg <- list()
   numBetas <- 6

@@ -27,7 +27,7 @@ drainage <- "west" # ==
 speciesDet <- c("bkt", "bnt","ats") #keep as all three spp
 speciesInDet <- factor(speciesDet, levels = c('bkt','bnt','ats'), ordered = T)
 
-speciesGr <- "bkt"
+speciesGr <- "bnt"
 #speciesGr = c("bkt", "bnt","ats")
 speciesInGr <- factor(speciesGr, levels = c('bkt','bnt','ats'), ordered = T)
 
@@ -220,17 +220,28 @@ iter=1
     #save(dG,ddG,dddG, file = paste0('./data/out/dG_', modelName, '_forLmer.RData')) # for Lmer model with all spp
 
 
+  # #########################################
+  # # mcmc run data
+  # mcmcInfo <- list()
+  # mcmcInfo$nChains <- 3
+  # mcmcInfo$nIter <- 1000 #25000
+  # mcmcInfo$thinRate <- 10 # nIter gets thinned
+  # mcmcInfo$nSamples <- 25 # Number of thinned samples
+  #
+  # try( if(mcmcInfo$nSamples > mcmcInfo$nIter/mcmcInfo$thinRate) stop( 'nSamples > thinned nIter' ) )
+  #
+  # mcmcInfo$nBurnIn <- mcmcInfo$nIter/mcmcInfo$thinRate - mcmcInfo$nSamples
+  # #mcmcInfo$nSamples <- round( (mcmcInfo$nIter - mcmcInfo$nBurnIn) * mcmcInfo$nChains / mcmcInfo$thinRate )
+
   #########################################
   # mcmc run data
   mcmcInfo <- list()
   mcmcInfo$nChains <- 3
-  mcmcInfo$nIter <- 2000 #25000
-  mcmcInfo$nBurnIn <- 1750 #24000
-  mcmcInfo$thinRate <- 1 #fails with thinRate of 3 and 1000/750
-  mcmcInfo$nSamples <- round( (mcmcInfo$nIter - mcmcInfo$nBurnIn) * mcmcInfo$nChains / mcmcInfo$thinRate )
-
-
-
+  mcmcInfo$nIter <- 10000 #25000
+  mcmcInfo$nBurnIn <- 7500
+  mcmcInfo$AvailForSampling <- mcmcInfo$nIter - mcmcInfo$nBurnIn
+  mcmcInfo$thinRate <- 10
+  mcmcInfo$nSamples <- mcmcInfo$AvailForSampling / mcmcInfo$thinRate
 
   #########################################
   # Get data for model run
@@ -251,8 +262,8 @@ iter=1
   }
 
   if(speciesGr == 'bnt'){
-    nB$nBetas <- 5
-    nB$nBetasBNT <- 2
+    nB$nBetas <- 4
+    nB$nBetasBNT <- 3
     nB$nBetasATS <- 1
     nB$nBetasSigma <- 3
   }
@@ -272,7 +283,7 @@ iter=1
   rm(Rmodel); rm(conf); rm(Rmcmc); rm(Cmodel); rm(Cmcmc); rm(mcmc); rm(mcmcProcessed); rm(obsPred)
 
   Rmodel <- nimbleModel(dG[[ii]]$code, dG[[ii]]$constants, dG[[ii]]$data, dG[[ii]]$inits)
-  Rmodel$lengthDATA <- zoo::na.approx(dG[[ii]]$data$lengthDATA)
+  #Rmodel$lengthDATA <- zoo::na.approx(dG[[ii]]$data$lengthDATA) ### check this is ok
 
   conf <- configureMCMC(Rmodel)
   conf$setThin(mcmcInfo$thinRate)
@@ -334,9 +345,7 @@ iter=1
   source("./R/plotFunctions.R") #will put into functions later
   plotInt_Nimble(mcmcProcessed)
 
-  plotBetas_Nimble(mcmcProcessed,1:3)
-  plotBetas_Nimble(mcmcProcessed,4:5)
-  plotBetas_Nimble(mcmcProcessed,5:5)
+  plotBetas_Nimble(mcmcProcessed,1:4)
 
   plotBetasBNT_Nimble(mcmcProcessed,1:3)
   plotBetasATS_Nimble(mcmcProcessed,1)

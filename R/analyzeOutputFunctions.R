@@ -123,7 +123,6 @@ getPrediction <- function(d, limits = 2, nPoints = 5, itersForPred, constants, s
                       beta3 * temp * flow +
 
                       beta4 * cBKT +
-                      beta5 * cBKT^2 +
 
                       betaBNT1 * cBNT +
                       betaBNT2 * cBNT^2 +
@@ -147,11 +146,10 @@ getPrediction <- function(d, limits = 2, nPoints = 5, itersForPred, constants, s
               beta3 * temp * flow +
 
               beta4 * cBKT +
-              beta5 * cBKT^2 +
 
               betaBNT1 * cBNT +
               betaBNT2 * cBNT^2 +
-          #    betaBNT3 * cBNT * cBKT +
+              betaBNT3 * cBNT * cBKT +
 
               betaATS1 * cATS
           #    betaATS2 * cATS^2

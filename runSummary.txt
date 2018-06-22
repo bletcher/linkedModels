@@ -176,4 +176,64 @@ small truncated (-0.05,0.05), sd (estimated, unif[0.01,0.5]), rmse = 3.00, good 
 small truncated (-0.05,0.05), sd (estimated, unif[0.01,0.5]), rmse = 3.04, good mixing, sigmaInRE=0.014, looks fine, except bkt and bkt2 have some mixing issues for some season/river combos - DONT use bkt2
 
 11) Add bkt and bnt bnt2 bnt*bkt to grBeta
-small truncated (-0.05,0.05), sd (estimated, unif[0.01,0.5]), rmse = , good mixing, sigmaInRE=, looks fine
+small truncated (-0.05,0.05), sd (estimated, unif[0.01,0.5]), rmse = 2.9, good mixing, sigmaInRE=0.34, looks fine mostly, sigmaIndRE-chain 1 stuck at 1 [maybe just a bad run?]
+
+12) Add ats to grBeta
+small truncated (-0.05,0.05), sd (estimated, unif[0.01,0.5]), rmse = 2.97, good mixing, sigmaInRE=0.014, looks fine
+
+############
+BNT
+ 1) try full model 18 with grIndRE changes from BKT above
+ small truncated (-0.05,0.05), sd (estimated, unif[0.01,0.5]), rmse = 3.06, good mixing for some, sigmaInRE=0.013, looks marginal
+
+ 2) take out hier for ints and betas - thinking only have 2 rivers, small # for RE
+small truncated (-0.05,0.05), sd (estimated, unif[0.01,0.5]), rmse = 3.07, good mixing for some, sigmaInRE=0.012, looks some bad mixing
+
+ 3) temp * flow only in gr and sigma
+ small truncated (-0.05,0.05), sd (estimated, unif[0.01,0.5]), rmse = 3.12, good mixing for some, sigmaInRE=0.013, some mixing problems - stripping it down
+
+ 4) grInt and sigmaInt only
+ rmse = 3.92, sigmaIndRE = 0.015, excellent mixing
+
+ 5) add in grBeta 1-3
+ rmse = 3.00, sigmaIndRE = 0.0155, very good mixing
+
+ 6) add in grBeta4
+ rmse = 2.97, sigmaIndRE = 0.015, very good mixing
+
+ 7) add in bnt beta1
+ rmse = 2.91, sigmaIndRE = 0.016, very good mixing
+
+ 8) add in bnt beta2
+ rmse = 2.90, sigmaIndRE = 0.015, very good mixing
+
+ 9) add in bnt beta3
+ rmse = 2.85, sigmaIndRE = 0.014, some mixing problems
+
+ 10) take out bnt3, add in atsBeta1
+ rmse = 2.89, sigmaIndRE = 0.014,  some mixing problems
+
+ 11) add in sigmaBeta1-3
+ rmse = 3.04, sigmaIndRE = 0.015,  some mixing problems
+
+ 12) go back, include grBeta1-4 and siggmaBeta1-3
+ rmse = 3.06, sigmaIndRE = 0.016, mostly good mixing - chains may be too short...
+
+ 13) add in hier structure to grBeta
+ rmse = 3.08, sigmaIndRE = 0.016,  mostly good mixing
+
+ 14) add in bnt1-2 and ats1 with 10000 iters
+ rmse = 3.10, sigmaIndRE = 0.011,   mixing poor for bnt betas
+
+ 15) add in bnt1-3 and ats1 with 10000 iters
+ rmse = 3.07, sigmaIndRE = 0.013,   mixing poor for bnt betas
+
+ 16) try bnt betas 1 at a time, add in bnt1 ->
+ rmse = 3.01, sigmaIndRE = 0.018,   mixing marginal for betas good for bntBeta1
+
+ 17) try bnt betas 1 at a time, add in bnt3
+ rmse = 3.02, sigmaIndRE = 0.020,   mixing marginal for betas good for bntBeta3
+
+
+
+  rmse = , sigmaIndRE = ,   mixing

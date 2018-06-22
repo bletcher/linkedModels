@@ -101,6 +101,24 @@ rm(ddG,dG,mcmcProcessed)
 load("D:/projects/linkedModels/data/cd_west_1997.RData")
 ```
 
+```{r bnt density}
+
+ggplot(d2, aes(cBNTStd)) +
+  geom_histogram() +
+  facet_grid(season~riverOrdered)
+
+ggplot(d2, aes(cBNTStd, grLength)) +
+  geom_point(alpha=0.1) +
+  geom_smooth(method='lm') +
+  facet_grid(isYOY+season~riverOrdered)
+
+ggplot(d2, aes(cBKTStd, grLength)) +
+  geom_point(alpha=0.1) +
+  geom_smooth(method='lm') +
+  facet_grid(isYOY+season~riverOrdered)
+```
+
+
 ```{r check lengthExp}
 
 len2 <- array2df(mcmc[['bnt']]$sims.list$lengthExp, label.x = "est") %>%
