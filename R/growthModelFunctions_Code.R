@@ -342,11 +342,11 @@ codeSpp[[3]] <- nimbleCode({
 
     ##
     log( expectedGRSigma[ evalRows[i] ] ) <- #grSigma
-      sigmaInt[     isYOYDATA[evalRows[i]], season[evalRows[i]], riverDATA[evalRows[i]] ]
-   #   sigmaBeta[ 1, isYOYDATA[evalRows[i]], season[evalRows[i]], riverDATA[evalRows[i]] ] * cBKTStd[evalRows[i]] +
-  #    sigmaBeta[ 1, isYOYDATA[evalRows[i]], season[evalRows[i]], riverDATA[evalRows[i]] ] * tempStd[evalRows[i]] +
-  #    sigmaBeta[ 2, isYOYDATA[evalRows[i]], season[evalRows[i]], riverDATA[evalRows[i]] ] * flowStd[evalRows[i]] +
-  #    sigmaBeta[ 3, isYOYDATA[evalRows[i]], season[evalRows[i]], riverDATA[evalRows[i]] ] * tempStd[evalRows[i]] * flowStd[evalRows[i]]
+      sigmaInt[     isYOYDATA[evalRows[i]], season[evalRows[i]], riverDATA[evalRows[i]] ] +
+  #    sigmaBeta[ 1, isYOYDATA[evalRows[i]], season[evalRows[i]], riverDATA[evalRows[i]] ] * cBKTStd[evalRows[i]] +
+      sigmaBeta[ 1, isYOYDATA[evalRows[i]], season[evalRows[i]], riverDATA[evalRows[i]] ] * tempStd[evalRows[i]] +
+      sigmaBeta[ 2, isYOYDATA[evalRows[i]], season[evalRows[i]], riverDATA[evalRows[i]] ] * flowStd[evalRows[i]] +
+      sigmaBeta[ 3, isYOYDATA[evalRows[i]], season[evalRows[i]], riverDATA[evalRows[i]] ] * tempStd[evalRows[i]] * flowStd[evalRows[i]]
 
    #   sigmaBetaBNT[1, isYOYDATA[evalRows[i]], season[evalRows[i]], riverDATA[evalRows[i]] ] * cBNTStd[evalRows[i]] +
       #      sigmaBetaBNT[2, isYOYDATA[evalRows[i]], season[evalRows[i]], riverDATA[evalRows[i]] ] * cBNTStd[evalRows[i]] * cBKTStd[evalRows[i]] +
@@ -374,8 +374,8 @@ codeSpp[[3]] <- nimbleCode({
     }
     ##
     for( b in 1:nBetasSigma ) {  ############# Beta ##############################################################################
-      sigmaBetaMu[ b,s ] <- 1#~ dnorm(0,sd = 30)
-      sigmaBetaSigma[ b,s ] <- 1#~ dunif(0,100)
+      sigmaBetaMu[ b,s ] ~ dnorm(0,sd = 30)
+      sigmaBetaSigma[ b,s ] ~ dunif(0,100)
     }
     ##
     for( yoy in 1:2 ) {
@@ -387,7 +387,7 @@ codeSpp[[3]] <- nimbleCode({
           grBeta[ b,yoy,s,r ] ~ dnorm( grBetaMu[ b,s ], sd = grBetaSigma[ b,s ] )
         }
         for( b in 1:nBetasSigma ) {  ############# Beta ##################################################################################
-          sigmaBeta[ b,yoy,s,r ] <- 1 #~ dnorm( sigmaBetaMu[ b,s ], sd = sigmaBetaSigma[ b,s ] )
+          sigmaBeta[ b,yoy,s,r ] ~ dnorm( sigmaBetaMu[ b,s ], sd = sigmaBetaSigma[ b,s ] )
         }
       }
     }

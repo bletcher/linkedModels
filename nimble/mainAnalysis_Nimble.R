@@ -27,7 +27,7 @@ drainage <- "west" # ==
 speciesDet <- c("bkt", "bnt","ats") #keep as all three spp
 speciesInDet <- factor(speciesDet, levels = c('bkt','bnt','ats'), ordered = T)
 
-speciesGr <- "bnt"
+speciesGr <- "ats"
 #speciesGr = c("bkt", "bnt","ats")
 speciesInGr <- factor(speciesGr, levels = c('bkt','bnt','ats'), ordered = T)
 
@@ -237,8 +237,8 @@ iter=1
   # mcmc run data
   mcmcInfo <- list()
   mcmcInfo$nChains <- 3
-  mcmcInfo$nIter <- 10000 #25000
-  mcmcInfo$nBurnIn <- 7500
+  mcmcInfo$nIter <- 2000 #25000
+  mcmcInfo$nBurnIn <- 1500
   mcmcInfo$AvailForSampling <- mcmcInfo$nIter - mcmcInfo$nBurnIn
   mcmcInfo$thinRate <- 10
   mcmcInfo$nSamples <- mcmcInfo$AvailForSampling / mcmcInfo$thinRate
@@ -272,7 +272,7 @@ iter=1
     nB$nBetas <- 4
     nB$nBetasBNT <- 1
     nB$nBetasATS <- 2
-    nB$nBetasSigma <- 1
+    nB$nBetasSigma <- 3
   }
 
   dG[[ii]] <- ddG[[ii]][[1]] %>% runGrowthModel_Nimble(mcmcInfo,code,speciesGr,nB)
