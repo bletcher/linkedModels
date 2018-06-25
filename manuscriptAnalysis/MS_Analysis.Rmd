@@ -64,7 +64,7 @@ load("D:/projects/linkedModels/data/out/ddD_bktbntats_1997.RData")
 load("D:/projects/linkedModels/data/out/rawCountsAndMasses.RData")
 
 mcmc <- list()
-load("D:/projects/linkedModels/data/out/dG_1528425682_bkt1997_Nimble.RData")
+load("D:/projects/linkedModels/data/out/dG_1529763682_bkt1997_Nimble.RData")
 
 # input data
 d1 <- ddG[[1]][[1]]
@@ -90,10 +90,10 @@ d2 <- d2 %>%
 mcmc[['bkt']] <- mcmcProcessed
 
 
-load("D:/projects/linkedModels/data/out/dG_1528410796_bnt1997_Nimble.RData")
+load("D:/projects/linkedModels/data/out/dG_1529720799_bnt1997_Nimble.RData")
 mcmc[['bnt']]  <- mcmcProcessed
 
-load("D:/projects/linkedModels/data/out/dG_1528735018_ats1997_Nimble.RData")
+load("D:/projects/linkedModels/data/out/dG_1529778009_ats1997_Nimble.RData")
 mcmc[['ats']]  <- mcmcProcessed
 
 rm(ddG,dG,mcmcProcessed)
@@ -144,7 +144,7 @@ len <- left_join(len1,lenMean1)
 
 
 
-len %>% filter(ind == 1, !firstObs, iter%%50==0) %>%
+len %>% filter(ind == 20, !firstObs, iter%%50==0) %>%
   ggplot(aes(obs,est)) +
   geom_point() +
   geom_line(aes(group = iter)) +
@@ -391,8 +391,8 @@ cd %>% filter() %>%
 ```{r r-hat}
 
 rHat <- list()
-rHat[['bkt']] <- array2df(mcmc[['bkt']]$Rhat$grBeta, levels = list(beta=1:5,isYOY=c(0,1),season=1:4,river=riverOrderedIn[1:4]), label.x="rHat")
-rHat[['bnt']] <- array2df(mcmc[['bnt']]$Rhat$grBeta, levels = list(beta=1:5,isYOY=c(0,1),season=1:4,river=riverOrderedIn[1:2]), label.x="rHat")
+rHat[['bkt']] <- array2df(mcmc[['bkt']]$Rhat$grBeta, levels = list(beta=1:4,isYOY=c(0,1),season=1:4,river=riverOrderedIn[1:4]), label.x="rHat")
+rHat[['bnt']] <- array2df(mcmc[['bnt']]$Rhat$grBeta, levels = list(beta=1:4,isYOY=c(0,1),season=1:4,river=riverOrderedIn[1:2]), label.x="rHat")
 rHat[['ats']] <- array2df(mcmc[['ats']]$Rhat$grBeta, levels = list(beta=1:4,isYOY=c(0,1),season=1:4,river=riverOrderedIn[1:1]), label.x="rHat")
 
 # rHat[['bkt']] <- array2df(mcmc[['bkt']]$Rhat$grBeta, levels = list(beta=1:8,isYOY=c(0,1),season=1:4,river=riverOrderedIn[1:4]), label.x="rHat")
@@ -401,7 +401,7 @@ rHat[['ats']] <- array2df(mcmc[['ats']]$Rhat$grBeta, levels = list(beta=1:4,isYO
 
 
 
-ggplot(rHat[[3]], aes(beta,rHat)) +
+ggplot(rHat[[1]], aes(beta,rHat)) +
   geom_point() +
   facet_grid(river+isYOY~season)
 

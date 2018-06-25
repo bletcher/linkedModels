@@ -465,7 +465,7 @@ codeSpp[[3]] <- nimbleCode({
 
   }
   ##
-  sigmaIndRE ~ dunif(0.01,0.5)
+  sigmaIndRE ~ dunif(0.001,0.5)
 
 
 })

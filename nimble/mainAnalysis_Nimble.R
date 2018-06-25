@@ -27,7 +27,7 @@ drainage <- "west" # ==
 speciesDet <- c("bkt", "bnt","ats") #keep as all three spp
 speciesInDet <- factor(speciesDet, levels = c('bkt','bnt','ats'), ordered = T)
 
-speciesGr <- "ats"
+speciesGr <- "bkt"
 #speciesGr = c("bkt", "bnt","ats")
 speciesInGr <- factor(speciesGr, levels = c('bkt','bnt','ats'), ordered = T)
 
@@ -39,7 +39,7 @@ maxSampleInterval <- 200 # <
 recreatecdFileBeforeDetMod_TF <- FALSE
 runDetectionModel_TF <- FALSE
 recreateCD_TF <- FALSE
-runCrossValidation_TF <- FALSE
+runCrossValidation_TF <- TRUE
 percentLeftOut <- 10
 
 meanOrIter <- "mean"; iter <- 1
@@ -237,8 +237,8 @@ iter=1
   # mcmc run data
   mcmcInfo <- list()
   mcmcInfo$nChains <- 3
-  mcmcInfo$nIter <- 2000 #25000
-  mcmcInfo$nBurnIn <- 1500
+  mcmcInfo$nIter <- 5000 #25000
+  mcmcInfo$nBurnIn <- 4000
   mcmcInfo$AvailForSampling <- mcmcInfo$nIter - mcmcInfo$nBurnIn
   mcmcInfo$thinRate <- 10
   mcmcInfo$nSamples <- mcmcInfo$AvailForSampling / mcmcInfo$thinRate
@@ -337,7 +337,7 @@ iter=1
 
   #########################################
   # save data to file
-  save(mcmcInfo,mcmcProcessed,dG,ddG,nB, file = paste0('./data/out/dG_', as.integer(Sys.time()),'_', modelName, '_Nimble.RData'))
+  save(mcmcInfo,mcmcProcessed,dG,ddG,nB,speciesGr,riverOrderedIn, file = paste0('./data/out/dG_', as.integer(Sys.time()),'_crossVal',runCrossValidation_TF,"_", modelName, '_Nimble.RData'))
 
   ######################
   # Plot traces
@@ -359,6 +359,11 @@ iter=1
 
   #########################
   # Predictions
+  ### temporary variables needed if do predictions after loading output files
+  ii <- 1
+  riverOrderedIn <- factor(c('west brook', 'wb jimmy', 'wb mitchell',"wb obear"),levels=c('west brook', 'wb jimmy', 'wb mitchell',"wb obear"),labels = c("west brook","wb jimmy","wb mitchell","wb obear"), ordered = T)
+  speciesGr <- 'ats'
+  ###
 
   limits <- 1.5 # -/+ limits on standardized range of input variable
   nPoints <- 5

@@ -300,20 +300,20 @@ getPredictionSigma <- function(d, limits = 2, nPoints = 5, itersForPred, constan
   preds <- cbind( predTemplateLong,grBetaLong )
 
   # This model structure needs to match that in grModelx.jags
-  if(speciesGr == 'ats'){
-  preds <- preds %>%
-    mutate( predGrSigma =
-              exp( int
-
-                #  beta1 * temp
-                 ## beta2 * flow +
-                #  beta3 * temp * flow
-
-              ) #* interval
-    ) %>%
-    dplyr::select( flow,temp,iter,isYOY,season,river,predGrSigma )
-
-  } else {
+  # if(speciesGr == 'ats'){
+  # preds <- preds %>%
+  #   mutate( predGrSigma =
+  #             exp( int
+  #
+  #               #  beta1 * temp
+  #                ## beta2 * flow +
+  #               #  beta3 * temp * flow
+  #
+  #             ) #* interval
+  #   ) %>%
+  #   dplyr::select( flow,temp,iter,isYOY,season,river,predGrSigma )
+  #
+  # } else {
   preds <- preds %>%
     mutate( predGrSigma =
               exp( int +
@@ -325,7 +325,7 @@ getPredictionSigma <- function(d, limits = 2, nPoints = 5, itersForPred, constan
               ) #* interval
     ) %>%
     dplyr::select( flow,temp,iter,isYOY,season,river,predGrSigma )
-  }
+#  }
 
   return(preds)
 
@@ -694,15 +694,22 @@ getRMSE_Nimble <- function(d,residLimit = 0.6, ii = 1){
   outlierFish <- ddGIn %>% filter(tag %in% outlierFish1$tag) %>%
     dplyr::select(tag,season,sampleName,observedLength,lengthDATALnStd,observedLength,estLen,resid,rowNumber,isOutlier,species)
 
-  gg <- ggplot( ddGIn, aes( observedLength, estLen, color = factor(year) ) ) +
+  gg <- ggplot( ddGIn, aes( observedLengthOriginal, estLen, color = factor(year) ) ) +
         geom_point( alpha = 0.8 ) +
         geom_abline(intercept = 0, slope = 1) +
  #   ylim(-2,4) +
         facet_grid(isYOY+riverN~season+leftOut)
   print(gg)
 
+  ggg <- ggplot( ddGIn, aes( observedLengthOriginal, estLen, color = factor(leftOut) ) ) +
+    geom_point( alpha = 0.8 ) +
+    geom_abline(intercept = 0, slope = 1) +
+    #   ylim(-2,4) +
+    facet_grid(~leftOut)
+  print(ggg)
+
   rmse <- ddGIn %>%
-    mutate( resid = estLen - observedLength ) %>%
+    mutate( resid = estLen - observedLengthOriginal ) %>%
     group_by(leftOut) %>%
     summarise( rmse = sqrt( sum(resid^2,na.rm=T)/length(resid) ) )
 
