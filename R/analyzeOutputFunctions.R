@@ -702,16 +702,18 @@ getRMSE_Nimble <- function(d,residLimit = 0.6, ii = 1){
   print(gg)
 
   ggg <- ggplot( ddGIn, aes( observedLengthOriginal, estLen, color = factor(leftOut) ) ) +
-    geom_point( alpha = 0.8 ) +
+    geom_point( alpha = 0.1 ) +
     geom_abline(intercept = 0, slope = 1) +
     #   ylim(-2,4) +
     facet_grid(~leftOut)
   print(ggg)
 
   rmse <- ddGIn %>%
-    mutate( resid = estLen - observedLengthOriginal ) %>%
+    mutate( resid = estLen - observedLengthOriginal,
+            isAbovePred = (estLen > observedLengthOriginal) * 1 ) %>%
     group_by(leftOut) %>%
-    summarise( rmse = sqrt( sum(resid^2,na.rm=T)/length(resid) ) )
+    summarise( rmse = sqrt( sum(resid^2,na.rm=T) / sum(!is.na(resid)) ),
+               pValue = sum(isAbovePred,na.rm=T) / sum(!is.na(isAbovePred)) )
 
   return(list(rmse = rmse, outliers = outlierFish))
 }

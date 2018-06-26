@@ -23,7 +23,7 @@ prepareDataForJags_Nimble <- function(d,modelType){
 
 
   # Without error in lengthDATA (from Munch/sigourney), firstObs doesn't det estimated
-  # There are a few fish with observations with fOcc=1 and NA for oberservedLength (e.g. 4 for west/bkt). Filter those fish out here
+  # There are a few fish with observations with fOcc=1 and NA for observedLength (e.g. 4 for west/bkt). Filter those fish out here
   noLenFOcc <- d %>% dplyr::select(tagIndex,observedLength,fOcc) %>% filter( (is.na(observedLength) & fOcc == 1) )
   d <- d %>% filter( !(tagIndex %in% noLenFOcc$tagIndex ) )
   print(paste("NA length for first observation, # =", length(noLenFOcc$tagIndex)))
@@ -147,6 +147,22 @@ prepareDataForJags_Nimble <- function(d,modelType){
 
   print(paste0("Number of input rows = ",nrow(d),", Number of encounters = ",sum(d$enc,na.rm=T)))
 
+  # get ind that were only observed for 1 gr interval - for grIndRE
+  d <- d %>%
+    group_by(tag) %>%
+    mutate( onlyOneGrInterval = (maxOcc == (minOcc + 1)) ) %>%
+    ungroup()
+
+  onlyOne <- d %>% group_by(tag) %>%
+    mutate( onlyOneGrInterval = (maxOcc == (minOcc + 1)) ) %>%
+    summarize(onlyOne_TF = unique(onlyOneGrInterval)) %>%
+    ungroup()
+
+  moreThanOneInterval <- which(!onlyOne$onlyOne_TF)
+  exactlyOneInterval <- which(  onlyOne$onlyOne_TF)
+
+  nMoreThanOneInterval <- length(moreThanOneInterval)
+  nExactlyOneInterval <- length(exactlyOneInterval)
 
   ##############
   # from linearGR_ModelsMap.Rmd
@@ -272,6 +288,8 @@ prepareDataForJags_Nimble <- function(d,modelType){
                   nEvalRows = nEvalRows, evalRows = evalRows,
                   nFirstObsRows = nFirstObsRows, firstObsRows = firstObsRows,
                   nLastObsRows = nLastObsRows, lastObsRows = lastObsRows,
+                  nMoreThanOneInterval = nMoreThanOneInterval, moreThanOneInterval = moreThanOneInterval,
+                  nExactlyOneInterval = nExactlyOneInterval, exactlyOneInterval = exactlyOneInterval,
                   nAllRows = nAllRows,
                   nSeasons = nSeasons,
                   lengthMean = mean(d$observedLength, na.rm = TRUE), #array(means$meanLen, dim = c(nRivers,nSeasons,nSpecies)),

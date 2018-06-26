@@ -39,22 +39,12 @@ maxSampleInterval <- 200 # <
 recreatecdFileBeforeDetMod_TF <- FALSE
 runDetectionModel_TF <- FALSE
 recreateCD_TF <- FALSE
-runCrossValidation_TF <- TRUE
+runCrossValidation_TF <- TRUE ############################
 percentLeftOut <- 10
 
 meanOrIter <- "mean"; iter <- 1
 ####### or ########
 #meanOrIter = "iter"
-
-#make sure species are always in order and indexed correctly for arrays
-#riverOrderedIn <- factor(1:3,levels=c('mainstem', 'west', 'east'),labels = c('mainstem', 'west', 'east'), ordered=T)
-
-# update yoy cutoffs as get new data using
-# getYOYCutoffs(cd,drainage) - make sure to call with cd so all data enter and minYear==1997 for 'west'
-# which is called within prepareDataForJagsNimble() and is saved in
-# getAndPrepareDataWB.R
-# will need to update code for stanley
-
 
 ######################################################
 # Get data from database
@@ -237,20 +227,18 @@ iter=1
   # mcmc run data
   mcmcInfo <- list()
   mcmcInfo$nChains <- 3
-  mcmcInfo$nIter <- 5000 #25000
-  mcmcInfo$nBurnIn <- 4000
+  mcmcInfo$nIter <- 50000 #25000
+  mcmcInfo$nBurnIn <- 40000
   mcmcInfo$AvailForSampling <- mcmcInfo$nIter - mcmcInfo$nBurnIn
   mcmcInfo$thinRate <- 10
   mcmcInfo$nSamples <- mcmcInfo$AvailForSampling / mcmcInfo$thinRate
 
   #########################################
   # Get data for model run
-  source('./R/growthModelFunctions_Code.R') #################################################
+  source('./R/growthModelFunctions_Code_tmp.R') #################################################
   code <- codeSpp[[as.numeric(speciesInGr)]]
 
   #####
-  start <- Sys.time()
-  print(start)
   print(c("in loop",meanOrIter,ii,iter))
   nB <- list()
 
@@ -279,6 +267,8 @@ iter=1
 
   #########################################
   # Nimble model run
+  start <- Sys.time()
+  print(start)
 
   rm(Rmodel); rm(conf); rm(Rmcmc); rm(Cmodel); rm(Cmcmc); rm(mcmc); rm(mcmcProcessed); rm(obsPred)
 
@@ -288,6 +278,28 @@ iter=1
   conf <- configureMCMC(Rmodel)
   conf$setThin(mcmcInfo$thinRate)
   conf$addMonitors(dG[[ii]]$params)
+
+####################################### Added with Daniel 6/26/18 ######
+
+  # sample sigma variables on log scale. Helps with very small values
+  sigmaNodes <- c("grIntSigma",'sigmaIntSigma','grBetaSigma','sigmaBetaSigma')
+  conf$removeSamplers(sigmaNodes)
+  for( node in Rmodel$expandNodeNames(sigmaNodes) ){
+    conf$addSampler(node, "RW", control = list(logScale = TRUE))
+  }
+
+  # remove samplers for last obs for each fish, for speed
+  nodeNames <- paste0("lengthDATA[", dG[[1]]$constants$lastObsRows, "]")
+  conf$removeSamplers(nodeNames)
+
+
+  # Block sample - check cor, and block sample correlated vars
+#e.g.  corNodeNames <- c('grBeta[1,2,3,4]','grBeta[2,2,3,4]')
+#  conf$removeSamplers(corNodeNames)
+#  conf$addSampler(corNodeNames, 'RW_block')
+
+
+########################################
 
   Rmcmc <- buildMCMC(conf)
   Cmodel <- compileNimble(Rmodel)

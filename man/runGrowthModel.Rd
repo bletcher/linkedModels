@@ -2,16 +2,18 @@
 % Please edit documentation in R/growthModelFunctions.R
 \name{runGrowthModel}
 \alias{runGrowthModel}
-\title{Run the growth model}
+\title{Run the growth model using jags}
 \usage{
 runGrowthModel(d, parallel = FALSE)
 }
 \arguments{
-\item{drainage}{Which drainage, "west" or "stanley"}
+\item{d, }{the input dataframe}
+
+\item{paralel, }{boolean for running chains in parallel}
 }
 \value{
 a data frame
 }
 \description{
-Run the growth model
+Run the growth model using jags
 }
