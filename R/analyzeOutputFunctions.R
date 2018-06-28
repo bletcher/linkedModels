@@ -92,7 +92,7 @@ getPrediction <- function(d, limits = 2, nPoints = 5, itersForPred, constants, s
     cATSData <- 0
 
   predTemplate <- data.frame(
-                            #  len = lenData,
+                              len = lenData,
                              # count = countData,
                               flow =  flowData,
                               temp =  tempData,
@@ -121,18 +121,23 @@ getPrediction <- function(d, limits = 2, nPoints = 5, itersForPred, constants, s
                       beta1 * temp +
                       beta2 * flow +
                       beta3 * temp * flow +
+                      beta4 * temp^2 +
+                      beta5 * flow^2 +
 
-                      beta4 * cBKT +
+                      beta6 * cBKT +
+
+                      beta7 * len +
 
                       betaBNT1 * cBNT +
                       betaBNT2 * cBNT^2 +
                       betaBNT3 * cBNT * cBKT +
 
-                      betaATS1 * cATS
+                      betaATS1 * cATS +
+                      betaATS2 * cATS^2
 
                   ) #* interval
         ) %>%
-        dplyr::select( flow,temp,cBKT,cBNT,cATS,iter,isYOY,season,river,predGr )
+        dplyr::select( len,flow,temp,cBKT,cBNT,cATS,iter,isYOY,season,river,predGr )
     }
 
 

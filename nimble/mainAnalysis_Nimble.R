@@ -39,7 +39,7 @@ maxSampleInterval <- 200 # <
 recreatecdFileBeforeDetMod_TF <- FALSE
 runDetectionModel_TF <- FALSE
 recreateCD_TF <- FALSE
-runCrossValidation_TF <- TRUE ############################
+runCrossValidation_TF <- FALSE ############################
 percentLeftOut <- 10
 
 meanOrIter <- "mean"; iter <- 1
@@ -228,14 +228,14 @@ iter=1
   mcmcInfo <- list()
   mcmcInfo$nChains <- 3
   mcmcInfo$nIter <- 50000 #25000
-  mcmcInfo$nBurnIn <- 40000
+  mcmcInfo$nBurnIn <- 25000
   mcmcInfo$AvailForSampling <- mcmcInfo$nIter - mcmcInfo$nBurnIn
   mcmcInfo$thinRate <- 10
   mcmcInfo$nSamples <- mcmcInfo$AvailForSampling / mcmcInfo$thinRate
 
   #########################################
   # Get data for model run
-  source('./R/growthModelFunctions_Code_tmp.R') #################################################
+  source('./R/growthModelFunctions_Code.R') #################################################
   code <- codeSpp[[as.numeric(speciesInGr)]]
 
   #####
@@ -243,9 +243,9 @@ iter=1
   nB <- list()
 
   if(speciesGr == 'bkt'){
-    nB$nBetas <- 4
+    nB$nBetas <- 7
     nB$nBetasBNT <- 3
-    nB$nBetasATS <- 1
+    nB$nBetasATS <- 2
     nB$nBetasSigma <- 3
   }
 
@@ -267,10 +267,11 @@ iter=1
 
   #########################################
   # Nimble model run
-  start <- Sys.time()
-  print(start)
 
   rm(Rmodel); rm(conf); rm(Rmcmc); rm(Cmodel); rm(Cmcmc); rm(mcmc); rm(mcmcProcessed); rm(obsPred)
+
+  start <- Sys.time()
+  print(start)
 
   Rmodel <- nimbleModel(dG[[ii]]$code, dG[[ii]]$constants, dG[[ii]]$data, dG[[ii]]$inits)
   #Rmodel$lengthDATA <- zoo::na.approx(dG[[ii]]$data$lengthDATA) ### check this is ok
@@ -282,15 +283,15 @@ iter=1
 ####################################### Added with Daniel 6/26/18 ######
 
   # sample sigma variables on log scale. Helps with very small values
-  sigmaNodes <- c("grIntSigma",'sigmaIntSigma','grBetaSigma','sigmaBetaSigma')
-  conf$removeSamplers(sigmaNodes)
-  for( node in Rmodel$expandNodeNames(sigmaNodes) ){
-    conf$addSampler(node, "RW", control = list(logScale = TRUE))
-  }
+   sigmaNodes <- c("grIntSigma",'sigmaIntSigma','grBetaSigma','sigmaBetaSigma')
+   conf$removeSamplers(sigmaNodes)
+   for( node in Rmodel$expandNodeNames(sigmaNodes) ){
+     conf$addSampler(node, "RW", control = list(logScale = TRUE))
+   }
 
   # remove samplers for last obs for each fish, for speed
-  nodeNames <- paste0("lengthDATA[", dG[[1]]$constants$lastObsRows, "]")
-  conf$removeSamplers(nodeNames)
+#  nodeNames <- paste0("lengthDATA[", dG[[1]]$constants$lastObsRows, "]")
+#  conf$removeSamplers(nodeNames)
 
 
   # Block sample - check cor, and block sample correlated vars
@@ -301,7 +302,7 @@ iter=1
 
 ########################################
 
-  Rmcmc <- buildMCMC(conf)
+  Rmcmc <- buildMCMC(conf)#, enableWAIC = TRUE)
   Cmodel <- compileNimble(Rmodel)
   Cmcmc <- compileNimble(Rmcmc, project = Rmodel)
   mcmc <- runMCMC(Cmcmc,
@@ -309,7 +310,7 @@ iter=1
                   niter = mcmcInfo$nIter,
                   nchains = mcmcInfo$nChains,
                   samples = TRUE, samplesAsCodaMCMC = TRUE,
-                  summary = FALSE)#, WAIC = TRUE)
+                  summary = FALSE, WAIC = FALSE)
 
   done <- Sys.time()
   elapsed[[ii]] <- done - start
@@ -325,7 +326,9 @@ iter=1
   obsPred$rmse
   #obsPred$outliers%>% as.data.frame()
 
-  #hist(mcmcProcessed$mean$grIndRE,breaks=1000)
+  getPropOverlapBetas(mcmcProcessed,nB)
+
+  #hist(mcmcProcessed$mean$grIndRE[mcmcProcessed$mean$grIndRE != 0] ,breaks=1000)
   mcmcProcessed$mean$sigmaIndRE
 
   mcmcProcessed$Rhat$grIntMu
@@ -358,9 +361,10 @@ iter=1
   plotInt_Nimble(mcmcProcessed)
 
   plotBetas_Nimble(mcmcProcessed,1:4)
+  plotBetas_Nimble(mcmcProcessed,6:9)
 
   plotBetasBNT_Nimble(mcmcProcessed,1:3)
-  plotBetasATS_Nimble(mcmcProcessed,1)
+  plotBetasATS_Nimble(mcmcProcessed,1:2)
 
 
   plotSigmaInt_Nimble(mcmcProcessed)
@@ -372,9 +376,9 @@ iter=1
   #########################
   # Predictions
   ### temporary variables needed if do predictions after loading output files
-  ii <- 1
-  riverOrderedIn <- factor(c('west brook', 'wb jimmy', 'wb mitchell',"wb obear"),levels=c('west brook', 'wb jimmy', 'wb mitchell',"wb obear"),labels = c("west brook","wb jimmy","wb mitchell","wb obear"), ordered = T)
-  speciesGr <- 'ats'
+#  ii <- 1
+#  riverOrderedIn <- factor(c('west brook', 'wb jimmy', 'wb mitchell',"wb obear"),levels=c('west brook', 'wb jimmy', 'wb mitchell',"wb obear"),labels = c("west brook","wb jimmy","wb mitchell","wb obear"), ordered = T)
+#  speciesGr <- 'ats'
   ###
 
   limits <- 1.5 # -/+ limits on standardized range of input variable
@@ -384,7 +388,7 @@ iter=1
   itersForPred <- sample( 1:mcmcInfo$nSamples, nItersForPred )
 
   # predictions across the grid
-  p <- getPrediction( mcmcProcessed, limits, nPoints, itersForPred, dG[[1]]$constants, ddG[[ii]][[1]]$sampleIntervalMean, c("temp", "flow","cBKT", "cBNT", "cATS") )#######################
+  p <- getPrediction( mcmcProcessed, limits, nPoints, itersForPred, dG[[1]]$constants, ddG[[ii]][[1]]$sampleIntervalMean, c("len","temp", "flow","cBKT", "cBNT", "cATS") )#######################
   #p$variable <- "mean"
   # predictions of sigma across the grid
 
@@ -404,7 +408,7 @@ iter=1
   #
   # graph function, in analyzeOutputFunctions.R
 
-
+  plotPred(pBoth, "predGr", "len", 1, speciesGr)
   plotPred(pBoth, "predGr", "temp", 1, speciesGr)
   plotPred(pBoth, "predGr", "flow", 1, speciesGr)
   plotPred(pBoth, "predGr", "cBKT", 1, speciesGr)
