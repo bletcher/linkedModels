@@ -27,7 +27,7 @@ drainage <- "west" # ==
 speciesDet <- c("bkt", "bnt","ats") #keep as all three spp
 speciesInDet <- factor(speciesDet, levels = c('bkt','bnt','ats'), ordered = T)
 
-speciesGr <- "bkt"
+speciesGr <- "bnt"
 #speciesGr = c("bkt", "bnt","ats")
 speciesInGr <- factor(speciesGr, levels = c('bkt','bnt','ats'), ordered = T)
 
@@ -243,23 +243,23 @@ iter=1
   nB <- list()
 
   if(speciesGr == 'bkt'){
-    nB$nBetas <- 7
-    nB$nBetasBNT <- 3
-    nB$nBetasATS <- 2
+    nB$nBetas <- 8
+    nB$nBetasBNT <- 2
+    nB$nBetasATS <- 1
     nB$nBetasSigma <- 3
   }
 
   if(speciesGr == 'bnt'){
-    nB$nBetas <- 4
-    nB$nBetasBNT <- 3
+    nB$nBetas <- 8
+    nB$nBetasBNT <- 2
     nB$nBetasATS <- 1
     nB$nBetasSigma <- 3
   }
 
   if(speciesGr == 'ats'){
-    nB$nBetas <- 4
-    nB$nBetasBNT <- 1
-    nB$nBetasATS <- 2
+    nB$nBetas <- 8
+    nB$nBetasBNT <- 2
+    nB$nBetasATS <- 1
     nB$nBetasSigma <- 3
   }
 
@@ -326,11 +326,12 @@ iter=1
   obsPred$rmse
   #obsPred$outliers%>% as.data.frame()
 
-  getPropOverlapBetas(mcmcProcessed,nB)
+  getPropOverlap0Betas(mcmcProcessed,nB)
 
   #hist(mcmcProcessed$mean$grIndRE[mcmcProcessed$mean$grIndRE != 0] ,breaks=1000)
   mcmcProcessed$mean$sigmaIndRE
 
+  # rHats
   mcmcProcessed$Rhat$grIntMu
   mcmcProcessed$Rhat$grIntSigma
   mcmcProcessed$Rhat$grInt
@@ -361,7 +362,7 @@ iter=1
   plotInt_Nimble(mcmcProcessed)
 
   plotBetas_Nimble(mcmcProcessed,1:4)
-  plotBetas_Nimble(mcmcProcessed,6:9)
+  plotBetas_Nimble(mcmcProcessed,5:7)
 
   plotBetasBNT_Nimble(mcmcProcessed,1:3)
   plotBetasATS_Nimble(mcmcProcessed,1:2)

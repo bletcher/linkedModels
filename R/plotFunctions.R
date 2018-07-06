@@ -24,15 +24,26 @@ plotBetas_Nimble <- function(d,b){
   ggGrBeta$chain <- rep(1:mcmcInfo$nChains, each = mcmcInfo$nSamples)#/mcmcInfo$nChains)
   ggGrBeta$iter <- 1:as.numeric(mcmcInfo$nSamples)#/mcmcInfo$nChains)
 
+  ggOverlap0 <- array2df(d$overlap0$grBeta, label.x = "est0") %>%
+    rename( d2=d1,d3=d2,d4=d3,d5=d4 )
+
+  ggNEff <- array2df(d$n.eff$grBeta, label.x = "estNE") %>%
+    rename( d2=d1,d3=d2,d4=d3,d5=d4 )
+
   gg <- list()
-  numBetas <- 18
+  numBetas <- nB$nBetas
   for (i in 1:numBetas){
     gg[[i]] <- ggplot(filter(ggGrBeta,d2 == i), aes(iter,est)) +
       geom_hline(yintercept = 0) +
       geom_point( aes(color = factor(chain)), size = 0.1 ) +
       ylim(-.05,.05) +
+      geom_text(aes(label = est0, x=-100, y = 0, color = factor(est0+90)),
+                data = filter(ggOverlap0,d2 == i) ) +
+      geom_text(aes(label = estNE, x=250, y = 0.03),
+                data = filter(ggNEff,d2 == i) ) +
       facet_grid(d3+d5 ~ d4) +
       ggtitle(paste("beta =", i))
+
     if(i %in% b) print(gg[[i]])
   }
 }
@@ -43,6 +54,9 @@ plotBetasBNT_Nimble <- function(d,b){
   ggGrBeta$chain <- rep(1:mcmcInfo$nChains, each = mcmcInfo$nSamples)#/mcmcInfo$nChains)
   ggGrBeta$iter <- 1:as.numeric(mcmcInfo$nSamples)#/mcmcInfo$nChains)
 
+  ggOverlap0 <- array2df(d$overlap0$grBetaBNT, label.x = "est0") %>%
+    rename( d2=d1,d3=d2,d4=d3,d5=d4 )
+
   gg <- list()
   numBetas <- 8
   for (i in 1:numBetas){
@@ -50,10 +64,13 @@ plotBetasBNT_Nimble <- function(d,b){
       geom_hline(yintercept = 0) +
       geom_point( aes(color = factor(chain)), size = 0.1 ) +
          ylim(-.1,.1) +
+      geom_text(aes(label = est0, x= -100, y = 0, color = factor(est0 + 90)),
+                data = filter(ggOverlap0,d2 == i) ) +
       facet_grid(d3+d5 ~ d4) +
       ggtitle(paste("beta =", i))
     if(i %in% b) print(gg[[i]])
   }
+
 }
 
 plotBetasATS_Nimble <- function(d,b){
@@ -62,6 +79,9 @@ plotBetasATS_Nimble <- function(d,b){
   ggGrBeta$chain <- rep(1:mcmcInfo$nChains, each = mcmcInfo$nSamples)#/mcmcInfo$nChains)
   ggGrBeta$iter <- 1:as.numeric(mcmcInfo$nSamples)#/mcmcInfo$nChains)
 
+  ggOverlap0 <- array2df(d$overlap0$grBetaATS, label.x = "est0") %>%
+    rename( d2=d1,d3=d2,d4=d3,d5=d4 )
+
   gg <- list()
   numBetas <- 8
   for (i in 1:numBetas){
@@ -69,6 +89,8 @@ plotBetasATS_Nimble <- function(d,b){
       geom_hline(yintercept = 0) +
       geom_point( aes(color = factor(chain)), size = 0.1 ) +
          ylim(-1,1) +
+      geom_text(aes(label = est0, x= -100, y = 0, color = factor(est0 + 90)),
+                data = filter(ggOverlap0,d2 == i) ) +
       facet_grid(d3+d5 ~ d4) +
       ggtitle(paste("beta =", i))
     if(i %in% b) print(gg[[i]])

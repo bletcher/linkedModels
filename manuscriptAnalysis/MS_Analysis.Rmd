@@ -59,12 +59,13 @@ Plots for the manuscript
 library(linkedModels)
 library(arrayhelpers)
 library(tidyverse)
+library(gridExtra)
 
 load("D:/projects/linkedModels/data/out/ddD_bktbntats_1997.RData")
 load("D:/projects/linkedModels/data/out/rawCountsAndMasses.RData")
 
 mcmc <- list()
-load("D:/projects/linkedModels/data/out/dG_1529763682_bkt1997_Nimble.RData")
+load("D:/projects/linkedModels/data/out/dG_1530190754_crossValFALSE_bkt1997_Nimble.RData")
 
 # input data
 d1 <- ddG[[1]][[1]]
@@ -90,10 +91,10 @@ d2 <- d2 %>%
 mcmc[['bkt']] <- mcmcProcessed
 
 
-load("D:/projects/linkedModels/data/out/dG_1529720799_bnt1997_Nimble.RData")
+load("D:/projects/linkedModels/data/out/dG_1530220511_crossValFALSE_bnt1997_Nimble.RData")
 mcmc[['bnt']]  <- mcmcProcessed
 
-load("D:/projects/linkedModels/data/out/dG_1529778009_ats1997_Nimble.RData")
+load("D:/projects/linkedModels/data/out/dG_1530239054_crossValFALSE_ats1997_Nimble.RData")
 mcmc[['ats']]  <- mcmcProcessed
 
 rm(ddG,dG,mcmcProcessed)
@@ -391,9 +392,9 @@ cd %>% filter() %>%
 ```{r r-hat}
 
 rHat <- list()
-rHat[['bkt']] <- array2df(mcmc[['bkt']]$Rhat$grBeta, levels = list(beta=1:4,isYOY=c(0,1),season=1:4,river=riverOrderedIn[1:4]), label.x="rHat")
-rHat[['bnt']] <- array2df(mcmc[['bnt']]$Rhat$grBeta, levels = list(beta=1:4,isYOY=c(0,1),season=1:4,river=riverOrderedIn[1:2]), label.x="rHat")
-rHat[['ats']] <- array2df(mcmc[['ats']]$Rhat$grBeta, levels = list(beta=1:4,isYOY=c(0,1),season=1:4,river=riverOrderedIn[1:1]), label.x="rHat")
+rHat[['bkt']] <- array2df(mcmc[['bkt']]$Rhat$grBeta, levels = list(beta=1:7,isYOY=c(0,1),season=1:4,river=riverOrderedIn[1:4]), label.x="rHat")
+rHat[['bnt']] <- array2df(mcmc[['bnt']]$Rhat$grBeta, levels = list(beta=1:7,isYOY=c(0,1),season=1:4,river=riverOrderedIn[1:2]), label.x="rHat")
+rHat[['ats']] <- array2df(mcmc[['ats']]$Rhat$grBeta, levels = list(beta=1:7,isYOY=c(0,1),season=1:4,river=riverOrderedIn[1:1]), label.x="rHat")
 
 # rHat[['bkt']] <- array2df(mcmc[['bkt']]$Rhat$grBeta, levels = list(beta=1:8,isYOY=c(0,1),season=1:4,river=riverOrderedIn[1:4]), label.x="rHat")
 # rHat[['bnt']] <- array2df(mcmc[['bnt']]$Rhat$grBeta, levels = list(beta=1:8,isYOY=c(0,1),season=1:4,river=riverOrderedIn[1:2]), label.x="rHat")
@@ -401,7 +402,7 @@ rHat[['ats']] <- array2df(mcmc[['ats']]$Rhat$grBeta, levels = list(beta=1:4,isYO
 
 
 
-ggplot(rHat[[1]], aes(beta,rHat)) +
+ggplot(rHat[["ats"]], aes(beta,rHat)) +
   geom_point() +
   facet_grid(river+isYOY~season)
 
@@ -563,7 +564,7 @@ plotHPDSigma('ats'); ggsave('figures/HDPsigma_ats.png', height = 3, width = 3, s
 ```
 
 ```{r}
-riverOrderedIn <- factor(c('west brook', 'wb jimmy', 'wb mitchell',"wb obear"),levels=c('west brook', 'wb jimmy', 'wb mitchell',"wb obear"),labels = c("west brook","wb jimmy","wb mitchell","wb obear"), ordered = T)
+#riverOrderedIn <- factor(c('west brook', 'wb jimmy', 'wb mitchell',"wb obear"),levels=c('west brook', 'wb jimmy', 'wb mitchell',"wb obear"),labels = c("west brook","wb jimmy","wb mitchell","wb obear"), ordered = T)
 
 grIntMu <- list()
 grIntMu[['bkt']] <- array2df(mcmc[['bkt']]$sims.list$grIntMu, levels = list(iter=NA,season=1:4), label.x="int")
@@ -577,7 +578,7 @@ ggplot( grIntMu[['bkt']] , aes(int)) +
   geom_freqpoly(aes(int),binwidth = bw,color = 'lightblue', data = grIntMu[['ats']]) +
   #xlim(-4.5,-1) +
   xlim(-0.25,0.75) +
-  ylim(0,500) +
+ # ylim(0,2500) +
   theme_publication() +
   facet_wrap(~season )
 
@@ -600,26 +601,29 @@ ggplot( grIndRE[[1]], aes(value,..density..) ) +
 
 
 ```{r predictions}
-# #run if get new predictions - takes a while to run
-# load('D:/projects/linkedModels/data/out/P_ForMike_bkt.RData')
-# pBoth$species <- 'bkt'
-# pAll <- pBoth; rm(pBoth)
 # 
-# load('D:/projects/linkedModels/data/out/P_ForMike_bnt.RData')
-# pBoth$species <- 'bnt'
-# pAll <- rbind(pAll,pBoth); rm(pBoth)
-# 
-# load('D:/projects/linkedModels/data/out/P_ForMike_ats.RData')
-# pBoth$species <- 'ats'
-# pAll <- rbind(pAll,pBoth); rm(pBoth)
-# 
-# 
-# pred <- pAll %>% group_by(species,flow,temp,cBKT,cBNT,cATS,isYOY,season,river) %>%
-#   summarize(meanPredGR = mean(predGr, na.rm=T),
-#             sdpredGR = sd(predGr, na.rm=T)) %>%
-#    ungroup()
-# 
-# save(pred,file = 'D:/projects/linkedModels/data/out/P_ForMike_allMeans.RData')
+#####run if get new predictions - takes a while to run ####
+
+ # load('D:/projects/linkedModels/data/out/P_ForMike_bkt.RData')
+ # pBoth$species <- 'bkt'
+ # pAll <- pBoth; rm(pBoth)
+ # 
+ # load('D:/projects/linkedModels/data/out/P_ForMike_bnt.RData')
+ # pBoth$species <- 'bnt'
+ # pAll <- rbind(pAll,pBoth); rm(pBoth)
+ # 
+ # load('D:/projects/linkedModels/data/out/P_ForMike_ats.RData')
+ # pBoth$species <- 'ats'
+ # pAll <- rbind(pAll,pBoth); rm(pBoth)
+ # 
+ # 
+ # pred <- pAll %>% group_by(species,len,flow,temp,cBKT,cBNT,cATS,isYOY,season,river) %>%
+ #   summarize(meanPredGR = mean(predGr, na.rm=T),
+ #             sdpredGR = sd(predGr, na.rm=T)) %>%
+ #    ungroup()
+ # 
+ # save(pred,file = 'D:/projects/linkedModels/data/out/P_ForMike_allMeans.RData')
+
 load('D:/projects/linkedModels/data/out/P_ForMike_allMeans.RData')
   
 pred <- pred %>% filter( !(isYOY == 0 & season == 2) ) 
@@ -658,6 +662,73 @@ plotPredMeans(pred, "meanPredGR", c("flow","temp"), 1)
 ggsave('figures/tmp.png', width = 9, height = 7, units='in')
 ```
 
+```{r}
+
+all <- c('len','temp','flow','cBKT','cBNT','cATS')
+allLabels <- c('Length (mm)','Temperature (C)','Flow (m3/s)','Brook Trout abundance','Brown Trout abundance','Atlantic Salmon abundance')
+
+all <- c('len','cBKT','temp','cBNT','flow','cATS')
+allLabels <- c('Length (mm)','Brook Trout abundance','Stream temperature (C)','Brown Trout abundance','Stream flow (m3/s)','Atlantic Salmon abundance')
+
+remFacetLabel <- c(3,4,5,6)
+
+selectSingleVar <- function(p, all, depVar, varsToPlot, isYOYGG){
+  
+  notPlot <- NA
+  notPlot[1] <- all[!(all %in% varsToPlot)][1]
+  notPlot[2] <- all[!(all %in% varsToPlot)][2]
+  notPlot[3] <- all[!(all %in% varsToPlot)][3]
+  notPlot[4] <- all[!(all %in% varsToPlot)][4]
+  notPlot[5] <- all[!(all %in% varsToPlot)][5]
+
+  pGG <- p %>% filter(isYOY == isYOYGG, 
+                        eval(as.name(notPlot[1])) == 0, 
+                        eval(as.name(notPlot[2])) == 0, 
+                        eval(as.name(notPlot[3])) == 0,                                         
+                        eval(as.name(notPlot[4])) == 0, 
+                        eval(as.name(notPlot[5])) == 0
+                      )#%>%
+              # distinct(species, isYOY, riverGG, seasonGG, speciesGG, .keep_all = TRUE)
+
+  return(pGG)  
+}
+
+isYOYGG <- 0
+
+ggSingle <- list()
+singleDat <- list()
+for(i in 1:length(all))
+  #https://stackoverflow.com/questions/31993704/storing-ggplot-objects-in-a-list-from-within-loop-in-r
+      local({ i <- i
+  singleDat[[i]] <- selectSingleVar(pred, all, "meanPredGR", all[i], isYOYGG)
+  print(c(i,all[i]))
+ # print(str(singleDat[[i]]))
+  
+  tmp <- singleDat[[i]] %>% filter(riverGG == "West Brook")
+  ggSingle[[i]] <<- ggplot( tmp, aes( eval(as.name(all[i])), meanPredGR, color=speciesGG ) ) +
+      geom_line( size = 1.225 ) +
+      theme_bw() +
+      theme(panel.grid.minor = element_blank(), panel.grid.major = element_blank(), 
+            axis.title.y = element_blank(),
+            legend.position="none") +
+      geom_hline(yintercept = 0) +
+      ylim(-0.15,0.8) +
+      scale_x_continuous(allLabels[i]) +
+      facet_grid(~seasonGG)
+  
+  if( i %in% remFacetLabel ) {
+    ggSingle[[i]] <<- ggSingle[[i]] +
+    theme(
+      strip.background = element_blank(),
+      strip.text.x = element_blank()
+    )
+  }
+})
+
+grid.arrange(grobs=ggSingle, left = "Growth rate (mm/d)")
+
+
+```
 
 
 

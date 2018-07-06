@@ -237,3 +237,9 @@ small truncated (-0.05,0.05), sd (estimated, unif[0.01,0.5]), rmse = 3.07, good 
 
 
   rmse = , sigmaIndRE = ,   mixing
+
+
+  .....
+  7/6/18
+
+Take out squared terms in bnt and bkt, and in squared toerm for len - for all three spp
