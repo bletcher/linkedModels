@@ -129,11 +129,11 @@ getPrediction <- function(d, limits = 2, nPoints = 5, itersForPred, constants, s
                       beta7 * len +
 
                       betaBNT1 * cBNT +
-                      betaBNT2 * cBNT^2 +
-                      betaBNT3 * cBNT * cBKT +
+                  #    betaBNT2 * cBNT^2 +
+                      betaBNT2 * cBNT * cBKT +
 
-                      betaATS1 * cATS +
-                      betaATS2 * cATS^2
+                      betaATS1 * cATS
+                 #     betaATS2 * cATS^2
 
                   ) #* interval
         ) %>%
@@ -156,12 +156,12 @@ getPrediction <- function(d, limits = 2, nPoints = 5, itersForPred, constants, s
 
                 beta7 * len +
 
-              betaBNT1 * cBNT +
-              betaBNT2 * cBNT^2 +
-              betaBNT3 * cBNT * cBKT +
+                betaBNT1 * cBNT +
+                #    betaBNT2 * cBNT^2 +
+                betaBNT2 * cBNT * cBKT +
 
-              betaATS1 * cATS +
-              betaATS2 * cATS^2
+                betaATS1 * cATS
+              #     betaATS2 * cATS^2
 
             ) #* interval
     ) %>%
@@ -185,11 +185,11 @@ getPrediction <- function(d, limits = 2, nPoints = 5, itersForPred, constants, s
                       beta7 * len +
 
                       betaBNT1 * cBNT +
-                      betaBNT2 * cBNT^2 +
-                      betaBNT3 * cBNT * cBKT +
+                      #    betaBNT2 * cBNT^2 +
+                      betaBNT2 * cBNT * cBKT +
 
-                      betaATS1 * cATS +
-                      betaATS2 * cATS^2
+                      betaATS1 * cATS
+                    #     betaATS2 * cATS^2
 
                   ) #* interval
         ) %>%

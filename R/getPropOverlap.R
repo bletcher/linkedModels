@@ -1,11 +1,11 @@
 #'Estimate proportion overlap for betas
 #'
 #'@param mcmcProcessed a list generated using process.output()
-#'@param nB a data frame containing the number of beats for the run
+#'@param nB a data frame containing the number of betas for the run
 #'@return Prints the proportion of [,isYOY,season,river] beta means that overlap 0
 #'@export
 
-getPropOverlapBetas <- function(mcmcProcessed,nB){
+getPropOverlap0Betas <- function(mcmcProcessed,nB){
 
   getProp <- function(i) {
     sum(i*1)/length(i)
@@ -25,7 +25,7 @@ getPropOverlapBetas <- function(mcmcProcessed,nB){
   # for each BNT beta
   print("grBetaBNT")
   for ( i in 1:nB$nBetasBNT ){
-    prop <- lapply( mcmcProcessed$overlap0$grBetaBNT[i,,,], getProp )
+    prop <- lapply( mcmcProcessed$overlap0$grBetaBNT[i,,,1:2], getProp )
     print( sum(data.frame(prop)) / length(data.frame(prop)) )
   }
   print("")
@@ -33,7 +33,7 @@ getPropOverlapBetas <- function(mcmcProcessed,nB){
   # for each ATS beta
   print("grBetaATS")
   for ( i in 1:nB$nBetasATS ){
-    prop <- lapply( mcmcProcessed$overlap0$grBetaATS[i,,,], getProp )
+    prop <- lapply( mcmcProcessed$overlap0$grBetaATS[i,,,1], getProp )
     print( sum(data.frame(prop)) / length(data.frame(prop)) )
   }
 }

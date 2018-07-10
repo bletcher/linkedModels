@@ -27,7 +27,7 @@ drainage <- "west" # ==
 speciesDet <- c("bkt", "bnt","ats") #keep as all three spp
 speciesInDet <- factor(speciesDet, levels = c('bkt','bnt','ats'), ordered = T)
 
-speciesGr <- "bnt"
+speciesGr <- "ats"
 #speciesGr = c("bkt", "bnt","ats")
 speciesInGr <- factor(speciesGr, levels = c('bkt','bnt','ats'), ordered = T)
 
@@ -243,21 +243,21 @@ iter=1
   nB <- list()
 
   if(speciesGr == 'bkt'){
-    nB$nBetas <- 8
+    nB$nBetas <- 7
     nB$nBetasBNT <- 2
     nB$nBetasATS <- 1
     nB$nBetasSigma <- 3
   }
 
   if(speciesGr == 'bnt'){
-    nB$nBetas <- 8
+    nB$nBetas <- 7
     nB$nBetasBNT <- 2
     nB$nBetasATS <- 1
     nB$nBetasSigma <- 3
   }
 
   if(speciesGr == 'ats'){
-    nB$nBetas <- 8
+    nB$nBetas <- 7
     nB$nBetasBNT <- 2
     nB$nBetasATS <- 1
     nB$nBetasSigma <- 3
