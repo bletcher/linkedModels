@@ -719,9 +719,18 @@ getRMSE_Nimble <- function(d,residLimit = 0.6, ii = 1){
   ggg <- ggplot( ddGIn, aes( observedLengthOriginal, estLen, color = factor(leftOut) ) ) +
     geom_point( alpha = 0.1 ) +
     geom_abline(intercept = 0, slope = 1) +
+    scale_x_continuous("Observed length (mm)") +
+    scale_y_continuous("Estimated length (mm)") +
+    theme_publication() +
+    theme(      strip.background = element_blank(),
+                strip.text.x = element_blank(),
+                legend.position="none") +
     #   ylim(-2,4) +
+    ggtitle(speciesGr) +
     facet_grid(~leftOut)
   print(ggg)
+
+  ggsave(paste0('figures/obsPred_',speciesGr,'.png'),width = 7,height = 5)
 
   rmse <- ddGIn %>%
     mutate( resid = estLen - observedLengthOriginal,
@@ -747,7 +756,7 @@ getRMSE_Nimble <- function(d,residLimit = 0.6, ii = 1){
 #
 #'Plot observed/predicted and return RMSE
 #'
-#'@param various
+#'@param various plotlist, file cols=1
 #'@return plots
 #'@export
 #'

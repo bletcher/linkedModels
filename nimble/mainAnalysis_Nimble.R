@@ -39,7 +39,7 @@ maxSampleInterval <- 200 # <
 recreatecdFileBeforeDetMod_TF <- FALSE
 runDetectionModel_TF <- FALSE
 recreateCD_TF <- FALSE
-runCrossValidation_TF <- FALSE ############################
+runCrossValidation_TF <- TRUE ############################
 percentLeftOut <- 10
 
 meanOrIter <- "mean"; iter <- 1
@@ -322,6 +322,7 @@ iter=1
   source("./R/jagsUIFunctions.R")
   mcmcProcessed <- process.output(mcmc, DIC=FALSE, params.omit=FALSE)#,params.omit=("lengthExp")) #jagsUI function, DIC = FALSE because it requires 'deviance'
 
+  # this saves /figures/obsPred_speciesGr.png
   obsPred <- getRMSE_Nimble(mcmcProcessed,20)
   obsPred$rmse
   #obsPred$outliers%>% as.data.frame()
