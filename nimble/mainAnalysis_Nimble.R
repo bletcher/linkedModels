@@ -390,12 +390,14 @@ iter=1
   itersForPred <- sample( 1:mcmcInfo$nSamples, nItersForPred )
 
   # predictions across the grid
-  p <- getPrediction( mcmcProcessed, limits, nPoints, itersForPred, dG[[1]]$constants, ddG[[ii]][[1]]$sampleIntervalMean, c("len","temp", "flow","cBKT", "cBNT", "cATS") )#######################
+  p <- getPrediction( mcmcProcessed, limits, nPoints, itersForPred, dG[[1]]$constants, ddG[[ii]][[1]]$sampleIntervalMean,
+                      c("len","temp", "flow","cBKT", "cBNT", "cATS") )#######################
   #p$variable <- "mean"
   # predictions of sigma across the grid
 
   #### need to comment out betas for ATS
-  pSigma <- getPredictionSigma( mcmcProcessed, limits, nPoints, itersForPred, dG[[1]]$constants, ddG[[ii]][[1]]$sampleIntervalMean, c("temp", "flow") )
+  pSigma <- getPredictionSigma( mcmcProcessed, limits, nPoints, itersForPred, dG[[1]]$constants, ddG[[ii]][[1]]$sampleIntervalMean,
+                                c("temp", "flow") )
 
   #pSigma$variable <- "sd"
   # combine predicted growth rates and sigma in predicted growth rates to get cv in predicted growth rates
@@ -421,7 +423,7 @@ iter=1
   plotPred(pBoth, "predGr", c("flow","cBKT"), 1, speciesGr)
   plotPred(pBoth, "predGr", c("cBKT","cBNT"), 1, speciesGr)
 
-
+  plotPred(pBoth, "predGr", c("len","cBNT"), 1, speciesGr)
   #######################
   # graph function, in analyzeOutputFunctions.R
 

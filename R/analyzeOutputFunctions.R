@@ -16,19 +16,19 @@ getPrediction <- function(d, limits = 2, nPoints = 5, itersForPred, constants, s
   grInt <- array2df(d$sims.list$grInt, levels = list(iter=NA,isYOY=c(0,1),season=1:constants$nSeasons,river=riverOrderedIn[1:constants$nRivers]), label.x="int")
 
   # get grBeta in df format and merge in grInt
-  grBeta3 <- array2df(d$sims.list$grBeta, levels = list(iter=NA,beta=NA,isYOY=c(0,1),season=1:constants$nSeasons,river=riverOrderedIn[1:constants$nRivers]), label.x="est")
+  grBeta3 <- array2df(d$sims.list$grBeta, levels = list(iter=NA,beta=1:nB$nBetas,isYOY=c(0,1),season=1:constants$nSeasons,river=riverOrderedIn[1:constants$nRivers]), label.x="est")
 
   grBeta2 <- spread( grBeta3, key = beta, value = est, sep = "" ) %>%
     left_join( .,grInt )
 
   # grBetaBNT, 2 rivers only
-  grBetaBNT <- array2df(d$sims.list$grBetaBNT, levels = list(iter=NA,betaBNT=NA,isYOY=c(0,1),season=1:constants$nSeasons,river=riverOrderedIn[1:(4-(4-constants$nRivers))]), label.x="est")
+  grBetaBNT <- array2df(d$sims.list$grBetaBNT, levels = list(iter=NA,betaBNT=1:nB$nBetasBNT,isYOY=c(0,1),season=1:constants$nSeasons,river=riverOrderedIn[1:(4-(4-constants$nRivers))]), label.x="est")
 
   grBeta1 <- spread( grBetaBNT, key = betaBNT, value = est, sep = "" ) %>%
     left_join( .,grBeta2 )
 
   # grBetaATS, no river
-  grBetaATS <- array2df(d$sims.list$grBetaATS, levels = list(iter=NA,betaATS=NA,isYOY=c(0,1),season=1:constants$nSeasons,river=riverOrderedIn[1:(4-(4-constants$nRivers))]), label.x="est")
+  grBetaATS <- array2df(d$sims.list$grBetaATS, levels = list(iter=NA,betaATS=1:nB$nBetasATS,isYOY=c(0,1),season=1:constants$nSeasons,river=riverOrderedIn[1:(4-(4-constants$nRivers))]), label.x="est")
 
   grBeta <- spread( grBetaATS, key = betaATS, value = est, sep = "" ) %>%
     left_join( .,grBeta1 )
@@ -92,10 +92,11 @@ getPrediction <- function(d, limits = 2, nPoints = 5, itersForPred, constants, s
     cATSData <- 0
 
   predTemplate <- data.frame(
-                              len = lenData,
+
                              # count = countData,
-                              flow =  flowData,
                               temp =  tempData,
+                              flow =  flowData,
+                              len  =  lenData,
                               cBKT =  cBKTData,
                               cBNT =  cBNTData,
                               cATS =  cATSData
@@ -580,7 +581,7 @@ plotPred <- function(p, depVar, varsToPlot, isYOYGG, speciesGG) {
 #'@export
 #'
 plotPredMeans <- function(p, depVar, varsToPlot, isYOYGG) {
-  all = c('temp','flow','cBKT','cBNT','cATS')
+  all = c('len','temp','flow','cBKT','cBNT','cATS')
 
   #print(c(depVar,(as.name(depVar))))
 
@@ -590,12 +591,13 @@ plotPredMeans <- function(p, depVar, varsToPlot, isYOYGG) {
     notPlot[2] <- all[!(all %in% varsToPlot)][2]
     notPlot[3] <- all[!(all %in% varsToPlot)][3]
     notPlot[4] <- all[!(all %in% varsToPlot)][4]
+    notPlot[5] <- all[!(all %in% varsToPlot)][5]
 
 
     #   pGG <- p %>% filter(isYOY == isYOYGG, species == speciesGG, eval(as.name(notPlot[1])) == 0, eval(as.name(notPlot[2])) == 0, eval(as.name(notPlot[3])) == 0 ) %>%
     #                 distinct(eval(as.name(varsToPlot[1])), iter, isYOY, river, species, season, .keep_all = TRUE)
     pGG <- p %>% filter(isYOY == isYOYGG, eval(as.name(notPlot[1])) == 0, eval(as.name(notPlot[2])) == 0, eval(as.name(notPlot[3])) == 0,
-                        eval(as.name(notPlot[4])) == 0) %>%
+                        eval(as.name(notPlot[4])) == 0, eval(as.name(notPlot[5])) == 0) %>%
       distinct(eval(as.name(varsToPlot[1])), speciesGG, isYOY, riverGG, seasonGG, .keep_all = TRUE)
 
     ggOut <- ggplot( pGG, aes( eval(as.name(varsToPlot[1])), eval(as.name(depVar)), color=(speciesGG) ) ) +
@@ -616,13 +618,14 @@ plotPredMeans <- function(p, depVar, varsToPlot, isYOYGG) {
     notPlot[1] <- all[!(all %in% varsToPlot)][1]
     notPlot[2] <- all[!(all %in% varsToPlot)][2]
     notPlot[3] <- all[!(all %in% varsToPlot)][3]
+    notPlot[4] <- all[!(all %in% varsToPlot)][4]
 
 
     #    pGG <- p %>% filter(isYOY == isYOYGG, species == speciesGG, eval(as.name(notPlot[1])) == 0, eval(as.name(notPlot[2])) == 0 ) %>%
     #      distinct(eval(as.name(varsToPlot[1])), eval(as.name(varsToPlot[2])), iter, isYOY, riverGG, species, season, .keep_all = TRUE)
 
     pGG <- p %>% filter(isYOY == isYOYGG, eval(as.name(notPlot[1])) == 0, eval(as.name(notPlot[2])) == 0,
-                        eval(as.name(notPlot[3])) == 0) %>%
+                        eval(as.name(notPlot[3])) == 0,eval(as.name(notPlot[4])) == 0) %>%
       distinct(eval(as.name(varsToPlot[1])), eval(as.name(varsToPlot[2])), speciesGG, isYOY, riverGG, seasonGG, .keep_all = TRUE)
 
     pGG$speciesGroup <- paste0(pGG$speciesGG,pGG[[varsToPlot[2]]])
