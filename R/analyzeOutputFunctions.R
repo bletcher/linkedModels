@@ -720,6 +720,7 @@ getRMSE_Nimble <- function(d,residLimit = 0.6, ii = 1){
   print(gg)
 
   ggg <- ggplot( ddGIn, aes( observedLengthOriginal, estLen, color = factor(leftOut) ) ) +
+  #ggg <- ggplot( ddGIn %>% filter(riverOrdered == 'west brook'), aes( observedLengthOriginal, estLen, color = factor(leftOut) ) ) +
     geom_point( alpha = 0.1 ) +
     geom_abline(intercept = 0, slope = 1) +
     scale_x_continuous("Observed length (mm)") +
@@ -734,6 +735,7 @@ getRMSE_Nimble <- function(d,residLimit = 0.6, ii = 1){
   print(ggg)
 
   ggsave(paste0('figures/obsPred_',speciesGr,'.png'),width = 7,height = 5)
+#  ggsave(paste0('figures/obsPred_',speciesGr,'_WB.png'),width = 7,height = 5)
 
   rmse <- ddGIn %>%
     mutate( resid = estLen - observedLengthOriginal,
