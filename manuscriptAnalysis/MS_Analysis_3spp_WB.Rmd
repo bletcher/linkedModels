@@ -18,6 +18,7 @@ Plots for the manuscript
 
 ```{r Load data, message=FALSE}
 library(arm)
+library(relaimpo)
 library(linkedModels)
 library(arrayhelpers)
 library(tidyverse)
@@ -1155,9 +1156,10 @@ simData <- list(
   riverIndex = 1 #Levels: west brook < wb jimmy < wb mitchell < wb obear
 )
 
-stats3Spp <- anov <- list()
+stats3Spp <- anov <- elapsed <- lm <- relImp <- list()
+spp <- c('bkt','bnt','ats')
 
-for( speciesForProj in c('bkt','bnt','ats') ){
+for( speciesForProj in spp ){
 
   # get mean on mean length by cohort for the fall yoy sample
   obsLenStats <-  
@@ -1193,28 +1195,33 @@ for( speciesForProj in c('bkt','bnt','ats') ){
     sizeStats2 <- rbind(sizeStats2,sizeStats1[[2]]) #means by occ of means over individuals (grouped by occ)
   }
   endTime <- Sys.time()
-  (elapsed <- endTime - startTime)
+  (elapsed[[speciesForProj]] <- endTime - startTime)
   
   stats3Spp[[speciesForProj]] <- list( sizeStats,sizeStats2 )
+
+  lm[[speciesForProj]] <- lm( lenMean ~ temp + flow + bkt + bnt + ats + temp * flow + temp^2 + flow^2 + bnt^2, data = sizeStats %>% filter(occ == (simData$nOccYOY + simData$nOccAdult)))
   
-  anov[[speciesForProj]] <- anova( lm( lenMean ~ temp + flow + bkt + bnt + ats, data = sizeStats %>% filter(occ == (simData$nOccYOY + simData$nOccAdult))) )
+  relImp[[speciesForProj]] <- calc.relimp(lm[[speciesForProj]], type = c("lmg"), rela = TRUE)
+    
+  anov[[speciesForProj]] <- anova( lm[[speciesForProj]] )
 
 }
 
+# make bar chart of relative importance of each variable for each spp
+rI <- cbind(data.frame(bktRI = relImp[['bkt']]$lmg), data.frame(bntRI = relImp[['bnt']]$lmg), data.frame(atsRI = relImp[['ats']]$lmg)) %>%
+        rownames_to_column() %>% gather(key=rowname) %>% mutate(var = rep(1:length(relImp[['bkt']]$lmg),length(spp)))
 
+ggplot(rI, aes(factor(var),value, fill = factor(rowname, levels = c('bktRI','bntRI','atsRI'), ordered = TRUE))) +
+  geom_col(position='dodge') +
+  scale_x_discrete('Parameter name',
+                   labels = c('1' = 'Temp','2' = 'Flow','3' = 'Bkt','4' = 'Bnt','5' = 'Ats','6' = 'Temp*Flow')) +
+  scale_fill_grey() +
+  scale_y_continuous('Relative proportion of variance explained') +
+  theme_publication() +
+  theme( legend.position = 'none')
 
+ggsave('figures/3Spp_WB/relImp.png', width = 9, height = 7, units='in')
 
-ggplot(sizeStats, aes())
-
-
-matplot(t(sizeMat[2,,]))
-
-
-ggplot(predLen %>% filter(iter %in% 1:10), aes(occ,len, group=ind)) +
-  geom_point(aes(color=ind))+
-  geom_line(aes(color=ind)) +
-  theme(legend.position = 'none')+
-  facet_wrap(~iter)
 
 
 

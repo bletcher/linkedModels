@@ -135,7 +135,7 @@ projectSizes <- function(m,simData,testRow){
   d <- indVars %>% filter(rowNum == testRow)
 
   for(i in 1:simData$nReps){
-    print(paste0(i," out of ",simData$nReps))
+    print(paste0(i," out of ",simData$nReps,"  ",speciesForProj))
     print(d)
     for(rows in 1:simData$numInd){
       for(cols in 1:(simData$nOcc-1)){
