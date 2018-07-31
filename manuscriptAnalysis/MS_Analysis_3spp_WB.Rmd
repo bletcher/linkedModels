@@ -1145,46 +1145,75 @@ interact <- pred %>% filter(isYOY == isYOYGG,
 ```{r projections}
 # run 'Load data' chunk at top to get the 'mcmc' object
 
-speciesForProj <- 'bkt'
-
-# get mean on mean length by cohort for the fall yoy sample
-obsLenStats <-  
-  ddGIn2[[speciesForProj]] %>%
-    group_by(cohort,ageInSamples) %>%
-    summarise(lenMean = mean(observedLength, na.rm=TRUE),
-              lenSD = sd(observedLength, na.rm=TRUE)) %>%
-    filter(ageInSamples == 1) %>%
-    ungroup() %>%
-    summarise(lenMeanMean = mean(lenMean, na.rm=TRUE),
-              lenSDMean = sd(lenMean, na.rm=TRUE)) 
 
 #data for running the simulation
 simData <- list(
-  nReps = 1000, #num of mcmc iterations to grab
-  numInd = 500, # number of individual to simulate
+  nReps = 100, #num of mcmc iterations to grab
+  numInd = 500 , # number of individual to simulate
   nOccYOY = 3,
   nOccAdult = 7,
-  riverIndex = 1, #Levels: west brook < wb jimmy < wb mitchell < wb obear
-  
-  species = speciesForProj,
-  meanInit = obsLenStats$lenMeanMean,
-  sdInit = obsLenStats$lenSDMean,
-  nSamplesAvail = mcmcInfo$nChains * mcmcInfo$nSamples
+  riverIndex = 1 #Levels: west brook < wb jimmy < wb mitchell < wb obear
 )
 
-simData <- updateSimData(simData)
-nB <- getNBetas()
-m <- createMatrices()
-indVars <- getIndVars()
-sizeMat <- projectSizes(m)
+stats3Spp <- anov <- list()
+
+for( speciesForProj in c('bkt','bnt','ats') ){
+
+  # get mean on mean length by cohort for the fall yoy sample
+  obsLenStats <-  
+    ddGIn2[[speciesForProj]] %>%
+      group_by(cohort,ageInSamples) %>%
+      summarise(lenMean = mean(observedLength, na.rm=TRUE),
+                lenSD = sd(observedLength, na.rm=TRUE)) %>%
+      filter(ageInSamples == 1) %>%
+      ungroup() %>%
+      summarise(lenMeanMean = mean(lenMean, na.rm=TRUE),
+                lenSDMean = mean(lenSD, na.rm=TRUE)) 
+  
+
+  simData$species = speciesForProj
+  simData$meanInit = obsLenStats$lenMeanMean
+  simData$sdInit = obsLenStats$lenSDMean
+  simData$nSamplesAvail = mcmcInfo$nChains * mcmcInfo$nSamples
+  
+  simData <- updateSimData(simData)
+  nB <- getNBetas()
+  m <- createMatrices()
+  
+  indVars <- getIndVars()
+  
+  startTime <- Sys.time()
+  sizeStats <- sizeStats2 <- NULL
+  #loop over conditions
+  for(testRow in indVars$rowNum){
+    sizeMat <- projectSizes(m,simData,testRow)
+    
+    sizeStats1 <- summarizeLens(sizeMat,testRow)
+    sizeStats <- rbind(sizeStats,sizeStats1[[1]]) #means over individuals (grouped by iter, occ)
+    sizeStats2 <- rbind(sizeStats2,sizeStats1[[2]]) #means by occ of means over individuals (grouped by occ)
+  }
+  endTime <- Sys.time()
+  (elapsed <- endTime - startTime)
+  
+  stats3Spp[[speciesForProj]] <- list( sizeStats,sizeStats2 )
+  
+  anov[[speciesForProj]] <- anova( lm( lenMean ~ temp + flow + bkt + bnt + ats, data = sizeStats %>% filter(occ == (simData$nOccYOY + simData$nOccAdult))) )
+
+}
+
+
+
+
+ggplot(sizeStats, aes())
+
 
 matplot(t(sizeMat[2,,]))
 
-predLen <- array2df(sizeMat, levels = list(iter=1:simData$nReps,ind=1:simData$numInd,occ=1:simData$nOcc), label.x="len")
 
-ggplot(predLen, aes(occ,len, group=ind)) +
+ggplot(predLen %>% filter(iter %in% 1:10), aes(occ,len, group=ind)) +
   geom_point(aes(color=ind))+
   geom_line(aes(color=ind)) +
+  theme(legend.position = 'none')+
   facet_wrap(~iter)
 
 

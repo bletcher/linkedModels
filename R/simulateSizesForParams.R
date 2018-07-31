@@ -129,17 +129,17 @@ getIndVars <- function(){
 #'@param d a model run dataFrame
 #'@return a matrix
 #'@export
+#'
+projectSizes <- function(m,simData,testRow){
 
-#project sizes
-projectSizes <- function(m){
+  d <- indVars %>% filter(rowNum == testRow)
 
-  testRow <- 22
   for(i in 1:simData$nReps){
-    print(paste0(i," out of ",simdData$nReps))
+    print(paste0(i," out of ",simData$nReps))
+    print(d)
     for(rows in 1:simData$numInd){
       for(cols in 1:(simData$nOcc-1)){
 
-        d <- indVars %>% filter(rowNum == testRow)
         gr <- m$intMat[i,rows,cols] +
           m$betaMat[i,1,rows,cols] * d$temp +
           m$betaMat[i,2,rows,cols] * d$flow +
@@ -168,3 +168,38 @@ projectSizes <- function(m){
   return(m$sizeMat)
 
 }
+
+
+#'Summarize predictions of body sizes
+#'
+#'@param d a model run dataFrame
+#'@return a matrix
+#'@export
+#'
+summarizeLens <- function(sizeMat,testRow){
+  predLen <- array2df(sizeMat, levels = list(iter=1:simData$nReps,ind=1:simData$numInd,occ=1:simData$nOcc), label.x="len")
+
+  p <- predLen %>%
+    group_by(iter,occ) %>%
+    summarize( lenMean = mean(len),
+               lenSD = sd(len),
+               n=n()) %>%
+    ungroup()
+
+  d <- indVars %>% filter(rowNum == testRow)
+  p <- cbind(p,d)
+
+  p2 <- p %>%
+    group_by(occ) %>%
+    summarize( lenMeanMean = mean(lenMean),
+               lenMeanSD = sd(lenMean),
+               lenSDMean = mean(lenSD),
+               lenSDSD = sd(lenSD),
+               n=n()) %>%
+    ungroup()
+
+  p2 <- cbind(p2,d)
+
+  return(list(p,p2))
+}
+
