@@ -149,7 +149,7 @@ projectSizes <- function(m,simData,testRow){
           m$betaMat[i,6,rows,cols] * d$bkt +
           m$betaMat[i,7,rows,cols] * ((m$sizeMat[i,rows,cols] - simData$lengthMean) / simData$lengthSD) +
           m$betaMatBNT[i,1,rows,cols] * d$bnt +
-          m$betaMatBNT[i,2,rows,cols] * d$bnt^2 +
+          m$betaMatBNT[i,2,rows,cols] * d$bnt * d$bkt +
           m$betaMatATS[i,1,rows,cols] * d$ats +
           m$indREMat[i,rows,cols]
 

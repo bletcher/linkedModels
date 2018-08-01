@@ -1199,7 +1199,7 @@ for( speciesForProj in spp ){
   
   stats3Spp[[speciesForProj]] <- list( sizeStats,sizeStats2 )
 
-  lm[[speciesForProj]] <- lm( lenMean ~ temp + flow + bkt + bnt + ats + temp * flow + temp^2 + flow^2 + bnt^2, data = sizeStats %>% filter(occ == (simData$nOccYOY + simData$nOccAdult)))
+  lm[[speciesForProj]] <- lm( lenMean ~ temp + flow + bkt + bnt + ats + temp * flow + temp^2 + flow^2 + bnt^2, data = sizeStats %>% filter(occ == (simData$nOcc)))
   
   relImp[[speciesForProj]] <- calc.relimp(lm[[speciesForProj]], type = c("lmg"), rela = TRUE)
     
@@ -1207,22 +1207,135 @@ for( speciesForProj in spp ){
 
 }
 
-# make bar chart of relative importance of each variable for each spp
-rI <- cbind(data.frame(bktRI = relImp[['bkt']]$lmg), data.frame(bntRI = relImp[['bnt']]$lmg), data.frame(atsRI = relImp[['ats']]$lmg)) %>%
-        rownames_to_column() %>% gather(key=rowname) %>% mutate(var = rep(1:length(relImp[['bkt']]$lmg),length(spp)))
+projOut <- list(stats3Spp, lm, relImp, anov, elapsed)
+save( projOut, file = 'D:/projects/linkedModels/data/out/projectionOut.RData')
 
-ggplot(rI, aes(factor(var),value, fill = factor(rowname, levels = c('bktRI','bntRI','atsRI'), ordered = TRUE))) +
-  geom_col(position='dodge') +
-  scale_x_discrete('Parameter name',
-                   labels = c('1' = 'Temp','2' = 'Flow','3' = 'Bkt','4' = 'Bnt','5' = 'Ats','6' = 'Temp*Flow')) +
+# make figures of relative importance for each sampling occasion
+rIAll <- cAll <- NULL
+for( occSelected in 2:simData$nOcc){
+  print(occSelected)
+  lmAll <- ggRIAll <- relImpAll <- coefsAll <- list()
+
+  for(spp1 in spp){
+      
+      lmAll[[spp1]] <- lm( lenMean ~ temp + flow + temp * flow + temp^2 + flow^2 + bkt + bnt + ats + bnt * bkt, data = stats3Spp[[spp1]][[1]] %>% filter(occ == occSelected))
+  
+      relImpAll[[spp1]] <- calc.relimp(lmAll[[spp1]], type = c("lmg"), rela = TRUE)
+      
+      coefsAll[[spp1]] <- lmAll[[spp1]]$coefficients
+  }
+  
+  # make bar chart of relative importance of each variable for each spp
+  rI <- cbind(data.frame(bktRI = relImpAll[['bkt']]$lmg), 
+              data.frame(bntRI = relImpAll[['bnt']]$lmg), 
+              data.frame(atsRI = relImpAll[['ats']]$lmg)) %>%
+        rownames_to_column() %>% 
+        gather(key=rowname) %>% 
+        mutate(var = rep(1:length(relImpAll[['bkt']]$lmg),length(spp)),
+               occ = occSelected,
+               season = simData$seasons[occSelected])
+  
+  rIAll <- rbind(rIAll,rI)
+  
+  ggplot(rI, aes(factor(var),value, fill = factor(rowname, levels = c('bktRI','bntRI','atsRI'), ordered = TRUE))) +
+    geom_col(position='dodge') +
+    scale_x_discrete('Parameter',
+                     labels = c('1' = 'Temp','2' = 'Flow','3' = 'Bkt','4' = 'Bnt','5' = 'Ats','6' = 'Temp*Flow', '7' = "Bkt*Bnt")) +
+    scale_fill_grey() +
+    scale_y_continuous('Relative proportion of variance explained') +
+    ggtitle(paste0("occ = ",occSelected,"  Season = ",simData$seasons[occSelected])) +
+    theme_publication() +
+    theme( legend.position = 'none')
+  
+  ggsave(paste0('figures/3Spp_WB/relImpOcc',occSelected,'.png'), width = 9, height = 7, units='in')
+  
+  # coefficients
+  coefs <- cbind(data.frame(bktC = coefsAll[['bkt']]), 
+                 data.frame(bntC = coefsAll[['bnt']]), 
+                 data.frame(atsC = coefsAll[['ats']])) %>%
+        rownames_to_column() %>% 
+        gather(key=rowname) %>% 
+        mutate(var = rep(1:length(coefsAll[['bkt']]),length(spp)),
+               occ = occSelected,
+               season = simData$seasons[occSelected])
+  
+  cAll <- rbind(cAll,coefs)
+}  
+
+######################################################
+# relImp over occasions for each spp and parameter
+labels <- c('1' = 'Temp','2' = 'Flow','3' = 'Bkt','4' = 'Bnt','5' = 'Ats','6' = 'Temp*Flow', '7' = "Bkt*Bnt")
+
+# leaving out bkt*bnt, too small
+ggplot(rIAll %>% filter(var<7), aes((occ), value, color = factor(rowname))) +
+  geom_point() +
+  geom_line() +
+  geom_vline(xintercept = 3.5) +
+  scale_x_continuous('Sampling occasion',
+                    breaks = 2:10,
+                    labels = c('Winter','Spring','Summer', 'Autumn','Winter','Spring','Summer', 'Autumn','Winter')
+                    ) +
+  scale_y_continuous('Relative proportion of variance explained') +
+  theme_publication() +
+  theme(axis.text.x  = element_text(angle=90, vjust=0.25, size=10)) +
+  facet_wrap(~ var, labeller=labeller(var = labels))
+
+ggsave(paste0('figures/3Spp_WB/relImpOccAll.png'), width = 11, height = 9, units='in')
+
+rIMeans <- rIAll %>%
+  group_by(rowname,var) %>%
+  summarize( mean = mean(value),
+             sd = sd(value),
+             stderr = sd(value)/sqrt(length(value))) %>%
+  mutate( up = mean + stderr )
+
+dodge <- position_dodge(width=0.9)
+ggplot(rIMeans, aes(factor(var),mean, fill = factor(rowname, levels = c('bktRI','bntRI','atsRI'), ordered = TRUE))) +
+  geom_errorbar(aes(ymin = mean, ymax = up), width = 0.25, position=dodge) +
+  geom_col(position=dodge) +
+  scale_x_discrete('Parameter',
+                   labels = c('1' = 'Temp','2' = 'Flow','3' = 'Bkt','4' = 'Bnt','5' = 'Ats','6' = 'Temp*Flow', '7' = "Bkt*Bnt")) +
   scale_fill_grey() +
   scale_y_continuous('Relative proportion of variance explained') +
   theme_publication() +
   theme( legend.position = 'none')
 
-ggsave('figures/3Spp_WB/relImp.png', width = 9, height = 7, units='in')
+ggsave(paste0('figures/3Spp_WB/relImpOccMean.png'), width = 9, height = 7, units='in')
+
+#######################
+# coefs
+labelsC <- c('1' = 'intercept', '2' = 'Temp','3' = 'Flow','4' = 'Bkt','5' = 'Bnt','6' = 'Ats','7' = 'Temp*Flow', '8' = "Bkt*Bnt")
 
 
+ggplot(cAll %>% filter(var %in% 2:7), aes((occ), value, color = factor(rowname))) +
+  geom_point() +
+  geom_line() +
+  geom_vline(xintercept = 3.5) +
+  scale_x_continuous('Sampling occasion',
+                    breaks = 2:10,
+                    labels = c('Winter','Spring','Summer', 'Autumn','Winter','Spring','Summer', 'Autumn','Winter')
+                    ) +
+  scale_y_continuous('Coefficients') +
+  theme_publication() +
+  theme(axis.text.x  = element_text(angle=90, vjust=0.25, size=10)) +
+  facet_wrap(~ var, labeller=labeller(var = labelsC))#, scales = 'free')
+
+ggsave(paste0('figures/3Spp_WB/coefsOccAll.png'), width = 11, height = 9, units='in')
+
+# intercept only
+ggplot(cAll %>% filter(var == 1), aes((occ), value, color = factor(rowname))) +
+  geom_point(size=4) +
+  geom_line() +
+  geom_vline(xintercept = 3.5) +
+  scale_x_continuous('Sampling occasion',
+                    breaks = 2:10,
+                    labels = c('Winter','Spring','Summer', 'Autumn','Winter','Spring','Summer', 'Autumn','Winter')
+                    ) +
+  scale_y_continuous('Intercept') +
+  theme_publication() +
+  theme(axis.text.x  = element_text(angle=90, vjust=0.25, size=10))
+
+ggsave(paste0('figures/3Spp_WB/coefsInterceptOccAll.png'), width = 11, height = 9, units='in')
 
 
 # size=100
