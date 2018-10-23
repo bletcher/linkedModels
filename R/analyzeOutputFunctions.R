@@ -719,7 +719,7 @@ getRMSE_Nimble <- function(d,residLimit = 0.6, ii = 1){
         facet_grid(isYOY+riverN~season+leftOut)
   print(gg)
 
-  ggg <- ggplot( ddGIn, aes( observedLengthOriginal, estLen, color = factor(leftOut) ) ) +
+  ggg <- ggplot( ddGIn, aes( observedLengthOriginal, estLen ) ) +
   #ggg <- ggplot( ddGIn %>% filter(riverOrdered == 'west brook'), aes( observedLengthOriginal, estLen, color = factor(leftOut) ) ) +
     geom_point( alpha = 0.1 ) +
     geom_abline(intercept = 0, slope = 1) +
@@ -734,13 +734,13 @@ getRMSE_Nimble <- function(d,residLimit = 0.6, ii = 1){
     facet_grid(~leftOut)
   print(ggg)
 
-  ggsave(paste0('figures/obsPred_',speciesGr,'.png'),width = 7,height = 5)
+  ggsave(paste0('figures/3Spp_WB/obsPred_',speciesGr,'.png'),width = 7,height = 5)
 #  ggsave(paste0('figures/obsPred_',speciesGr,'_WB.png'),width = 7,height = 5)
 
   rmse <- ddGIn %>%
     mutate( resid = estLen - observedLengthOriginal,
             isAbovePred = (estLen > observedLengthOriginal) * 1 ) %>%
-    group_by(leftOut) %>%
+    group_by(riverOrdered,leftOut) %>%
     summarise( rmse = sqrt( sum(resid^2,na.rm=T) / sum(!is.na(resid)) ),
                pValue = sum(isAbovePred,na.rm=T) / sum(!is.na(isAbovePred)) )
 

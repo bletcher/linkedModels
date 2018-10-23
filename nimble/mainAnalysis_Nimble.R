@@ -27,7 +27,7 @@ drainage <- "west" # ==
 speciesDet <- c("bkt", "bnt","ats") #keep as all three spp
 speciesInDet <- factor(speciesDet, levels = c('bkt','bnt','ats'), ordered = T)
 
-speciesGr <- "ats"
+speciesGr <- "bnt"
 #speciesGr = c("bkt", "bnt","ats")
 speciesInGr <- factor(speciesGr, levels = c('bkt','bnt','ats'), ordered = T)
 
@@ -323,7 +323,7 @@ iter=1
   mcmcProcessed <- process.output(mcmc, DIC=FALSE, params.omit=FALSE)#,params.omit=("lengthExp")) #jagsUI function, DIC = FALSE because it requires 'deviance'
 
   # this saves /figures/obsPred_speciesGr.png
-  obsPred <- getRMSE_Nimble(mcmcProcessed,20)
+  obsPred <- getRMSE_Nimble(mcmcProcessed,20,1)
   obsPred$rmse
   #obsPred$outliers%>% as.data.frame()
 
