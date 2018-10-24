@@ -775,11 +775,26 @@ cd %>% filter() %>%
   # seem to need to run the ggsave outside of markdown by pasting into console
    ggsave('figures/3Spp_WB/p.png', height = 11, width = 9, units = 'in')
   
+  p %>% group_by(species) %>%
+    summarize(meanP = mean(invlogit(est)),
+              sdP = sd(invlogit(est)))
+   
+  p %>% group_by(season) %>%
+    summarize(meanP = mean(invlogit(est)))
+   
+  ##################### 
   phi <- array2df(ddD$q50$phiBetaInt, label.x = "est") %>%
     rename(est=est,isYOY=d1,species=d2,season=d3,river=d4,year=d5) %>% filter(river == 1) 
   ggplot(phi, aes(year,invlogit(est),color=factor(species))) +geom_point() + facet_grid( season ~ isYOY)
 
   ggsave('figures/3Spp_WB/phi.png')
+  
+  phi %>% group_by(species) %>%
+    summarize(meanPhi = mean(invlogit(est)),
+              sdPhi = sd(invlogit(est)))
+   
+  phi %>% group_by(season) %>%
+    summarize(meanPhi = mean(invlogit(est)))
   
 # # of skunked sections    
   tmp <- dddD[[2]] %>%
@@ -1595,11 +1610,16 @@ for( speciesForProj in spp ){
 
 }
 
-projOut <- list(stats3Spp, lm, relImp, anov, elapsed, simData)
-save( projOut, file = 'D:/projects/linkedModels/data/out/projectionOut.RData')
+#projOut <- list(stats3Spp, lm, relImp, anov, elapsed, simData)
+save( stats3Spp, lm, relImp, anov, elapsed, simData, file = 'D:/projects/linkedModels/data/out/projectionOut.RData')
 
 # if not re-running the sim
 # load( file = 'D:/projects/linkedModels/data/out/projectionOut.RData')
+
+# temporary while projOut is a list
+#stats3Spp <- projOut[[1]]
+#simData <- projOut[[6]]
+
 
 # make figures of relative importance for each sampling occasion
 rIAll <- cAll <- NULL
@@ -1638,7 +1658,7 @@ for( occSelected in 2:simData$nOcc){
     theme_publication() +
     theme( legend.position = 'none')
   
-#  ggsave(paste0('figures/3Spp_WB/relImpOcc',occSelected,'.png'), width = 9, height = 7, units='in')
+  ggsave(paste0('figures/3Spp_WB/relImpOcc',occSelected,'.png'), width = 9, height = 7, units='in')
   
   # coefficients
   coefs <- cbind(data.frame(bktC = coefsAll[['bkt']]), 
@@ -1658,7 +1678,7 @@ for( occSelected in 2:simData$nOcc){
 labels <- c('1' = 'Temp','2' = 'Flow','3' = 'Bkt','4' = 'Bnt','5' = 'Ats','6' = 'Temp*Flow', '7' = "Bkt*Bnt")
 
 # leaving out bkt*bnt, too small
-ggplot(rIAll, aes((occ), value, color = factor(rowname))) +
+ggplot(rIAll %>% filter(rowname %in% c('bktRI','bntRI')), aes((occ), value, color = factor(rowname))) +
   geom_point() +
   geom_line() +
   geom_vline(xintercept = 3.5) +
@@ -1685,13 +1705,29 @@ ggplot(rIMeans %>% filter(rowname %in% c('bktRI','bntRI')), aes(factor(var),mean
   geom_errorbar(aes(ymin = mean-0.01, ymax = up), width = 0.25, position=dodge) +
   geom_col(position=dodge) +
   scale_x_discrete('Parameter',
-                   labels = c('1' = 'Temp','2' = 'Flow','3' = 'Bkt','4' = 'Bnt','5' = 'Ats','6' = 'Temp*Flow', '7' = "Bkt*Bnt")) +
+                   labels = c('1' = 'Temperature','2' = 'Flow','3' = 'Bkt','4' = 'Bnt','5' = 'Ats','6' = 'Temp*Flow', '7' = "Bkt*Bnt")) +
   scale_fill_grey() +
   scale_y_continuous('Relative proportion of variance explained') +
   theme_publication() +
   theme( legend.position = 'none')
 
 ggsave(paste0('figures/3Spp_WB/relImpOccMean.png'), width = 9, height = 7, units='in')
+
+# mean rel Imp for env vs spp variables
+rIMeans %>%
+  mutate(isEnvVar = ifelse(var %in% c(1,2,6), 1,0)) %>%
+  group_by(rowname,isEnvVar) %>%
+  summarize(meanMean = mean(mean),
+            sumMean = sum(mean),
+            sdMean = sd(mean))
+
+# ratio of env/(env+spp) means
+.247/(.246+.0648) # bkt
+.122/(.122+.159) # bnt
+
+# ratio of env/(env+spp) sums - donT need to do ratio, just use sum for env
+.635/.259 # den-dep bnt/bkt
+.741/.365 # env bkt/bnt
 
 #######################
 # coefs
