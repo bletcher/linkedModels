@@ -1552,12 +1552,17 @@ interact <- pred %>% filter(isYOY == isYOYGG,
 
 #data for running the simulation
 simData <- list(
-  nReps = 100,#100, #num of mcmc iterations to grab
+  nReps = 25,#100, #num of mcmc iterations to grab
   numInd = 500 , # number of individual to simulate
   nOccYOY = 3,
   nOccAdult = 7,
-  riverIndex = 1 #Levels: west brook < wb jimmy < wb mitchell < wb obear
+  riverIndex = 1, #Levels: west brook < wb jimmy < wb mitchell < wb obear
+  minSD = -2, #range and step for independent variable values in the sim
+  maxSD = 2, 
+  step = 1
 )
+simData$nOcc <- simData$nOccYOY + simData$nOccAdult
+simData$indVarSeq = c(-1.5, -0.75, 0, 1.5) #seq(simData$minSD,simData$maxSD,simData$step)
 
 stats3Spp <- anov <- elapsed <- lm <- relImp <- list()
 spp <- c('bkt','bnt','ats')
@@ -1581,11 +1586,11 @@ for( speciesForProj in spp ){
   simData$sdInit = obsLenStats$lenSDMean
   simData$nSamplesAvail = mcmcInfo$nChains * mcmcInfo$nSamples
   
-  simData <- updateSimData(simData)
-  nB <- getNBetas()
+  simData <- updateSimData(simData) # add #season, itersForSim etc data to simData
+  nB <- getNBetas() # get number of betas from mcmc[]
   m <- createMatrices()
   
-  indVars <- getIndVars()
+  indVars <- getIndVars() # get independent variables table, -1.5, 0, 1.5
   
   startTime <- Sys.time()
   sizeStats <- sizeStats2 <- NULL
@@ -1611,14 +1616,25 @@ for( speciesForProj in spp ){
 }
 
 #projOut <- list(stats3Spp, lm, relImp, anov, elapsed, simData)
-save( stats3Spp, lm, relImp, anov, elapsed, simData, file = 'D:/projects/linkedModels/data/out/projectionOut.RData')
+save( stats3Spp, lm, relImp, anov, elapsed, simData, file = paste0('D:/projects/linkedModels/data/out/projectionOut_N',simData$nReps,'.RData'))
 
 # if not re-running the sim
 # load( file = 'D:/projects/linkedModels/data/out/projectionOut.RData')
-
 # temporary while projOut is a list
-#stats3Spp <- projOut[[1]]
-#simData <- projOut[[6]]
+# stats3Spp <- projOut[[1]]
+# relImpData <- projOut[[3]]
+# anovData <- projOut[[4]]
+# simData <- projOut[[6]]
+# spp <- c('bkt','bnt','ats')
+
+# raw sim data figs
+ggplot(stats3Spp[['bkt']][[1]] %>% filter(ats == 0, bkt == 0, bnt == 0), aes(as.numeric(occ),lenMean)) +
+  #geom_point(aes(color = factor(ats))) +
+  #geom_smooth(aes(color = factor(temp), linetype = factor(flow)))+#(bnt + 2)/4 )) +
+  geom_smooth()+#(bnt + 2)/4 )) +
+  geom_smooth(color = 'green', data = stats3Spp[['bnt']][[1]] %>% filter(ats == 0, bkt == 0, bnt == 0)) +
+  facet_grid(temp ~ flow)
+
 
 
 # make figures of relative importance for each sampling occasion
@@ -1658,7 +1674,7 @@ for( occSelected in 2:simData$nOcc){
     theme_publication() +
     theme( legend.position = 'none')
   
-  ggsave(paste0('figures/3Spp_WB/relImpOcc',occSelected,'.png'), width = 9, height = 7, units='in')
+##############################  ggsave(paste0('figures/3Spp_WB/relImpOcc',occSelected,'.png'), width = 9, height = 7, units='in')
   
   # coefficients
   coefs <- cbind(data.frame(bktC = coefsAll[['bkt']]), 
@@ -1734,7 +1750,7 @@ rIMeans %>%
 labelsC <- c('1' = 'intercept', '2' = 'Temp','3' = 'Flow','4' = 'Bkt','5' = 'Bnt','6' = 'Ats','7' = 'Temp*Flow', '8' = "Bkt*Bnt")
 
 
-ggplot(cAll %>% filter(var %in% 2:8), aes((occ), value, color = factor(rowname))) +
+ggplot(cAll %>% filter(var %in% 2:8, rowname %in% c('bktC','bntC')), aes((occ), value, color = factor(rowname))) +
   geom_point(size=3) +
   geom_line() +
   geom_vline(xintercept = 3.5) +
@@ -1820,6 +1836,101 @@ ggplot( stats2 %>% filter(temp == 0, flow == 0, bkt == 0, bnt == 0, ats == 0), a
   geom_point(aes(color = spp), data = stats2 %>% filter(temp == 0, flow == 0, bkt == 1.5, bnt == 0, ats == 0) ) +
   geom_line( aes(color = spp), data = stats2 %>% filter(temp == 0, flow == 0, bkt == 1.5, bnt == 0, ats == 0), linetype = 2 ) 
    
+
+# trajectories across indep var values for different combinations. Trying to relate to relImp results
+#temp
+p1 <- ggplot( stats2 %>% filter(flow == 0, bkt == 0, bnt == 0, ats == 0, spp %in% c('bkt','bnt')), aes(occ,lenMeanMean, group = factor(temp))) +
+  geom_line(aes(color = factor(temp))) +
+  geom_point(aes(color = factor(temp))) +
+  facet_wrap(~spp) 
+
+#flow
+p2 <- ggplot( stats2 %>% filter(temp == 0, bkt == 0, bnt == 0, ats == 0, spp %in% c('bkt','bnt')), aes(occ,lenMeanMean, group = factor(flow))) +
+  geom_line(aes(color = factor(flow))) +
+  geom_point(aes(color = factor(flow))) +
+  facet_wrap(~spp)  
+
+#bkt
+p3 <- ggplot( stats2 %>% filter(temp == 0, flow == 0, bnt == 0, ats == 0, spp %in% c('bkt','bnt')), aes(occ,lenMeanMean, group = factor(bkt))) +
+  geom_line(aes(color = factor(bkt))) +
+  geom_point(aes(color = factor(bkt))) +
+  facet_wrap(~spp) 
+
+#bnt
+p4 <- ggplot( stats2 %>% filter(temp == 0, flow == 0, bkt == 0, ats == 0, spp %in% c('bkt','bnt')), aes(occ,lenMeanMean, group = factor(bnt))) +
+  geom_line(aes(color = factor(bnt))) +
+  geom_point(aes(color = factor(bnt))) +
+  facet_wrap(~spp)
+
+#ats
+p5 <- ggplot( stats2 %>% filter(temp == 0, flow == 0, bkt == 0, bnt == 0, spp %in% c('bkt','bnt')), aes(occ,lenMeanMean, group = factor(ats))) +
+  geom_line(aes(color = factor(ats))) +
+  geom_point(aes(color = factor(ats))) +
+  facet_wrap(~spp)
+
+multiplot(p1, p2, p3, p4, p5, cols=2)
+
+#temp*flow
+ggplot( stats2 %>% filter(bkt == 0, bnt == 0, ats == 0, spp %in% c('bkt','bnt')), aes(occ,lenMeanMean, group = factor(flow))) +
+  geom_line(aes(color = factor(flow))) +
+  geom_point(aes(color = factor(flow))) +
+  facet_grid(temp~spp)
+
+#bkt*bnt
+ggplot( stats2 %>% filter(temp == 0, flow == 0, ats == 0, spp %in% c('bkt','bnt')), aes(occ,lenMeanMean, group = factor(bnt))) +
+  geom_line(aes(color = factor(bnt))) +
+  geom_point(aes(color = factor(bnt))) +
+  facet_grid(bkt~spp)
+
+
+
+
+# Multiple plot function
+#
+# ggplot objects can be passed in ..., or to plotlist (as a list of ggplot objects)
+# - cols:   Number of columns in layout
+# - layout: A matrix specifying the layout. If present, 'cols' is ignored.
+#
+# If the layout is something like matrix(c(1,2,3,3), nrow=2, byrow=TRUE),
+# then plot 1 will go in the upper left, 2 will go in the upper right, and
+# 3 will go all the way across the bottom.
+#
+multiplot <- function(..., plotlist=NULL, file, cols=1, layout=NULL) {
+  library(grid)
+
+  # Make a list from the ... arguments and plotlist
+  plots <- c(list(...), plotlist)
+
+  numPlots = length(plots)
+
+  # If layout is NULL, then use 'cols' to determine layout
+  if (is.null(layout)) {
+    # Make the panel
+    # ncol: Number of columns of plots
+    # nrow: Number of rows needed, calculated from # of cols
+    layout <- matrix(seq(1, cols * ceiling(numPlots/cols)),
+                    ncol = cols, nrow = ceiling(numPlots/cols))
+  }
+
+ if (numPlots==1) {
+    print(plots[[1]])
+
+  } else {
+    # Set up the page
+    grid.newpage()
+    pushViewport(viewport(layout = grid.layout(nrow(layout), ncol(layout))))
+
+    # Make each plot, in the correct location
+    for (i in 1:numPlots) {
+      # Get the i,j matrix positions of the regions that contain this subplot
+      matchidx <- as.data.frame(which(layout == i, arr.ind = TRUE))
+
+      print(plots[[i]], vp = viewport(layout.pos.row = matchidx$row,
+                                      layout.pos.col = matchidx$col))
+    }
+  }
+}
+
 
 
 # size=100

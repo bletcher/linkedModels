@@ -109,14 +109,12 @@ createMatrices <- function(){
 #'@export
 
 getIndVars <- function(){
-  minSD <- -1.5
-  maxSD <- 1.5
-  step <- 1.5
-  indVars <- expand.grid( temp = seq(minSD,maxSD,step),
-                          flow = seq(minSD,maxSD,step),
-                          bkt = seq(minSD,maxSD,step),
-                          bnt = seq(minSD,maxSD,step),
-                          ats = seq(minSD,maxSD,step)
+
+  indVars <- expand.grid( temp = simData$indVarSeq,
+                          flow = simData$indVarSeq,
+                          bkt =  simData$indVarSeq,
+                          bnt =  simData$indVarSeq,
+                          ats =  simData$indVarSeq
   )
   indVars$rowNum <- 1:nrow(indVars)
   return(indVars)
@@ -152,7 +150,7 @@ projectSizes <- function(m,simData,testRow){
           m$betaMatBNT[i,2,rows,cols] * d$bnt * d$bkt +
           m$betaMatATS[i,1,rows,cols] * d$ats +
           m$indREMat[i,rows,cols]
-
+        #temp + flow + bkt + bnt + ats + temp * flow + temp^2 + flow^2 + bnt*bkt
         sigma <- exp(
           m$sigmaIntMat[i,rows,cols] +
             m$sigmaBetaMat[i,1,rows,cols] * d$temp +
