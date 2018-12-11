@@ -48,8 +48,8 @@ getNBetas <- function(){
 #'
 createMatrices <- function(){
 
-  sizeMat <- intMat <- sigmaIntMat <- isYOYMat <- array(NA, c(simData$nReps, simData$numInd, simData$nOcc))
-  seasonMat <- sampIntMat <- indREMat <-          array(NA, c(simData$nReps, simData$numInd, simData$nOcc))
+  sizeMat <- intMat <- sigmaIntMat <- isYOYMat <-  array(NA, c(simData$nReps, simData$numInd, simData$nOcc))
+  seasonMat <- sampIntMat <- indREMat <-  grMat <- array(NA, c(simData$nReps, simData$numInd, simData$nOcc))
   betaMat <- sigmaBetaMat <- array(NA, c(simData$nReps, nB$nBetas, simData$numInd, simData$nOcc))
   betaMatBNT <- array(NA, c(simData$nReps, nB$nBetas, simData$numInd, simData$nOcc))
   betaMatATS <- array(NA, c(simData$nReps, nB$nBetas, simData$numInd, simData$nOcc))
@@ -97,7 +97,7 @@ createMatrices <- function(){
     }
   }
 
-  return(list(isYOYMat=isYOYMat,seasonMat=seasonMat,sampIntMat=sampIntMat,sizeMat=sizeMat,indREMat=indREMat,
+  return(list(isYOYMat=isYOYMat,seasonMat=seasonMat,sampIntMat=sampIntMat,sizeMat=sizeMat,grmat=grMat,indREMat=indREMat,
               intMat=intMat,sigmaIntMat=sigmaIntMat,betaMat=betaMat,
               betaMatBNT=betaMatBNT,betaMatATS=betaMatATS,sigmaBetaMat=sigmaBetaMat))
 }
@@ -159,11 +159,11 @@ projectSizes <- function(m,simData,testRow){
         )
         # print(c(sigma,exp(sigma)))
         m$sizeMat[i,rows,cols + 1] <-  rnorm(1, m$sizeMat[i,rows,cols] + gr * m$sampIntMat[i,rows,cols], sigma)
-
+        m$grMat[i,rows,cols] <- gr
       }
     }
   }
-  return(m$sizeMat)
+  return( list(sizeMat = m$sizeMat, grMat = m$grMat) )
 
 }
 
