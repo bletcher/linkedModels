@@ -2040,8 +2040,10 @@ for(ageGroupLoop in 0:1){
         gather(key=rowname) %>% 
         mutate(var = rep(1:length(relImpAll[['bkt']]$lmg),length(spp)),
                ageGroup = ageGroupLoop,
-               season = seasonLoop)
-
+               season = seasonLoop
+               )
+  rI$varText <- rep(names(relImpAll[['bkt']]$lmg),2)
+  
   rIAll <- rbind(rIAll,rI)
   
   #rIAll$age <- ifelse(rIAll$occ %in% 1:2, 0, ifelse(rIAll$occ %in% 3:6, 1, 2))
@@ -2075,6 +2077,45 @@ labelsSeason <- c('1'='Autumn','2'='Winter','3'='Spring','4'='Summer','5'='Autum
 labelsSeason2 <- c('1'='Spring','2'='Summer','3'='Autumn','4'='Winter')
 labelAge <- c('0' = 'Growth year 0/1', '1' = 'Growth Year 1+')
 
+### get prop env
+summ1 <- rIAll %>%
+  mutate(isEnvVar = ifelse(varText %in% c('temp','flow','temp:flow'), 1,0)) %>%
+  group_by(rowname,isEnvVar,ageGroup, season) %>%
+  summarize(mean=mean(value)) %>%
+  arrange(ageGroup,season,rowname,isEnvVar)
+
+summ2 <- summ1 %>%
+  group_by(rowname,ageGroup,season) %>%
+  summarize(sum=sum(mean))
+
+summ1a <- left_join(summ1,summ2) %>%
+  mutate(prop = mean/sum,
+         xAxisLoc = ifelse(rowname == 'bktRI',-0.85, 0.85)) %>%
+  filter(isEnvVar == 1) 
+###
+
+####
+# add in betas to rIAllMinus
+load("D:/projects/linkedModels/data/out/allBetas.RData") #loads df 'q'
+qFig1 <- q %>% filter(riverGG == 'WB', species %in% c('bkt','bnt'))
+qFig1$season <- as.numeric(as.character(qFig1$season))
+qFig1$isYOY <- as.numeric(as.character(qFig1$isYOY))
+qFig <- qFig1 %>%
+  mutate( varText = tolower(betaGG)) %>%
+  mutate( varText = ifelse(varText == 'temp*flow','temp:flow', varText)) %>%
+  mutate( varText = ifelse(varText == 'bnt*bkt','bkt:bnt', varText)) %>%
+  select(isYOY,season,species,median,varText)
+
+# prepare rIAllMinus
+rIAllMinusQ <- rIAllMinus %>%
+  mutate(species = str_sub(rowname,1,3),
+         isYOY = ageGroup) %>%
+  left_join(qFig) %>%
+  mutate(median01 = ifelse(median > 0, 1, 0),
+         medianBreaks = cut(median, breaks = c(-1, -0.025, 0 , 0.025, 1)))
+
+#
+
 ggplot(rIAllMinus, aes(var, y = value2, fill = rowname)) +
   geom_col() +
   coord_flip() +
@@ -2084,6 +2125,8 @@ ggplot(rIAllMinus, aes(var, y = value2, fill = rowname)) +
   scale_y_continuous('Relative proportion of variance explained',
                      breaks = c(-1.0, -0.5, 0.0, 0.5),
                      labels = c('1.0', '0.5', '0.0', '0.5')) +
+  geom_text(data = summ1a, aes(y=xAxisLoc, x=7, label=paste(round(prop,2)), color=rowname),size = 5) +
+  scale_color_grey(start = 0.15, end = 0.75) +
   theme_publication() +
   scale_fill_grey(start = 0.15, end = 0.75) +
   facet_grid(season ~ ageGroup, labeller=labeller(season = labelsSeason2, ageGroup = labelAge))
@@ -2091,14 +2134,31 @@ ggplot(rIAllMinus, aes(var, y = value2, fill = rowname)) +
 ggsave(paste0('figures/3Spp_WB/relImpOccAll_GR_HorizBars.png'), width = 11, height = 9, units='in')
 
 
+ggplot(rIAllMinusQ, aes(var, y = value2)) +
+  geom_col(aes(fill = median)) +
+  coord_flip() +
+  scale_x_reverse('Variable', 
+                     breaks = 1:7,
+                     labels = c('Temp', 'Flow', 'Bkt', 'Bnt','Ats','Temp*Flow',  "Bkt*Bnt")) +
+  scale_y_continuous('Relative proportion of variance explained',
+                     breaks = c(-0.9, -0.25, -0.5, 0.0, 0.25, 0.5, 0.9),
+                     labels = c('0.9', '0.25', '0.5\n\nBrook Trout\n', '0.0', '0.25', '0.5\n\nBrown Trout\n', '0.9')) +
+  geom_text(data = summ1a, aes(y=xAxisLoc, x=7, label=paste(round(prop,2))),size = 5) +
+  geom_hline(yintercept = 0) +
+  #scale_color_grey(start = 0.15, end = 0.75) +
+  theme_publication() +
+ #  scale_fill_continuous() +
+  scale_fill_distiller(name="Parameter\nestimate", palette = "RdBu", direction = 1) +
+  theme(legend.position="right",             
+        #legend.key = element_rect(colour = NA),
+        legend.direction = "vertical",
+        legend.key.size= unit(0.25, "in"),
+        #    legend.margin = unit(0, "cm"),
+        legend.title = element_text(face="plain")#element_blank()
+        ) +
+  facet_grid(season ~ ageGroup, labeller=labeller(season = labelsSeason2, ageGroup = labelAge))
 
-
-
-
-
-
-
-
+ggsave(paste0('figures/3Spp_WB/relImpOccAll_GR_HorizBarsColor.png'), width = 11, height = 9, units='in')
 
 
 #######################
