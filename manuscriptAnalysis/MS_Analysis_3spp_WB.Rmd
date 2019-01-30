@@ -645,7 +645,57 @@ d2 %>% group_by(riverOrderedGG,seasonGG,year) %>%
 ggsave('figures/3Spp_WB/temp.png')
 
 save(tempSlopesTidy,file = 'D:/projects/linkedModels/data/out/tempSlopesTidy.RData')
+```
 
+```{r Carys Jones analysis}
+######
+# for Carys Jones analysis
+dJonesT <- 
+  d2 %>% group_by(riverOrderedGG,seasonGG,year) %>%
+    summarize(meanT = mean(meanTemperature, na.rm=T),
+              sdT = sd(meanTemperature, na.rm=T)) %>%
+    filter(riverOrderedGG == "West Brook", seasonGG == "Summer") %>%
+    ungroup() %>%
+    select(year,meanLen,sdLen)
+
+#####
+# Lengths
+# run 'r mean lengths' chunk above
+
+dJonesL <- 
+  means %>%
+    filter(season == 3, age == 1) %>%
+    ungroup() %>%
+    select(species,year,meanLen,sdLen)
+
+######
+# abundance
+# run 'r adjusted counts' above
+
+dJonesA <- 
+  allFishBySpeciesYOY %>% 
+    filter(riverOrderedGG == "West Brook", year >=2000, season == 3, isYOY == 2) %>%
+    ungroup() %>%
+    select(species,year,nAllFishBySpecies)
+
+######
+# phi
+# run 'r p(detection)' below
+# only has summer survival, may want annual survival
+
+dJonesP <- phi %>%
+  filter(season == 2, isYOYGG == 'Adult') %>%
+  select(speciesGG,yearGG,phi) %>%
+  rename(species = speciesGG, year = yearGG) %>%
+  mutate(species = as.character(species))
+  
+
+dJonesAL <- left_join(dJonesA,dJonesL) 
+dJonesALT <-  left_join(dJonesAL,dJonesT)
+dJonesALTP <-  left_join(dJonesALT,dJonesP)
+
+##
+write.csv(dJonesALTP, file = 'D:/projects/linkedModels/dataForCarysJones/dJonesALTP.csv')
 ```
 
 ```{r mean gr graphs}
@@ -751,13 +801,14 @@ cd %>% filter() %>%
   #   facet_grid(d2+d4~d5+d3)
 
   p <- array2df(ddD$q50$pBetaInt, label.x = "est") %>%
-    rename(est=est,isYOY=d1,species=d2,season=d3,river=d4,year=d5) %>% filter(river == 1) 
+    rename(est=est,isYOY=d1,species=d2,season=d3,river=d4,year=d5) %>% filter(river == 1, year > 3) 
 
   p$speciesGG <- factor(p$species, levels = 1:3, labels = c("Brook Trout", "Brown Trout", "Atlantic Salmon"), ordered = T)
   p$seasonGG <- factor(p$season, levels = 1:4, labels = c("Spring","Summer","Autumn","Winter"), ordered = T)
   p$isYOYGG <- factor(p$isYOY, levels = 1:2, labels = c("Juvenile","Adult"), ordered = T)
-
-  ggplot(p, aes(year,invlogit(est),color=factor(speciesGG))) + 
+  p$yearGG <- p$year + 1996
+  
+  ggplot(p, aes(yearGG,invlogit(est),color=factor(speciesGG))) + 
     geom_point(size = 2) + 
     labs( x = 'Year', y = 'Probability of detection') +
     scale_color_grey(start = 0.0, end = 0.85) +
@@ -776,8 +827,15 @@ cd %>% filter() %>%
    
   ##################### 
   phi <- array2df(ddD$q50$phiBetaInt, label.x = "est") %>%
-    rename(est=est,isYOY=d1,species=d2,season=d3,river=d4,year=d5) %>% filter(river == 1) 
-  ggplot(phi, aes(year,invlogit(est),color=factor(species))) +geom_point() + facet_grid( season ~ isYOY)
+    rename(est=est,isYOY=d1,species=d2,season=d3,river=d4,year=d5) %>% filter(river == 1, year > 3)  
+  
+  phi$speciesGG <- factor(phi$species, levels = 1:3, labels = c("bkt", "bnt", "ats"), ordered = T)
+  phi$seasonGG <- factor(phi$season, levels = 1:4, labels = c("Spring","Summer","Autumn","Winter"), ordered = T)
+  phi$isYOYGG <- factor(phi$isYOY, levels = 1:2, labels = c("Juvenile","Adult"), ordered = T)
+  phi$yearGG <- phi$year + 1996
+  phi$phi <- invlogit(phi$est)
+
+  ggplot(phi, aes(yearGG,phi,color=factor(speciesGG))) +geom_point() + facet_grid(seasonGG ~ isYOYGG)
 
   ggsave('figures/3Spp_WB/phi.png')
   
@@ -1134,10 +1192,10 @@ pp <- rbind(pBKT,pBNT)
 intsForTable <- pp %>% 
   filter(river == 'west brook', species %in% c('bkt','bnt')) %>%
   arrange(species,isYOY,seasonGG) %>%
-  select(species,isYOY,seasonGG,intDown,int,intUp) %>%
-  mutate(lo = round(intDown,3),mean = round(int,3),hi = round(intUp,3))
+  mutate(lo = round(intDown,3),mean = round(int,3),hi = round(intUp,3)) %>%
+  select(species,isYOY,seasonGG,intDown,int,intUp)
 
-write.csv(intsForTable,file = 'D:/projects/linkedModels/data/out/intsForTable.csv')
+write.csv(intsForTable,file = 'D:/projects/linkedModels/data/out/intsForTableAgeGroup.csv')
 ```
 
 
@@ -1148,10 +1206,10 @@ load(file= "data/out/allBetas.RData") #loads q
 betasForTable <- q %>% 
   filter(river == 'west brook', species %in% c('bkt','bnt')) %>%
   arrange(species,betaGG,isYOY,seasonGG,betaGG) %>%
-  select(species,betaGG,isYOY,seasonGG,betaGG,lo,median,hi) %>%
-  mutate(lo = round(lo,3),median = round(median,3),hi = round(hi,3))
+  mutate(lo = round(lo,3),median = round(median,3),hi = round(hi,3)) %>%
+  select(species,betaGG,isYOY,seasonGG,betaGG,lo,median,hi)
 
-write.csv(betasForTable,file = 'D:/projects/linkedModels/data/out/betasForTable.csv')
+write.csv(betasForTable,file = 'D:/projects/linkedModels/data/out/betasForTableAgeGroup.csv')
 ```
 
 
@@ -2133,7 +2191,7 @@ ggplot(rIAllMinus, aes(var, y = value2, fill = rowname)) +
 
 ggsave(paste0('figures/3Spp_WB/relImpOccAll_GR_HorizBars.png'), width = 11, height = 9, units='in')
 
-
+# bars colered by beta
 ggplot(rIAllMinusQ, aes(var, y = value2)) +
   geom_col(aes(fill = median)) +
   coord_flip() +
